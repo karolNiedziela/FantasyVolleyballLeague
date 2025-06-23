@@ -1,0 +1,33 @@
+<Project>
+  <PropertyGroup>
+    <!-- Enable central package management, https://learn.microsoft.com/en-us/nuget/consume-packages/Central-Package-Management -->
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="Aspire.Hosting.SqlServer" Version="9.3.1" />
+    <PackageVersion Include="Aspire.Microsoft.EntityFrameworkCore.SqlServer" Version="9.3.1" />
+    <PackageVersion Include="HtmlAgilityPack" Version="1.12.1" />
+    <PackageVersion Include="IronOcr" Version="2025.6.4" />
+    <PackageVersion Include="IronOcr.Languages.Polish" Version="2020.11.2" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="9.0.6" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.6" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.6" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.6" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.6" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.6" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.6" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="9.0.6" />
+    <PackageVersion Include="Microsoft.Playwright" Version="1.52.0" />
+    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.11.0.117924" />
+    <PackageVersion Include="Aspire.Hosting.AppHost" Version="9.3.1" />
+    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="9.0.0" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.9.0" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.9.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.9.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.9.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.9.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="9.0.6" />
+    <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+  </ItemGroup>
+</Project>
