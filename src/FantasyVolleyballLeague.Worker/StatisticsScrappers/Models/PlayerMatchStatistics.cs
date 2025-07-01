@@ -1,4 +1,4 @@
-﻿namespace FantasyVolleyballLeague.Worker.StatisticsExtractor.Models
+﻿namespace FantasyVolleyballLeague.Worker.StatisticsScrapper.Models
 {
     public sealed record PlayerMatchStatistics(
       int Number,

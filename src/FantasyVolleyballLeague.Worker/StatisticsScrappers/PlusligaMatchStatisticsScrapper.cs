@@ -1,12 +1,15 @@
-﻿using FantasyVolleyballLeague.Worker.StatisticsExtractor.Models;
+﻿using FantasyVolleyballLeague.Worker.StatisticsScrapper.Models;
 using HtmlAgilityPack;
 using Microsoft.Playwright;
+using static System.Collections.Specialized.BitVector32;
 
-namespace FantasyVolleyballLeague.Worker.StatisticsExtractor
+namespace FantasyVolleyballLeague.Worker.StatisticsScrapper
 {
-    public sealed class PlusligaStatisticsScrapper : IStatisticsScrapper
+    public sealed class PlusligaMatchStatisticsScrapper : IMatchStatisticsScrapper
     {
-        public async Task<(MatchTeamStatistics FirstTeamStatistics, MatchTeamStatistics SecondTeamStatitics)> GetMatchStatisticsAsync()
+        private const string _matchDetailsUrl = "https://www.plusliga.pl/games/action/show/id/";
+
+        public async Task<(MatchTeamStatistics FirstTeamStatistics, MatchTeamStatistics SecondTeamStatitics)> GetMatchStatisticsAsync(int matchId)
         {
             var playwright = await Playwright.CreateAsync();
             var browser = await playwright.Chromium.LaunchAsync(new() { Headless = true });
@@ -19,14 +22,17 @@ namespace FantasyVolleyballLeague.Worker.StatisticsExtractor
             await context.AddInitScriptAsync(@"Object.defineProperty(navigator, 'webdriver', { get: () => undefined });");
             var page = await context.NewPageAsync();
 
-#pragma warning disable CA2007 // Consider calling ConfigureAwait on the awaited task
-#pragma warning disable S1075 // URIs should not be hardcoded
-            await page.GotoAsync("https://www.plusliga.pl/games/action/show/id/1103460.html");
-#pragma warning restore S1075 // URIs should not be hardcoded
-#pragma warning restore CA2007 // Consider calling ConfigureAwait on the awaited task
+            await page.GotoAsync($"{_matchDetailsUrl}{matchId}.html");
 
             var firstTeamStatistics = await GetTeamPlayerStatistics(page, context, "iframe.widget-team-a");
-            var secondTeamStatistics = await GetTeamPlayerStatistics(page, context, "iframe.widget-team-b");
+            var secondTeamStatistics = await GetTeamPlayerStatistics(page, context, "iframe.widget-team-b"); 
+            
+            var (firstTeamSetsWon, secondTeamSetsWon) = await GetSetsWonByTeam(page);
+
+            firstTeamStatistics.SetsWon = firstTeamSetsWon;
+            firstTeamStatistics.Won = firstTeamSetsWon > secondTeamSetsWon;
+            secondTeamStatistics.SetsWon = secondTeamSetsWon;
+            secondTeamStatistics.Won = secondTeamSetsWon > firstTeamSetsWon;
 
             return (firstTeamStatistics, secondTeamStatistics);
         }
@@ -92,7 +98,10 @@ namespace FantasyVolleyballLeague.Worker.StatisticsExtractor
             var teamName = teamContainerDiv?.Descendants("h2")
                 .FirstOrDefault()?.InnerText.Trim() ?? "Unknown Team Name";
 
-            var matchTeamStatistics = new MatchTeamStatistics(teamName, new List<PlayerMatchStatistics>());
+            var matchTeamStatistics = new MatchTeamStatistics
+            {
+                Name = teamName,
+            };
 
             foreach (var tableRow in allTableRows)
             {
@@ -279,5 +288,30 @@ namespace FantasyVolleyballLeague.Worker.StatisticsExtractor
                     var classes = classAttr.Split([' '], StringSplitOptions.RemoveEmptyEntries);
                     return classes.Contains("pkt") && classes.Contains("block");
                 })?.InnerText.Trim() ?? "-1");
+
+        private static async Task<(int FirstTeamSetsWon, int SecondTeamSetsWon)> GetSetsWonByTeam(IPage page)
+        {
+            var html = await page.ContentAsync();
+            var doc = new HtmlDocument();
+            doc.LoadHtml(html);
+
+            var firstTeamSetsWon = GetSetsWon(doc, "teamAStatus");
+            var secondTeamSetsWon = GetSetsWon(doc, "teamBStatus");
+
+            return (firstTeamSetsWon, secondTeamSetsWon);
+        }
+
+        private static int GetSetsWon(HtmlDocument document, string teamStatus)
+        {
+            var setsWon = document.DocumentNode.Descendants("span")
+                .FirstOrDefault(span =>
+                {
+                    var classAttr = span.GetAttributeValue("class", "");
+                    var classes = classAttr.Split([' '], StringSplitOptions.RemoveEmptyEntries);
+                    return classes.Contains(teamStatus);
+                })?.InnerText.Trim() ?? "-1";
+
+            return int.Parse(setsWon);
+        }
     }
 }
