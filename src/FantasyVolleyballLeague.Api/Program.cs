@@ -1,5 +1,6 @@
 using FantasyVolleyballLeague.Api;
-using FantasyVolleyballLeague.Api.Database;
+using FantasyVolleyballLeague.Infrastructure;
+using FantasyVolleyballLeague.Infrastructure.Database;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,12 +14,10 @@ var configuration = new ConfigurationBuilder()
 
 builder.AddSqlServerDbContext<FantasyVolleyballLeagueDbContext>("FantasyVolleyballLeagueDb");
 
-builder.Services.AddDatabase(configuration);
+builder.Services.AddInfrastructure(configuration);
 
 builder.AddServiceDefaults();
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
 var app = builder.Build();

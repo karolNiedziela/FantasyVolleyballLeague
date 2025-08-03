@@ -1,4 +1,4 @@
-﻿using FantasyVolleyballLeague.Api.Database;
+﻿using FantasyVolleyballLeague.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;

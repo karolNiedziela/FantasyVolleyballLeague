@@ -22,6 +22,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FantasyVolleyballLeague.Wor
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FantasyVolleyballLeague.Sandbox", "src\FantasyVolleyballLeague.Sandbox\FantasyVolleyballLeague.Sandbox.csproj", "{EF4D914B-6E29-4C6C-9C55-2630E3A98EE1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FantasyVolleyballLeague.Domain", "src\FantasyVolleyballLeague.Domain\FantasyVolleyballLeague.Domain.csproj", "{CE250AB7-6B32-4E1A-8D03-E1DF6440BD37}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FantasyVolleyballLeague.Infrastructure", "src\FantasyVolleyballLeague.Infrastructure\FantasyVolleyballLeague.Infrastructure.csproj", "{18CDDF25-2DE8-49DC-8D20-3B342CC426F5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,6 +52,14 @@ Global
 		{EF4D914B-6E29-4C6C-9C55-2630E3A98EE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EF4D914B-6E29-4C6C-9C55-2630E3A98EE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EF4D914B-6E29-4C6C-9C55-2630E3A98EE1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE250AB7-6B32-4E1A-8D03-E1DF6440BD37}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE250AB7-6B32-4E1A-8D03-E1DF6440BD37}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE250AB7-6B32-4E1A-8D03-E1DF6440BD37}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE250AB7-6B32-4E1A-8D03-E1DF6440BD37}.Release|Any CPU.Build.0 = Release|Any CPU
+		{18CDDF25-2DE8-49DC-8D20-3B342CC426F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{18CDDF25-2DE8-49DC-8D20-3B342CC426F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{18CDDF25-2DE8-49DC-8D20-3B342CC426F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{18CDDF25-2DE8-49DC-8D20-3B342CC426F5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -56,6 +68,8 @@ Global
 		{7E11DF57-C9CF-194E-83A8-F52AE7BB6E7D} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{E5BC086E-8E71-4424-AB72-52CF66B05267} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{EF4D914B-6E29-4C6C-9C55-2630E3A98EE1} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{CE250AB7-6B32-4E1A-8D03-E1DF6440BD37} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{18CDDF25-2DE8-49DC-8D20-3B342CC426F5} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C5253CD8-5365-4DE3-AA73-05021437E8CB}
