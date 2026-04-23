@@ -10,12 +10,6 @@ namespace FantasyVolleyballLeague.Infrastructure.Database.Configurations
         {
             builder.HasKey(m => m.Id);
 
-            builder.Property(m => m.ExternalMatchId)
-                .IsRequired();
-
-            builder.HasIndex(m => m.ExternalMatchId)
-                .IsUnique();
-
             builder.HasOne(m => m.HomeTeam)
                 .WithMany()
                 .HasForeignKey(m => m.HomeTeamId)

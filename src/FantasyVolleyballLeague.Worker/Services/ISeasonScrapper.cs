@@ -1,12 +1,12 @@
 ﻿using FantasyVolleyballLeague.Worker.TeamScrappers.Models;
 
-namespace FantasyVolleyballLeague.Worker.TeamScrappers
+namespace FantasyVolleyballLeague.Worker.Services
 {
-    public interface ITeamScrapper
+    public interface ISeasonScrapper
     {
         /// <param name="session">
         /// Optional shared session. If null, a new browser session is created and disposed internally.
         /// </param>
-        Task<IEnumerable<TeamInformation>> GetTeamDataAsync(Uri pageUrl, PlaywrightSession? session = null);
+        Task<IEnumerable<SeasonInformation>> GetSeasons(Uri pageUrl, PlaywrightSession? session = null);
     }
 }

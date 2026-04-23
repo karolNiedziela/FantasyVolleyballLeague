@@ -4,19 +4,16 @@ using FantasyVolleyballLeague.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace FantasyVolleyballLeague.Infrastructure.Database.Migrations
+namespace FantasyVolleyballLeague.Infrastructure.Migrations
 {
     [DbContext(typeof(FantasyVolleyballLeagueDbContext))]
-    [Migration("20250803182012_Match_ExternalMatchId")]
-    partial class Match_ExternalMatchId
+    partial class FantasyVolleyballLeagueDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -57,18 +54,12 @@ namespace FantasyVolleyballLeague.Infrastructure.Database.Migrations
                     b.Property<DateTimeOffset>("Date")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid>("ExternalMatchId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("HomeTeamId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
                     b.HasIndex("AwayTeamId");
-
-                    b.HasIndex("ExternalMatchId")
-                        .IsUnique();
 
                     b.HasIndex("HomeTeamId");
 
@@ -130,6 +121,28 @@ namespace FantasyVolleyballLeague.Infrastructure.Database.Migrations
                     b.HasIndex("PlayerId");
 
                     b.ToTable("PlayerStatistics");
+                });
+
+            modelBuilder.Entity("FantasyVolleyballLeague.Domain.Entities.Season", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("EndYear")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("StartYear")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Season");
                 });
 
             modelBuilder.Entity("FantasyVolleyballLeague.Domain.Entities.Team", b =>

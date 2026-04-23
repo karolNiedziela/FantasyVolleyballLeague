@@ -4,19 +4,20 @@
     {
         public Guid Id { get; set; }
 
-        public string Name { get; set; } = string.Empty;
+        public string Name { get; private set; } = string.Empty;
 
-        public int StartYearNumber { get; set; }
+        public int StartYear { get; set; }
 
-        public int EndYearNumber { get; set; }
+        public int EndYear { get; set; }
 
         private Season() { }
 
-        public Season(string name, int startYearNumber, int endYearNumber)
+        public Season(int startYear, int endYear, Guid id)
         {
-            Name = name;
-            StartYearNumber = startYearNumber;
-            EndYearNumber = endYearNumber;
+            Id = id;
+            Name = $"{startYear}/{endYear}";
+            StartYear = startYear;
+            EndYear = endYear;
         }
     }
 }

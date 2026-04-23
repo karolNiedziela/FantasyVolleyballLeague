@@ -14,17 +14,14 @@
 
         public Team AwayTeam { get; set; } = default!;
 
-        public Guid ExternalMatchId { get; set; }
-
         public ICollection<PlayerStatistics> PlayerStatistics { get; set; } = [];
 
         private Match() { }
 
-        public Match(Guid homeTeamId, Guid awayTeamId, Guid externalMatchId, DateTimeOffset date)
+        public Match(Guid homeTeamId, Guid awayTeamId, DateTimeOffset date)
         {
             HomeTeamId = homeTeamId;
             AwayTeamId = awayTeamId;
-            ExternalMatchId = externalMatchId;
             Date = date;
         }
     }

@@ -2,9 +2,11 @@
 {
     public sealed record PlayerInformation(
         string Fullname,
+        string Position,
         string DateOfBirth,
         int Height,
         int Weight,
         int AttackRange,
-        int ShirtNumber);
+        int ShirtNumber,
+        string LinkToDetailsSuffix);
 }

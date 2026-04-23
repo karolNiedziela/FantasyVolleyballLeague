@@ -3,27 +3,39 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace FantasyVolleyballLeague.Infrastructure.Database.Migrations
+namespace FantasyVolleyballLeague.Infrastructure.Migrations
 {
     /// <inheritdoc />
-#pragma warning disable CA1515 // Consider making public types internal
-    public partial class initial : Migration
-#pragma warning restore CA1515 // Consider making public types internal
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Team",
+                name: "League",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Country = table.Column<string>(type: "nvarchar(60)", maxLength: 60, nullable: true)
+                    Country = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Team", x => x.Id);
+                    table.PrimaryKey("PK_League", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Season",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    StartYear = table.Column<int>(type: "int", nullable: false),
+                    EndYear = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Season", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -38,6 +50,25 @@ namespace FantasyVolleyballLeague.Infrastructure.Database.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_UserTeam", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Team",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    LeagueId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Team", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Team_League_LeagueId",
+                        column: x => x.LeagueId,
+                        principalTable: "League",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -165,6 +196,11 @@ namespace FantasyVolleyballLeague.Infrastructure.Database.Migrations
                 column: "PlayerId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Team_LeagueId",
+                table: "Team",
+                column: "LeagueId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_UserTeam_UserId",
                 table: "UserTeam",
                 column: "UserId",
@@ -183,6 +219,9 @@ namespace FantasyVolleyballLeague.Infrastructure.Database.Migrations
                 name: "PlayerStatistics");
 
             migrationBuilder.DropTable(
+                name: "Season");
+
+            migrationBuilder.DropTable(
                 name: "UserTeamPlayer");
 
             migrationBuilder.DropTable(
@@ -196,6 +235,9 @@ namespace FantasyVolleyballLeague.Infrastructure.Database.Migrations
 
             migrationBuilder.DropTable(
                 name: "Team");
+
+            migrationBuilder.DropTable(
+                name: "League");
         }
     }
 }

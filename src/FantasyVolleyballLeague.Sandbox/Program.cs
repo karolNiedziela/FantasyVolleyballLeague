@@ -1,26 +1,42 @@
-﻿using FantasyVolleyballLeague.Worker.StatisticsScrapper;
+﻿using CsvHelper;
+using FantasyVolleyballLeague.Worker;
+using FantasyVolleyballLeague.Worker.DataProcessors.Statistics;
+using FantasyVolleyballLeague.Worker.DataProcessors.Teams;
+using FantasyVolleyballLeague.Worker.Services;
+using FantasyVolleyballLeague.Worker.StatisticsScrapper;
 using FantasyVolleyballLeague.Worker.StatisticsScrappers;
 using FantasyVolleyballLeague.Worker.StatisticsScrappers.Plusliga;
 using FantasyVolleyballLeague.Worker.TeamScrappers;
+using FantasyVolleyballLeague.Worker.TeamScrappers.Models;
 using FantasyVolleyballLeague.Worker.TeamScrappers.Plusliga;
-using HtmlAgilityPack;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 var serviceCollection = new ServiceCollection();
 
+var config = new ConfigurationBuilder()
+           .AddJsonFile("appsettings.json")
+           .Build();
+
+serviceCollection.AddOptions<PlaywrightOptions>()
+    .Configure(options => config.GetSection(PlaywrightOptions.SectionName).Bind(options));
+serviceCollection.AddScoped<PlaywrightFactory>();
+
 serviceCollection.AddScoped<IMatchStatisticsScrapper, PlusligaMatchStatisticsScrapper>();
-serviceCollection.AddScoped<ISeasonScrapper, PlusligaSeasonScrapper>();
+serviceCollection.AddScoped<ISeasonMatchScrapper, PlusligaSeasonMatchScrapper>();
 serviceCollection.AddScoped<ITeamScrapper, PlusligaTeamScrapper>();
+serviceCollection.AddScoped<ISeasonScrapper, SeasonScrapper>();
+serviceCollection.AddScoped<ITeamDataProcessor, TeamDataProcessor>();
+serviceCollection.AddScoped<IStatisticsDataProcessor, StatisticsDataProcessor>();
 
 var serviceProvider = serviceCollection.BuildServiceProvider();
 
-var plusligaMatchStatisticsScrapper = serviceProvider.GetRequiredService<IMatchStatisticsScrapper>();
-var plusligaSeasonScrapper = serviceProvider.GetRequiredService<ISeasonScrapper>();
-var plusligaTeamScrapper = serviceProvider.GetRequiredService<ITeamScrapper>();
+var plusligaSeasonMatchScrapper = serviceProvider.GetRequiredService<ISeasonMatchScrapper>();
+var seasonScrapper = serviceProvider.GetRequiredService<ISeasonScrapper>();
+var teamDataProcessor = serviceProvider.GetRequiredService<ITeamDataProcessor>();
+var statisticsDataProcessor = serviceProvider.GetRequiredService<IStatisticsDataProcessor>();
 
-//await plusligaSeasonScrapper.GetSeasonStatisticsAsync();
-
-await plusligaTeamScrapper.GetTeamDataAsync();
-
+//await teamDataProcessor.AcquireAndSaveAsync();
+await statisticsDataProcessor.AcquireAndSaveAsync();
 
 Console.ReadKey();
