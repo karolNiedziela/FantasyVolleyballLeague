@@ -1,8 +1,7 @@
 using System.Globalization;
-using CsvHelper;
-using CsvHelper.Configuration;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using FantasyVolleyballLeague.Worker.Services;
-using FantasyVolleyballLeague.Worker.StatisticsScrapper.Models;
 using FantasyVolleyballLeague.Worker.StatisticsScrappers;
 using FantasyVolleyballLeague.Worker.StatisticsScrappers.Models;
 
@@ -10,6 +9,12 @@ namespace FantasyVolleyballLeague.Worker.DataProcessors.Statistics
 {
     public sealed class StatisticsDataProcessor : IStatisticsDataProcessor
     {
+        private static readonly JsonSerializerOptions JsonOptions = new()
+        {
+            WriteIndented = true,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
+
         private readonly ISeasonScrapper _seasonScrapper;
         private readonly ISeasonMatchScrapper _seasonMatchScrapper;
         private readonly PlaywrightFactory _playwrightFactory;
@@ -73,7 +78,7 @@ namespace FantasyVolleyballLeague.Worker.DataProcessors.Statistics
                         {
                             var roundLabel = round.RoundName ?? round.RoundNumber.ToString(CultureInfo.InvariantCulture);
                             Console.WriteLine($"Processing phase: {phase.PhaseName}, stage: {stage.StageName}, round: {roundLabel} in season: {season.StartYear}-{season.EndYear}");
-                            WriteRoundStatisticsInformationToCsv(round, stageDirectoryPath);
+                            WriteRoundStatisticsToJson(round, stageDirectoryPath);
                             Console.WriteLine($"Processed phase: {phase.PhaseName}, stage: {stage.StageName}, round: {roundLabel} in season: {season.StartYear}-{season.EndYear}");
                         }
                     }
@@ -108,7 +113,7 @@ namespace FantasyVolleyballLeague.Worker.DataProcessors.Statistics
             File.Create(processedFilePath).Dispose();
         }
 
-        private static void WriteRoundStatisticsInformationToCsv(SeasonPhaseRound round, string baseDirectoryPath)
+        private static void WriteRoundStatisticsToJson(SeasonPhaseRound round, string baseDirectoryPath)
         {
             var roundDirectoryName = string.IsNullOrWhiteSpace(round.RoundName)
                 ? round.RoundNumber.ToString(CultureInfo.InvariantCulture)
@@ -116,32 +121,13 @@ namespace FantasyVolleyballLeague.Worker.DataProcessors.Statistics
             var roundDirectoryPath = Path.Combine(baseDirectoryPath, roundDirectoryName);
             TryCreateDirectory(roundDirectoryPath);
 
-            var csvConfiguration = new CsvConfiguration(CultureInfo.InvariantCulture)
+            foreach (var match in round.Matches)
             {
-                HasHeaderRecord = true,
-                Delimiter = ";",
-            };
-
-            foreach (var matchStatistics in round.Matches)
-            {
-                var matchFilePath = Path.Combine(roundDirectoryPath, $"{matchStatistics.FirstTeamStatistics.Name}_{matchStatistics.SecondTeamStatistics.Name}_{matchStatistics.ExternalMatchId}");
-                TryCreateDirectory(matchFilePath);
-
-                WriteSingleTeamStatistics(matchStatistics.FirstTeamStatistics, csvConfiguration, matchFilePath);
-                WriteSingleTeamStatistics(matchStatistics.SecondTeamStatistics, csvConfiguration, matchFilePath);
+                var matchFilePath = Path.Combine(roundDirectoryPath, $"{match.MatchId}.json");
+                File.WriteAllText(matchFilePath, JsonSerializer.Serialize(match, JsonOptions));
             }
 
             SaveProcessedFile(roundDirectoryPath);
-        }
-
-        private static void WriteSingleTeamStatistics(MatchTeamStatistics matchTeamStatistics, CsvConfiguration configuration, string matchFilePath)
-        {
-            var teamStatisticsFilePath = Path.Combine(matchFilePath, $"{matchTeamStatistics.Name}.csv");
-
-            using var writer = new StreamWriter(teamStatisticsFilePath);
-            using var csv = new CsvWriter(writer, configuration);
-            var players = matchTeamStatistics.PlayersStatistics.ToList();
-            csv.WriteRecords(players);
         }
     }
 }

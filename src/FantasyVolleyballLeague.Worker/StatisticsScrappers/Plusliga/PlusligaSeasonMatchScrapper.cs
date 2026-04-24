@@ -266,7 +266,7 @@ namespace FantasyVolleyballLeague.Worker.StatisticsScrappers.Plusliga
             return string.IsNullOrWhiteSpace(text) ? null : text;
         }
 
-        private async Task<List<SeasonMatchWeekGameStatistics>> ProcessMatchIdsAsync(
+        private async Task<List<MatchRecord>> ProcessMatchIdsAsync(
             PlaywrightSession session, List<int> matchIds)
         {
             if (matchIds.Count == 0)
@@ -281,14 +281,7 @@ namespace FantasyVolleyballLeague.Worker.StatisticsScrappers.Plusliga
                 await semaphore.WaitAsync();
                 try
                 {
-                    var result = await _matchStatisticsScrapper.GetMatchStatisticsAsync(matchId, session);
-                    if (result is null)
-                    {
-                        return null;
-                    }
-
-                    var (firstTeam, secondTeam) = result.Value;
-                    return new SeasonMatchWeekGameStatistics(firstTeam, secondTeam, matchId);
+                    return await _matchStatisticsScrapper.GetMatchStatisticsAsync(matchId, session);
                 }
 #pragma warning disable CA1031
                 catch (Exception ex)
@@ -304,7 +297,7 @@ namespace FantasyVolleyballLeague.Worker.StatisticsScrappers.Plusliga
             });
 
             var results = await Task.WhenAll(tasks);
-            return [.. results.OfType<SeasonMatchWeekGameStatistics>()];
+            return [.. results.OfType<MatchRecord>()];
         }
 
         private static List<int> GetMatchIds(HtmlDocument document)

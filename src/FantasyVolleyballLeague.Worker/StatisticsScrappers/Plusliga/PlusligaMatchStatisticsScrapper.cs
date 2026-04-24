@@ -1,6 +1,7 @@
 using System.Globalization;
 using FantasyVolleyballLeague.Worker.StatisticsScrapper;
 using FantasyVolleyballLeague.Worker.StatisticsScrapper.Models;
+using FantasyVolleyballLeague.Worker.StatisticsScrappers.Models;
 using HtmlAgilityPack;
 using Microsoft.Playwright;
 
@@ -8,7 +9,7 @@ namespace FantasyVolleyballLeague.Worker.StatisticsScrappers.Plusliga
 {
     public sealed class PlusligaMatchStatisticsScrapper : IMatchStatisticsScrapper
     {
-        public async Task<(MatchTeamStatistics FirstTeamStatistics, MatchTeamStatistics SecondTeamStatitics)?> GetMatchStatisticsAsync(int matchId, PlaywrightSession session)
+        public async Task<MatchRecord?> GetMatchStatisticsAsync(int matchId, PlaywrightSession session)
         {
             var context = session.Context;
             var page = await context.NewPageAsync();
@@ -16,7 +17,7 @@ namespace FantasyVolleyballLeague.Worker.StatisticsScrappers.Plusliga
             await page.GotoAsync($"{UrlConstants.PlusLigaMatchDetailsUrl}{matchId}.html");
 
             var gameDateText = await page.Locator("div.game-date").First.InnerTextAsync();
-            if (!TryParseMatchDate(gameDateText, out var matchDate) || matchDate > DateTime.Now)
+            if (!TryParseMatchDate(gameDateText, out var matchDate) || matchDate > DateTime.UtcNow)
             {
                 await page.CloseAsync();
                 return null;
@@ -25,16 +26,38 @@ namespace FantasyVolleyballLeague.Worker.StatisticsScrappers.Plusliga
             var firstTeamStatistics = await GetTeamPlayerStatistics(page, context, "iframe.widget-team-a");
             var secondTeamStatistics = await GetTeamPlayerStatistics(page, context, "iframe.widget-team-b");
 
-            var (firstTeamSetsWon, secondTeamSetsWon) = await GetSetsWonByTeam(page);
+            var html = await page.ContentAsync();
+            var doc = new HtmlDocument();
+            doc.LoadHtml(html);
+
+            var (firstTeamSetsWon, secondTeamSetsWon) = GetSetsWonByTeam(doc);
 
             firstTeamStatistics.SetsWon = firstTeamSetsWon;
             firstTeamStatistics.Won = firstTeamSetsWon > secondTeamSetsWon;
             secondTeamStatistics.SetsWon = secondTeamSetsWon;
             secondTeamStatistics.Won = secondTeamSetsWon > firstTeamSetsWon;
 
+            var sets = GetSetScores(doc, firstTeamSetsWon + secondTeamSetsWon);
+
+            var attendanceText = GetTableValue(doc, "Liczba widzów:");
+            int? attendance = int.TryParse(attendanceText, out var att) ? att : null;
+
             await page.CloseAsync();
 
-            return (firstTeamStatistics, secondTeamStatistics);
+            return new MatchRecord(
+                matchId,
+                matchDate,
+                GetTableValue(doc, "Numer meczu:"),
+                GetTableValue(doc, "MVP:"),
+                attendance,
+                GetTableValue(doc, "Sędzia pierwszy:"),
+                GetTableValue(doc, "Sędzia drugi:"),
+                GetTableValue(doc, "Komisarz:"),
+                GetTableValue(doc, "Nazwa:"),
+                GetTableValue(doc, "Miasto:"),
+                sets,
+                firstTeamStatistics,
+                secondTeamStatistics);
         }
 
         private static async Task<MatchTeamStatistics> GetTeamPlayerStatistics(IPage page, IBrowserContext context, string iframeClass)
@@ -164,17 +187,22 @@ namespace FantasyVolleyballLeague.Worker.StatisticsScrappers.Plusliga
         private static int GetPlayerBlocks(HtmlNode tableRow)
             => int.Parse(tableRow.FindDescendantWithClass("div", "pkt", "block")?.InnerText.Trim() ?? "-1");
 
+        private static readonly TimeZoneInfo PolishTimeZone =
+            TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
+
         private static bool TryParseMatchDate(string text, out DateTime matchDate)
-            => DateTime.TryParseExact(text.Trim(), "dd.MM.yyyy, HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out matchDate);
-
-        private static async Task<(int FirstTeamSetsWon, int SecondTeamSetsWon)> GetSetsWonByTeam(IPage page)
         {
-            var html = await page.ContentAsync();
-            var doc = new HtmlDocument();
-            doc.LoadHtml(html);
-
-            return (GetSetsWon(doc, "teamAStatus"), GetSetsWon(doc, "teamBStatus"));
+            if (!DateTime.TryParseExact(text.Trim(), "dd.MM.yyyy, HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed))
+            {
+                matchDate = default;
+                return false;
+            }
+            matchDate = TimeZoneInfo.ConvertTimeToUtc(parsed, PolishTimeZone);
+            return true;
         }
+
+        private static (int FirstTeamSetsWon, int SecondTeamSetsWon) GetSetsWonByTeam(HtmlDocument doc)
+            => (GetSetsWon(doc, "teamAStatus"), GetSetsWon(doc, "teamBStatus"));
 
         private static int GetSetsWon(HtmlDocument document, string teamStatus)
         {
@@ -187,6 +215,34 @@ namespace FantasyVolleyballLeague.Worker.StatisticsScrappers.Plusliga
                 })?.InnerText.Trim() ?? "-1";
 
             return int.Parse(setsWon);
+        }
+
+        private static List<SetScore> GetSetScores(HtmlDocument doc, int totalSets)
+        {
+            var sets = new List<SetScore>();
+            for (var i = 1; i <= totalSets; i++)
+            {
+                var teamAText = doc.DocumentNode.Descendants("span")
+                    .FirstOrDefault(s => s.GetAttributeValue("data-synced-games-content", "") == $"set{i}pointsTeamA")
+                    ?.InnerText.Trim();
+                var teamBText = doc.DocumentNode.Descendants("span")
+                    .FirstOrDefault(s => s.GetAttributeValue("data-synced-games-content", "") == $"set{i}pointsTeamB")
+                    ?.InnerText.Trim();
+
+                if (!int.TryParse(teamAText, out var teamAScore) || !int.TryParse(teamBText, out var teamBScore))
+                    break;
+
+                sets.Add(new SetScore(teamAScore, teamBScore));
+            }
+            return sets;
+        }
+
+        private static string? GetTableValue(HtmlDocument doc, string thText)
+        {
+            var th = doc.DocumentNode.Descendants("th")
+                .FirstOrDefault(n => n.InnerText.Trim() == thText);
+
+            return th?.ParentNode?.SelectSingleNode("td")?.InnerText.Trim();
         }
     }
 }
