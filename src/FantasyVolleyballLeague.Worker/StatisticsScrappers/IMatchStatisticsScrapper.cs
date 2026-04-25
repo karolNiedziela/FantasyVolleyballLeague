@@ -5,6 +5,6 @@ namespace FantasyVolleyballLeague.Worker.StatisticsScrapper
 {
     public interface IMatchStatisticsScrapper
     {
-        Task<MatchRecord?> GetMatchStatisticsAsync(int matchId, PlaywrightSession session);
+        Task<MatchRecord?> GetMatchStatisticsAsync(int matchId, string matchDetailsBaseUrl, PlaywrightSession session);
     }
 }

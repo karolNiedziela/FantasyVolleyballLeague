@@ -10,12 +10,14 @@ namespace FantasyVolleyballLeague.Worker.DataProcessors.Teams
         private readonly ISeasonScrapper _seasonScrapper;
         private readonly ITeamScrapper _teamScrapper;
         private readonly PlaywrightFactory _playwrightFactory;
+        private readonly IReadOnlyList<LeagueOptions> _leagues;
 
-        public TeamDataProcessor(ISeasonScrapper seasonScrapper, ITeamScrapper teamScrapper, PlaywrightFactory playwrightFactory)
+        public TeamDataProcessor(ISeasonScrapper seasonScrapper, ITeamScrapper teamScrapper, PlaywrightFactory playwrightFactory, IReadOnlyList<LeagueOptions> leagues)
         {
             _seasonScrapper = seasonScrapper;
             _teamScrapper = teamScrapper;
             _playwrightFactory = playwrightFactory;
+            _leagues = leagues;
         }
 
         public async Task AcquireAndSaveAsync()
@@ -24,47 +26,50 @@ namespace FantasyVolleyballLeague.Worker.DataProcessors.Teams
             // Pages within a context are independent, so concurrent season tasks share safely.
             await using var session = await _playwrightFactory.SetupBrowserContextAsync();
 
-            var teamSeasons = await _seasonScrapper.GetSeasons(new Uri(UrlConstants.PlusLigaTeams), session);
-
-            using var semaphore = new SemaphoreSlim(3);
-            var seasonTasks = new List<Task>();
-            foreach (var season in teamSeasons)
+            foreach (var league in _leagues)
             {
-                await semaphore.WaitAsync();
-                var task = Task.Run(async () =>
+                var teamSeasons = await _seasonScrapper.GetSeasons(league, session);
+
+                using var semaphore = new SemaphoreSlim(3);
+                var seasonTasks = new List<Task>();
+                foreach (var season in teamSeasons)
                 {
-                    try
+                    await semaphore.WaitAsync();
+                    var task = Task.Run(async () =>
                     {
-                        Console.WriteLine($"Processing season: {season.StartYear}-{season.EndYear}");
-                        var seasonDirectoryPath = Path.Combine("Files", "Seasons", "Teams", $"{season.StartYear}-{season.EndYear}");
-                        if (IsSeasonAlreadyProcessed(seasonDirectoryPath))
+                        try
                         {
-                            Console.WriteLine($"Season {season.StartYear}-{season.EndYear} is already processed. Skipping.");
-                            return;
+                            Console.WriteLine($"Processing season: {season.StartYear}-{season.EndYear}");
+                            var seasonDirectoryPath = Path.Combine("Files", "Seasons", "Teams", $"{season.StartYear}-{season.EndYear}");
+                            if (IsSeasonAlreadyProcessed(seasonDirectoryPath))
+                            {
+                                Console.WriteLine($"Season {season.StartYear}-{season.EndYear} is already processed. Skipping.");
+                                return;
+                            }
+
+                            TryCreateSeasonDirectory(seasonDirectoryPath);
+
+                            var teamInformationList = await _teamScrapper.GetTeamDataAsync(season.Url, session);
+                            foreach (var teamInformation in teamInformationList)
+                            {
+                                Console.WriteLine($"Processing team: {teamInformation.Name} in season: {season.StartYear}-{season.EndYear}");
+                                WriteTeamInformationToCsv(teamInformation, seasonDirectoryPath);
+                                Console.WriteLine($"Processed team: {teamInformation.Name} in season: {season.StartYear}-{season.EndYear}");
+                            }
+
+                            SaveProcessedSeason(seasonDirectoryPath);
+                            Console.WriteLine($"Finished processing season: {season.StartYear}-{season.EndYear}");
                         }
-
-                        TryCreateSeasonDirectory(seasonDirectoryPath);
-
-                        var teamInformationList = await _teamScrapper.GetTeamDataAsync(season.Url, session);
-                        foreach (var teamInformation in teamInformationList)
+                        finally
                         {
-                            Console.WriteLine($"Processing team: {teamInformation.Name} in season: {season.StartYear}-{season.EndYear}");
-                            WriteTeamInformationToCsv(teamInformation, seasonDirectoryPath);
-                            Console.WriteLine($"Processed team: {teamInformation.Name} in season: {season.StartYear}-{season.EndYear}");
+                            semaphore.Release();
                         }
+                    });
+                    seasonTasks.Add(task);
+                }
 
-                        SaveProcessedSeason(seasonDirectoryPath);
-                        Console.WriteLine($"Finished processing season: {season.StartYear}-{season.EndYear}");
-                    }
-                    finally
-                    {
-                        semaphore.Release();
-                    }
-                });
-                seasonTasks.Add(task);
+                await Task.WhenAll(seasonTasks);
             }
-
-            await Task.WhenAll(seasonTasks);
         }
 
         private static bool IsSeasonAlreadyProcessed(string seasonDirectoryPath)

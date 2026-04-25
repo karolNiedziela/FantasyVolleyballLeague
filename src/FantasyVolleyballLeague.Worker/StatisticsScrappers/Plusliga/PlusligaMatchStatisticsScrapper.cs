@@ -9,14 +9,14 @@ namespace FantasyVolleyballLeague.Worker.StatisticsScrappers.Plusliga
 {
     public sealed class PlusligaMatchStatisticsScrapper : IMatchStatisticsScrapper
     {
-        public async Task<MatchRecord?> GetMatchStatisticsAsync(int matchId, PlaywrightSession session)
+        public async Task<MatchRecord?> GetMatchStatisticsAsync(int matchId, string matchDetailsBaseUrl, PlaywrightSession session)
         {
             var context = session.Context;
             var page = await context.NewPageAsync();
 
             try
             {
-                await page.GotoAsync($"{UrlConstants.PlusLigaMatchDetailsUrl}{matchId}.html");
+                await page.GotoAsync($"{matchDetailsBaseUrl}{matchId}.html");
 
                 var html = await page.ContentAsync();
                 var doc = new HtmlDocument();

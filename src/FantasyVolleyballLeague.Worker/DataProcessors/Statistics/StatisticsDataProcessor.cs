@@ -18,77 +18,90 @@ namespace FantasyVolleyballLeague.Worker.DataProcessors.Statistics
         private readonly ISeasonScrapper _seasonScrapper;
         private readonly ISeasonMatchScrapper _seasonMatchScrapper;
         private readonly PlaywrightFactory _playwrightFactory;
+        private readonly IReadOnlyList<LeagueOptions> _leagues;
 
-        public StatisticsDataProcessor(ISeasonScrapper seasonScrapper, ISeasonMatchScrapper seasonMatchScrapper, PlaywrightFactory playwrightFactory)
+        public StatisticsDataProcessor(
+            ISeasonScrapper seasonScrapper,
+            ISeasonMatchScrapper seasonMatchScrapper,
+            PlaywrightFactory playwrightFactory,
+            IReadOnlyList<LeagueOptions> leagues)
         {
             _seasonScrapper = seasonScrapper;
             _seasonMatchScrapper = seasonMatchScrapper;
             _playwrightFactory = playwrightFactory;
+            _leagues = leagues;
         }
 
         public async Task AcquireAndSaveAsync()
         {
             await using var session = await _playwrightFactory.SetupBrowserContextAsync();
 
-            var seasons = await _seasonScrapper.GetSeasons(new Uri(UrlConstants.PlusLigaGames), session);
-
-            foreach (var season in seasons)
+            foreach (var league in _leagues)
             {
-                Console.WriteLine($"Processing season: {season.StartYear}-{season.EndYear}");
-                var seasonDirectoryPath = Path.Combine("Files", "Seasons", "Matches", $"{season.StartYear}-{season.EndYear}");
-                if (IsAlreadyProcessed(seasonDirectoryPath))
+                
+                Console.WriteLine($"Processing league: {league.Name}");
+                var seasons = await _seasonScrapper.GetSeasons(league, session);
+
+                foreach (var season in seasons)
                 {
-                    Console.WriteLine($"Season {season.StartYear}-{season.EndYear} is already processed. Skipping.");
-                    continue;
-                }
-
-                TryCreateDirectory(seasonDirectoryPath);
-
-                var page = await session.Context.NewPageAsync();
-                await page.GotoAsync(season.Url.AbsoluteUri);
-
-                var allPhases = await _seasonMatchScrapper.GetAllPhasesMatchStatisticsAsync(page, session);
-                await page.CloseAsync();
-
-                if (allPhases.Count == 0)
-                {
-                    Console.WriteLine($"No data found for season: {season.StartYear}-{season.EndYear}. Skipping.");
-                    continue;
-                }
-
-                foreach (var phase in allPhases)
-                {
-                    var phaseDirectoryPath = Path.Combine(seasonDirectoryPath, SanitizeDirectoryName(phase.PhaseName));
-                    TryCreateDirectory(phaseDirectoryPath);
-
-                    var hasMultipleStages = phase.Stages.Count > 1;
-
-                    foreach (var stage in phase.Stages)
+                    Console.WriteLine($"Processing season: {season.StartYear}-{season.EndYear}");
+                    var seasonDirectoryPath = Path.Combine("Files", "Seasons", "Matches", league.Name, $"{season.StartYear}-{season.EndYear}");
+                    if (IsAlreadyProcessed(seasonDirectoryPath))
                     {
-                        var stageDirectoryPath = hasMultipleStages
-                            ? Path.Combine(phaseDirectoryPath, SanitizeDirectoryName(stage.StageName))
-                            : phaseDirectoryPath;
-
-                        if (hasMultipleStages)
-                        {
-                            TryCreateDirectory(stageDirectoryPath);
-                        }
-
-                        foreach (var round in stage.Rounds)
-                        {
-                            var roundLabel = round.RoundName ?? round.RoundNumber.ToString(CultureInfo.InvariantCulture);
-                            Console.WriteLine($"Processing phase: {phase.PhaseName}, stage: {stage.StageName}, round: {roundLabel} in season: {season.StartYear}-{season.EndYear}");
-                            WriteRoundStatisticsToJson(round, stageDirectoryPath);
-                            Console.WriteLine($"Processed phase: {phase.PhaseName}, stage: {stage.StageName}, round: {roundLabel} in season: {season.StartYear}-{season.EndYear}");
-                        }
+                        Console.WriteLine($"Season {season.StartYear}-{season.EndYear} is already processed. Skipping.");
+                        continue;
                     }
 
-                    SaveProcessedFile(phaseDirectoryPath);
+                    TryCreateDirectory(seasonDirectoryPath);
+
+                    var page = await session.Context.NewPageAsync();
+                    await page.GotoAsync(season.Url.AbsoluteUri);
+
+                    var allPhases = await _seasonMatchScrapper.GetAllPhasesMatchStatisticsAsync(page, session, league.MatchDetailsBaseUrl);
+                    await page.CloseAsync();
+
+                    if (allPhases.Count == 0)
+                    {
+                        Console.WriteLine($"No data found for season: {season.StartYear}-{season.EndYear}. Skipping.");
+                        continue;
+                    }
+
+                    foreach (var phase in allPhases)
+                    {
+                        var phaseDirectoryPath = Path.Combine(seasonDirectoryPath, SanitizeDirectoryName(phase.PhaseName));
+                        TryCreateDirectory(phaseDirectoryPath);
+
+                        var hasMultipleStages = phase.Stages.Count > 1;
+
+                        foreach (var stage in phase.Stages)
+                        {
+                            var stageDirectoryPath = hasMultipleStages
+                                ? Path.Combine(phaseDirectoryPath, SanitizeDirectoryName(stage.StageName))
+                                : phaseDirectoryPath;
+
+                            if (hasMultipleStages)
+                            {
+                                TryCreateDirectory(stageDirectoryPath);
+                            }
+
+                            foreach (var round in stage.Rounds)
+                            {
+                                var roundLabel = round.RoundName ?? round.RoundNumber.ToString(CultureInfo.InvariantCulture);
+                                Console.WriteLine($"Processing phase: {phase.PhaseName}, stage: {stage.StageName}, round: {roundLabel} in season: {season.StartYear}-{season.EndYear}");
+                                WriteRoundStatisticsToJson(round, stageDirectoryPath);
+                                Console.WriteLine($"Processed phase: {phase.PhaseName}, stage: {stage.StageName}, round: {roundLabel} in season: {season.StartYear}-{season.EndYear}");
+                            }
+                        }
+
+                        SaveProcessedFile(phaseDirectoryPath);
+                    }
+
+                    SaveProcessedFile(seasonDirectoryPath);
+
+                    Console.WriteLine($"Finished processing season: {season.StartYear}-{season.EndYear}");
                 }
 
-                SaveProcessedFile(seasonDirectoryPath);
-
-                Console.WriteLine($"Finished processing season: {season.StartYear}-{season.EndYear}");
+                Console.WriteLine($"Finished processing league: {league.Name}");
             }
         }
 

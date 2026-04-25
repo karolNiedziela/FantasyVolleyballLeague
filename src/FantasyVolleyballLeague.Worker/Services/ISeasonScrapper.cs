@@ -7,6 +7,6 @@ namespace FantasyVolleyballLeague.Worker.Services
         /// <param name="session">
         /// Optional shared session. If null, a new browser session is created and disposed internally.
         /// </param>
-        Task<IEnumerable<SeasonInformation>> GetSeasons(Uri pageUrl, PlaywrightSession? session = null);
+        Task<IEnumerable<SeasonInformation>> GetSeasons(LeagueOptions leagueOptions, PlaywrightSession? session = null);
     }
 }

@@ -12,7 +12,7 @@ namespace FantasyVolleyballLeague.Worker.Services
             _playwrightFactory = playwrightFactory;
         }
 
-        public async Task<IEnumerable<SeasonInformation>> GetSeasons(Uri pageUrl, PlaywrightSession? session = null)
+        public async Task<IEnumerable<SeasonInformation>> GetSeasons(LeagueOptions leagueOptions, PlaywrightSession? session = null)
         {
             await using var ownedSession = session is null
                 ? await _playwrightFactory.SetupBrowserContextAsync()
@@ -20,7 +20,7 @@ namespace FantasyVolleyballLeague.Worker.Services
             var activeSession = session ?? ownedSession!;
 
             var page = await activeSession.Context.NewPageAsync();
-            await page.GotoAsync(pageUrl.AbsoluteUri);
+            await page.GotoAsync(new Uri(leagueOptions.GamesUrl).AbsoluteUri);
 
             var html = await page.ContentAsync();
             await page.CloseAsync();
@@ -35,7 +35,7 @@ namespace FantasyVolleyballLeague.Worker.Services
                 var parts = seasonYears.Split('/');
                 var startYear = int.Parse(parts[0]);
                 var endYear= int.Parse(parts[1]);
-                var url = new Uri(UrlConstants.PlusLiga + season.Href);
+                var url = new Uri(leagueOptions.Url + season.Href);
 
                 seasonInformationList.Add(new SeasonInformation(season.Name, startYear, endYear, url));
             }

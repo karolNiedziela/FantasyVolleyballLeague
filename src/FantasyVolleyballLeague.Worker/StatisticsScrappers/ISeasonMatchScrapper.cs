@@ -6,6 +6,6 @@ namespace FantasyVolleyballLeague.Worker.StatisticsScrappers
     public interface ISeasonMatchScrapper
     {
         Task<IReadOnlyList<SeasonPhaseStatistics>> GetAllPhasesMatchStatisticsAsync(
-            IPage page, PlaywrightSession session);
+            IPage page, PlaywrightSession session, string matchDetailsBaseUrl);
     }
 }

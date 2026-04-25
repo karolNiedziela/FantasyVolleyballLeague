@@ -22,6 +22,9 @@ serviceCollection.AddOptions<PlaywrightOptions>()
     .Configure(options => config.GetSection(PlaywrightOptions.SectionName).Bind(options));
 serviceCollection.AddScoped<PlaywrightFactory>();
 
+var leagues = config.GetSection(LeagueOptions.SectionName).Get<List<LeagueOptions>>() ?? [];
+serviceCollection.AddSingleton<IReadOnlyList<LeagueOptions>>(leagues);
+
 serviceCollection.AddScoped<IMatchStatisticsScrapper, PlusligaMatchStatisticsScrapper>();
 serviceCollection.AddScoped<ISeasonMatchScrapper, PlusligaSeasonMatchScrapper>();
 serviceCollection.AddScoped<ITeamScrapper, PlusligaTeamScrapper>();
@@ -36,7 +39,7 @@ var seasonScrapper = serviceProvider.GetRequiredService<ISeasonScrapper>();
 var teamDataProcessor = serviceProvider.GetRequiredService<ITeamDataProcessor>();
 var statisticsDataProcessor = serviceProvider.GetRequiredService<IStatisticsDataProcessor>();
 
-//await teamDataProcessor.AcquireAndSaveAsync();
-await statisticsDataProcessor.AcquireAndSaveAsync();
+await teamDataProcessor.AcquireAndSaveAsync();
+//await statisticsDataProcessor.AcquireAndSaveAsync();
 
 Console.ReadKey();

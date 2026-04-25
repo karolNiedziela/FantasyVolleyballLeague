@@ -8,7 +8,7 @@ namespace FantasyVolleyballLeague.Worker.StatisticsScrappers.Plusliga
 {
     public sealed class PlusligaSeasonMatchScrapper : ISeasonMatchScrapper
     {
-        private const int MaxConcurrentMatches = 1;
+        private const int MaxConcurrentMatches = 5;
 
         private readonly IMatchStatisticsScrapper _matchStatisticsScrapper;
 
@@ -18,7 +18,7 @@ namespace FantasyVolleyballLeague.Worker.StatisticsScrappers.Plusliga
         }
 
         public async Task<IReadOnlyList<SeasonPhaseStatistics>> GetAllPhasesMatchStatisticsAsync(
-            IPage page, PlaywrightSession session)
+            IPage page, PlaywrightSession session, string matchDetailsBaseUrl)
         {
             var html = await page.ContentAsync();
             var document = new HtmlDocument();
@@ -78,12 +78,12 @@ namespace FantasyVolleyballLeague.Worker.StatisticsScrappers.Plusliga
 
                 if (termFilterType == FilterListTypes.Round)
                 {
-                    stages = await ScrapeRoundThenTermsAsync(page, session, currentDocument, dataPhase);
+                    stages = await ScrapeRoundThenTermsAsync(page, session, currentDocument, dataPhase, matchDetailsBaseUrl);
                 }
                 else
                 {
                     var stageName = GetVisibleStageName(currentDocument, dataPhase);
-                    var rounds = await ScrapeTermRoundsAsync(page, session, currentDocument, termFilterType, dataPhase);
+                    var rounds = await ScrapeTermRoundsAsync(page, session, currentDocument, termFilterType, dataPhase, matchDetailsBaseUrl);
                     stages = rounds.Count > 0 ? [new SeasonPhaseStage(1, stageName, rounds)] : [];
                 }
 
@@ -97,7 +97,7 @@ namespace FantasyVolleyballLeague.Worker.StatisticsScrappers.Plusliga
         }
 
         private async Task<List<SeasonPhaseStage>> ScrapeRoundThenTermsAsync(
-            IPage page, PlaywrightSession session, HtmlDocument document, string dataPhase)
+            IPage page, PlaywrightSession session, HtmlDocument document, string dataPhase, string matchDetailsBaseUrl)
         {
             var stages = new List<SeasonPhaseStage>();
             var roundValues = GetFilterValues(document, PlusligaSeasonMatchScrapperConstants.FilterListTypes.Round, dataPhase);
@@ -113,10 +113,10 @@ namespace FantasyVolleyballLeague.Worker.StatisticsScrappers.Plusliga
                 roundDocument.LoadHtml(roundHtml);
 
                 var stageName = GetVisibleStageName(roundDocument, dataPhase);
-                var termRounds = await ScrapeTermRoundsAsync(page, session, roundDocument, PlusligaSeasonMatchScrapperConstants.FilterListTypes.Term, dataPhase);
+                var termRounds = await ScrapeTermRoundsAsync(page, session, roundDocument, PlusligaSeasonMatchScrapperConstants.FilterListTypes.Term, dataPhase, matchDetailsBaseUrl);
                 if (termRounds.Count == 0)
                 {
-                    termRounds = await ScrapeWithoutTermsAsync(page, session, roundDocument, dataPhase);
+                    termRounds = await ScrapeWithoutTermsAsync(page, session, roundDocument, dataPhase, matchDetailsBaseUrl);
                 }
 
                 if (termRounds.Count > 0)
@@ -129,14 +129,14 @@ namespace FantasyVolleyballLeague.Worker.StatisticsScrappers.Plusliga
         }
 
         private async Task<List<SeasonPhaseRound>> ScrapeTermRoundsAsync(
-            IPage page, PlaywrightSession session, HtmlDocument document, string filterListType, string dataPhase)
+            IPage page, PlaywrightSession session, HtmlDocument document, string filterListType, string dataPhase, string matchDetailsBaseUrl)
         {
             var rounds = new List<SeasonPhaseRound>();
             var filterValues = GetFilterValues(document, filterListType, dataPhase);
 
             if (filterValues.Count == 0)
             {
-                var termRounds = await ScrapeWithoutTermsAsync(page, session, document, dataPhase);
+                var termRounds = await ScrapeWithoutTermsAsync(page, session, document, dataPhase, matchDetailsBaseUrl);
                 return termRounds;
             }
 
@@ -160,7 +160,7 @@ namespace FantasyVolleyballLeague.Worker.StatisticsScrappers.Plusliga
                     continue;
                 }
 
-                var matches = await ProcessMatchIdsAsync(session, matchIds);
+                var matches = await ProcessMatchIdsAsync(session, matchIds, matchDetailsBaseUrl);
                 Console.WriteLine($"Term {filterValue}: {matches.Count} matches scraped.");
                 if (matches.Count > 0)
                 {
@@ -171,7 +171,7 @@ namespace FantasyVolleyballLeague.Worker.StatisticsScrappers.Plusliga
             return rounds;
         }
 
-        private async Task<List<SeasonPhaseRound>> ScrapeWithoutTermsAsync(IPage page, PlaywrightSession session, HtmlDocument document, string dataPhase)
+        private async Task<List<SeasonPhaseRound>> ScrapeWithoutTermsAsync(IPage page, PlaywrightSession session, HtmlDocument document, string dataPhase, string matchDetailsBaseUrl)
         {
             var rounds = new List<SeasonPhaseRound>();
 
@@ -182,7 +182,7 @@ namespace FantasyVolleyballLeague.Worker.StatisticsScrappers.Plusliga
                 return rounds;
             }
 
-            var matches = await ProcessMatchIdsAsync(session, matchIds);
+            var matches = await ProcessMatchIdsAsync(session, matchIds, matchDetailsBaseUrl);
             Console.WriteLine($"{matches.Count} matches scraped.");
 
             if (matches.Count > 0)
@@ -284,7 +284,7 @@ namespace FantasyVolleyballLeague.Worker.StatisticsScrappers.Plusliga
         }
 
         private async Task<List<MatchRecord>> ProcessMatchIdsAsync(
-            PlaywrightSession session, List<int> matchIds)
+            PlaywrightSession session, List<int> matchIds, string matchDetailsBaseUrl)
         {
             if (matchIds.Count == 0)
             {
@@ -298,7 +298,7 @@ namespace FantasyVolleyballLeague.Worker.StatisticsScrappers.Plusliga
                 await semaphore.WaitAsync();
                 try
                 {
-                    return await _matchStatisticsScrapper.GetMatchStatisticsAsync(matchId, session);
+                    return await _matchStatisticsScrapper.GetMatchStatisticsAsync(matchId, matchDetailsBaseUrl, session);
                 }
 #pragma warning disable CA1031
                 catch (Exception ex)
