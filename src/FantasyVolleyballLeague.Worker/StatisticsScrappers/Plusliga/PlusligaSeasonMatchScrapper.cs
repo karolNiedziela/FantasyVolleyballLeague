@@ -8,7 +8,7 @@ namespace FantasyVolleyballLeague.Worker.StatisticsScrappers.Plusliga
 {
     public sealed class PlusligaSeasonMatchScrapper : ISeasonMatchScrapper
     {
-        private const int MaxConcurrentMatches = 3;
+        private const int MaxConcurrentMatches = 1;
 
         private readonly IMatchStatisticsScrapper _matchStatisticsScrapper;
 
@@ -38,41 +38,52 @@ namespace FantasyVolleyballLeague.Worker.StatisticsScrappers.Plusliga
             foreach (var button in phaseButtons)
             {
                 var phaseName = button.InnerText.Trim();
-                var dataPhase = button.GetAttributeValue(PlusligaSeasonMatchScrapperConstants.Attributes.FilterValue, "");
+                var dataPhase = button.GetAttributeValue(Attributes.FilterValue, "");
 
                 Console.WriteLine($"Processing phase: {phaseName}");
 
-                try
-                {
-                    await page.Locator($"button[{PlusligaSeasonMatchScrapperConstants.Attributes.FilterValue}='{dataPhase}']").ClickAsync();
-                }
-                catch (TimeoutException)
-                {
-                    Console.WriteLine($"Button with filter '{dataPhase}' was not found in time. Skipping phase.");
-                    continue;
-                }
+                var currentHtml = await page.ContentAsync();
+                var currentDocument = new HtmlDocument();
+                currentDocument.LoadHtml(currentHtml);
 
-                var updatedHtml = await page.ContentAsync();
-                var updatedDocument = new HtmlDocument();
-                updatedDocument.LoadHtml(updatedHtml);
+                var termFilterType = GetVisibleFilterListType(currentDocument, dataPhase);
 
-                var termFilterType = GetVisibleFilterListType(updatedDocument, dataPhase);
                 if (termFilterType is null)
                 {
-                    Console.WriteLine($"No visible filter list type found for phase {phaseName}. Skipping.");
-                    continue;
+                    try
+                    {
+                        await page.Locator(
+                            $"div[{Attributes.FilterListType}='{FilterListTypes.Phase}'] " +
+                            $"button[{Attributes.FilterValue}='{dataPhase}']").ClickAsync();
+                    }
+                    catch (TimeoutException)
+                    {
+                        Console.WriteLine($"Button with filter '{dataPhase}' was not found in time. Skipping phase.");
+                        continue;
+                    }
+
+                    currentHtml = await page.ContentAsync();
+                    currentDocument = new HtmlDocument();
+                    currentDocument.LoadHtml(currentHtml);
+
+                    termFilterType = GetVisibleFilterListType(currentDocument, dataPhase);
+                    if (termFilterType is null)
+                    {
+                        Console.WriteLine($"No visible filter list type found for phase {phaseName}. Skipping.");
+                        continue;
+                    }
                 }
 
                 List<SeasonPhaseStage> stages;
 
-                if (termFilterType == PlusligaSeasonMatchScrapperConstants.FilterListTypes.Round)
+                if (termFilterType == FilterListTypes.Round)
                 {
-                    stages = await ScrapeRoundThenTermsAsync(page, session, updatedDocument, dataPhase);
+                    stages = await ScrapeRoundThenTermsAsync(page, session, currentDocument, dataPhase);
                 }
                 else
                 {
-                    var stageName = GetVisibleStageName(updatedDocument, dataPhase);
-                    var rounds = await ScrapeTermRoundsAsync(page, session, updatedDocument, termFilterType, dataPhase);
+                    var stageName = GetVisibleStageName(currentDocument, dataPhase);
+                    var rounds = await ScrapeTermRoundsAsync(page, session, currentDocument, termFilterType, dataPhase);
                     stages = rounds.Count > 0 ? [new SeasonPhaseStage(1, stageName, rounds)] : [];
                 }
 
@@ -94,9 +105,9 @@ namespace FantasyVolleyballLeague.Worker.StatisticsScrappers.Plusliga
             foreach (var roundValue in roundValues)
             {
                 await page.Locator(
-                    $"div[{PlusligaSeasonMatchScrapperConstants.Attributes.FilterListType}='{PlusligaSeasonMatchScrapperConstants.FilterListTypes.Round}']" +
-                    $"[{PlusligaSeasonMatchScrapperConstants.Attributes.Phase}='{dataPhase}'] " +
-                    $"button[{PlusligaSeasonMatchScrapperConstants.Attributes.FilterValue}='{roundValue}']").ClickAsync();
+                    $"div[{Attributes.FilterListType}='{FilterListTypes.Round}']" +
+                    $"[{Attributes.Phase}='{dataPhase}']:visible " +
+                    $"button[{Attributes.FilterValue}='{roundValue}']").ClickAsync();
                 var roundHtml = await page.ContentAsync();
                 var roundDocument = new HtmlDocument();
                 roundDocument.LoadHtml(roundHtml);
@@ -122,13 +133,19 @@ namespace FantasyVolleyballLeague.Worker.StatisticsScrappers.Plusliga
         {
             var rounds = new List<SeasonPhaseRound>();
             var filterValues = GetFilterValues(document, filterListType, dataPhase);
-         
+
+            if (filterValues.Count == 0)
+            {
+                var termRounds = await ScrapeWithoutTermsAsync(page, session, document, dataPhase);
+                return termRounds;
+            }
+
             foreach (var filterValue in filterValues)
             {
                 await page.Locator(
-                    $"div[{PlusligaSeasonMatchScrapperConstants.Attributes.FilterListType}='{filterListType}']" +
-                    $"[{PlusligaSeasonMatchScrapperConstants.Attributes.Phase}='{dataPhase}'] " +
-                    $"button[{PlusligaSeasonMatchScrapperConstants.Attributes.FilterValue}='{filterValue}']").ClickAsync();
+                    $"div[{Attributes.FilterListType}='{filterListType}']" +
+                    $"[{Attributes.Phase}='{dataPhase}']:visible " +
+                    $"button[{Attributes.FilterValue}='{filterValue}']").ClickAsync();
                 var termHtml = await page.ContentAsync();
                 var termDocument = new HtmlDocument();
                 termDocument.LoadHtml(termHtml);

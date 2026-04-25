@@ -86,6 +86,8 @@ namespace FantasyVolleyballLeague.Worker.DataProcessors.Statistics
                     SaveProcessedFile(phaseDirectoryPath);
                 }
 
+                SaveProcessedFile(seasonDirectoryPath);
+
                 Console.WriteLine($"Finished processing season: {season.StartYear}-{season.EndYear}");
             }
         }
@@ -96,7 +98,7 @@ namespace FantasyVolleyballLeague.Worker.DataProcessors.Statistics
         private static bool IsAlreadyProcessed(string directoryPath)
         {
             var processedFilePath = Path.Combine(directoryPath, "processed.txt");
-            return File.Exists(processedFilePath) && new DirectoryInfo(directoryPath).GetFiles().Length > 0;
+            return File.Exists(processedFilePath);
         }
 
         private static void TryCreateDirectory(string directoryPath)
