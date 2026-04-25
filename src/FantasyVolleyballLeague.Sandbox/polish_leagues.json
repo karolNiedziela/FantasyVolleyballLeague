@@ -1,0 +1,25 @@
+{
+  "Leagues": [
+    {
+      "Name": "PlusLiga",
+      "GamesUrl": "https://www.plusliga.pl/games.html",
+      "MatchDetailsBaseUrl": "https://www.plusliga.pl/games/action/show/id/",
+      "Url": "https://www.plusliga.pl",
+      "TeamsUrl": "https://www.plusliga.pl/teams.html"
+    },
+    {
+      "Name": "TauronLiga",
+      "GamesUrl": "https://www.tauronliga.pl/games.html",
+      "MatchDetailsBaseUrl": "https://www.tauronliga.pl/games/action/show/id/",
+      "Url": "https://www.tauronliga.pl",
+      "TeamsUrl": "https://www.tauronliga.pl/teams.html"
+    },
+    {
+      "Name": "PLS1Liga",
+      "GamesUrl": "https://www.pls1liga.pl/games.html",
+      "MatchDetailsBaseUrl": "https://www.pls1liga.pl/games/action/show/id/",
+      "Url": "https://www.pls1liga.pl",
+      "TeamsUrl": "https://www.pls1liga.pl/teams.html"
+    }
+  ]
+}

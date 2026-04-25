@@ -40,7 +40,7 @@ namespace FantasyVolleyballLeague.Worker.DataProcessors.Statistics
             {
                 
                 Console.WriteLine($"Processing league: {league.Name}");
-                var seasons = await _seasonScrapper.GetSeasons(league, session);
+                var seasons = await _seasonScrapper.GetSeasonsAsync(league, session);
 
                 foreach (var season in seasons)
                 {

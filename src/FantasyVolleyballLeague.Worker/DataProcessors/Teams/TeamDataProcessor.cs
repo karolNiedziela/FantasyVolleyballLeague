@@ -1,4 +1,5 @@
-﻿using CsvHelper;
+﻿using System.Text.Encodings.Web;
+using System.Text.Json;
 using FantasyVolleyballLeague.Worker.Services;
 using FantasyVolleyballLeague.Worker.TeamScrappers;
 using FantasyVolleyballLeague.Worker.TeamScrappers.Models;
@@ -7,6 +8,12 @@ namespace FantasyVolleyballLeague.Worker.DataProcessors.Teams
 {
     public sealed class TeamDataProcessor : ITeamDataProcessor
     {
+        private static readonly JsonSerializerOptions JsonOptions = new()
+        {
+            WriteIndented = true,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
+
         private readonly ISeasonScrapper _seasonScrapper;
         private readonly ITeamScrapper _teamScrapper;
         private readonly PlaywrightFactory _playwrightFactory;
@@ -22,65 +29,45 @@ namespace FantasyVolleyballLeague.Worker.DataProcessors.Teams
 
         public async Task AcquireAndSaveAsync()
         {
-            // One shared session for the entire run: season listing + all team/player pages.
-            // Pages within a context are independent, so concurrent season tasks share safely.
             await using var session = await _playwrightFactory.SetupBrowserContextAsync();
 
             foreach (var league in _leagues)
             {
-                var teamSeasons = await _seasonScrapper.GetSeasons(league, session);
+                var teamSeasons = await _seasonScrapper.GetTeamSeasonsAsync(league, session);
 
-                using var semaphore = new SemaphoreSlim(3);
-                var seasonTasks = new List<Task>();
                 foreach (var season in teamSeasons)
                 {
-                    await semaphore.WaitAsync();
-                    var task = Task.Run(async () =>
+                    Console.WriteLine($"Processing season: {season.StartYear}-{season.EndYear}");
+                    var seasonDirectoryPath = Path.Combine("Files", "Seasons", "Teams", league.Name, $"{season.StartYear}-{season.EndYear}");
+                    if (IsAlreadyProcessed(seasonDirectoryPath))
                     {
-                        try
-                        {
-                            Console.WriteLine($"Processing season: {season.StartYear}-{season.EndYear}");
-                            var seasonDirectoryPath = Path.Combine("Files", "Seasons", "Teams", $"{season.StartYear}-{season.EndYear}");
-                            if (IsSeasonAlreadyProcessed(seasonDirectoryPath))
-                            {
-                                Console.WriteLine($"Season {season.StartYear}-{season.EndYear} is already processed. Skipping.");
-                                return;
-                            }
+                        Console.WriteLine($"Season {season.StartYear}-{season.EndYear} is already processed. Skipping.");
+                        continue;
+                    }
 
-                            TryCreateSeasonDirectory(seasonDirectoryPath);
+                    TryCreateDirectory(seasonDirectoryPath);
 
-                            var teamInformationList = await _teamScrapper.GetTeamDataAsync(season.Url, session);
-                            foreach (var teamInformation in teamInformationList)
-                            {
-                                Console.WriteLine($"Processing team: {teamInformation.Name} in season: {season.StartYear}-{season.EndYear}");
-                                WriteTeamInformationToCsv(teamInformation, seasonDirectoryPath);
-                                Console.WriteLine($"Processed team: {teamInformation.Name} in season: {season.StartYear}-{season.EndYear}");
-                            }
+                    var rosters = await _teamScrapper.GetTeamRosterAsync(season.Url, league.Url, session);
+                    foreach (var roster in rosters)
+                    {
+                        Console.WriteLine($"Processing team: {roster.Name} in season: {season.StartYear}-{season.EndYear}");
+                        WriteRosterToJson(roster, seasonDirectoryPath);
+                        Console.WriteLine($"Processed team: {roster.Name} in season: {season.StartYear}-{season.EndYear}");
+                    }
 
-                            SaveProcessedSeason(seasonDirectoryPath);
-                            Console.WriteLine($"Finished processing season: {season.StartYear}-{season.EndYear}");
-                        }
-                        finally
-                        {
-                            semaphore.Release();
-                        }
-                    });
-                    seasonTasks.Add(task);
+                    SaveProcessedFile(seasonDirectoryPath);
+                    Console.WriteLine($"Finished processing season: {season.StartYear}-{season.EndYear}");
                 }
-
-                await Task.WhenAll(seasonTasks);
             }
         }
 
-        private static bool IsSeasonAlreadyProcessed(string seasonDirectoryPath)
+        private static bool IsAlreadyProcessed(string directoryPath)
         {
-            var processedFileName = "processed.txt";
-            var processedFilePath = Path.Combine(seasonDirectoryPath, processedFileName);
-
-            return File.Exists(processedFilePath) && new DirectoryInfo(seasonDirectoryPath).GetFiles().Length > 0;
+            var processedFilePath = Path.Combine(directoryPath, "processed.txt");
+            return File.Exists(processedFilePath);
         }
 
-        private static void TryCreateSeasonDirectory(string directoryPath)
+        private static void TryCreateDirectory(string directoryPath)
         {
             if (!Directory.Exists(directoryPath))
             {
@@ -88,30 +75,21 @@ namespace FantasyVolleyballLeague.Worker.DataProcessors.Teams
             }
         }
 
-        private static void SaveProcessedSeason(string seasonDirectoryPath)
+        private static void SaveProcessedFile(string directoryPath)
         {
-            var processedFileName = "processed.txt";
-            var processedFilePath = Path.Combine(seasonDirectoryPath, processedFileName);
+            var processedFilePath = Path.Combine(directoryPath, "processed.txt");
             File.Create(processedFilePath).Dispose();
         }
 
-        private static void WriteTeamInformationToCsv(TeamInformation teamInformation, string seasonDirectoryPath)
+        private static void WriteRosterToJson(TeamRoster roster, string seasonDirectoryPath)
         {
-            var teamDirectoryFilePath = Path.Combine(seasonDirectoryPath, $"{teamInformation.Name}.csv");
-            if (File.Exists(teamDirectoryFilePath))
+            var filePath = Path.Combine(seasonDirectoryPath, $"{roster.Name}.json");
+            if (File.Exists(filePath))
             {
                 return;
             }
 
-            var csvConfiguration = new CsvHelper.Configuration.CsvConfiguration(System.Globalization.CultureInfo.InvariantCulture)
-            {
-                HasHeaderRecord = true,
-                Delimiter = ";",
-            };
-            using var writer = new StreamWriter(teamDirectoryFilePath);
-            using var csv = new CsvWriter(writer, csvConfiguration);
-            var players = teamInformation.Players.ToList();
-            csv.WriteRecords(players);
+            File.WriteAllText(filePath, JsonSerializer.Serialize(roster, JsonOptions));
         }
     }
 }

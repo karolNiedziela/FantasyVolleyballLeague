@@ -12,7 +12,7 @@ namespace FantasyVolleyballLeague.Worker.Services
             _playwrightFactory = playwrightFactory;
         }
 
-        public async Task<IEnumerable<SeasonInformation>> GetSeasons(LeagueOptions leagueOptions, PlaywrightSession? session = null)
+        public async Task<IEnumerable<Season>> GetSeasonsAsync(LeagueOptions leagueOptions, PlaywrightSession? session = null)
         {
             await using var ownedSession = session is null
                 ? await _playwrightFactory.SetupBrowserContextAsync()
@@ -28,27 +28,58 @@ namespace FantasyVolleyballLeague.Worker.Services
             var doc = new HtmlDocument();
             doc.LoadHtml(html);
 
-            var seasonInformationList = new List<SeasonInformation>();
-            foreach (var season in GetSeasonBrowserData(doc))
+            var seasons = new List<Season>();
+            foreach (var season in GetSeasonLinks(doc))
             {
                 var seasonYears = season.Name.Split(' ')[1];
                 var parts = seasonYears.Split('/');
                 var startYear = int.Parse(parts[0]);
-                var endYear= int.Parse(parts[1]);
+                var endYear = int.Parse(parts[1]);
                 var url = new Uri(leagueOptions.Url + season.Href);
 
-                seasonInformationList.Add(new SeasonInformation(season.Name, startYear, endYear, url));
+                seasons.Add(new Season(season.Name, startYear, endYear, url));
             }
 
-            return seasonInformationList;
+            return seasons;
         }
 
-        private static List<SeasonBrowserData> GetSeasonBrowserData(HtmlDocument doc)
+        public async Task<IEnumerable<Season>> GetTeamSeasonsAsync(LeagueOptions leagueOptions, PlaywrightSession? session = null)
+        {
+            await using var ownedSession = session is null
+                ? await _playwrightFactory.SetupBrowserContextAsync()
+                : null;
+            var activeSession = session ?? ownedSession!;
+
+            var page = await activeSession.Context.NewPageAsync();
+            await page.GotoAsync(new Uri(leagueOptions.TeamsUrl).AbsoluteUri);
+
+            var html = await page.ContentAsync();
+            await page.CloseAsync();
+
+            var doc = new HtmlDocument();
+            doc.LoadHtml(html);
+
+            var seasons = new List<Season>();
+            foreach (var season in GetSeasonLinks(doc))
+            {
+                var seasonYears = season.Name.Split(' ')[1];
+                var parts = seasonYears.Split('/');
+                var startYear = int.Parse(parts[0]);
+                var endYear = int.Parse(parts[1]);
+                var url = new Uri(leagueOptions.Url + season.Href);
+
+                seasons.Add(new Season(season.Name, startYear, endYear, url));
+            }
+
+            return seasons;
+        }
+
+        private static List<SeasonLink> GetSeasonLinks(HtmlDocument doc)
         {
             return doc.DocumentNode.Descendants("ul")
                 .FirstOrDefault(ul => ul.HasClass("dropdown-menu", "dropdown-menu-select"))
                 ?.Descendants("a")
-                .Select(x => new SeasonBrowserData(
+                .Select(x => new SeasonLink(
                     x.Attributes.First(a => a.Name == "href").Value,
                     x.InnerText.Trim()))
                 .ToList() ?? [];

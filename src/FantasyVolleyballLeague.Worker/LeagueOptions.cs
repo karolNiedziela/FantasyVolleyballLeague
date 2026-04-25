@@ -11,5 +11,7 @@ namespace FantasyVolleyballLeague.Worker
         public string MatchDetailsBaseUrl { get; set; } = string.Empty;
 
         public string Url { get; set; } = string.Empty;
+
+        public string TeamsUrl { get; set; } = string.Empty;
     }
 }

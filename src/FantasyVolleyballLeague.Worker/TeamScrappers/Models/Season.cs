@@ -1,9 +1,8 @@
 ﻿namespace FantasyVolleyballLeague.Worker.TeamScrappers.Models
 {
-    public sealed record SeasonInformation(
+    public sealed record Season(
         string Name,
-        int StartYear, 
-        int EndYear, 
+        int StartYear,
+        int EndYear,
         Uri Url);
-    
 }

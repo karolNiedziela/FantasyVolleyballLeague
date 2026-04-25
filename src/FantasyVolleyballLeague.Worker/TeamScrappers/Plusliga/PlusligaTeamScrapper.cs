@@ -6,6 +6,9 @@ namespace FantasyVolleyballLeague.Worker.TeamScrappers.Plusliga
 {
     public sealed class PlusligaTeamScrapper : ITeamScrapper
     {
+        private const int MaxConcurrentTeams = 2;
+        private const int MaxConcurrentPlayers = 3;
+
         private readonly PlaywrightFactory _playwrightFactory;
 
         public PlusligaTeamScrapper(PlaywrightFactory playwrightFactory)
@@ -13,7 +16,7 @@ namespace FantasyVolleyballLeague.Worker.TeamScrappers.Plusliga
             _playwrightFactory = playwrightFactory;
         }
 
-        public async Task<IEnumerable<TeamInformation>> GetTeamDataAsync(Uri pageUrl, PlaywrightSession? session = null)
+        public async Task<IEnumerable<TeamRoster>> GetTeamRosterAsync(Uri pageUrl, string baseUrl, PlaywrightSession? session = null)
         {
             await using var ownedSession = session is null
                 ? await _playwrightFactory.SetupBrowserContextAsync()
@@ -25,50 +28,51 @@ namespace FantasyVolleyballLeague.Worker.TeamScrappers.Plusliga
 
             await page.GotoAsync(pageUrl.ToString());
 
+            await PlaywrightUtilities.TryClickDenyCookiesAsync(activeSession);
+
             var html = await page.ContentAsync();
-            await page.CloseAsync();
 
             var doc = new HtmlDocument();
             doc.LoadHtml(html);
 
-            return await GetTeamsInformationAsync(context, doc);
+            return await GetRostersAsync(context, doc, baseUrl);
         }
 
-        private async static Task<IEnumerable<TeamInformation>> GetTeamsInformationAsync(IBrowserContext context, HtmlDocument doc)
+        private static async Task<IEnumerable<TeamRoster>> GetRostersAsync(IBrowserContext context, HtmlDocument doc, string baseUrl)
         {
-            var teams = doc.DocumentNode.Descendants("div")
-               .Where(div => div.HasClass("team-box-caption"))
-               .ToList();
-
-            var teamDetailsLinks = teams.Select(team => team.Descendants("a")
-                .FirstOrDefault(a => a.GetAttributeValue("href", string.Empty).Contains("/teams/"))
-                ?.GetAttributeValue("href", string.Empty))
+            var validTeamLinks = doc.DocumentNode.Descendants("div")
+                .Where(div => div.HasClass("team-box-caption"))
+                .Select(team => team.Descendants("a")
+                    .FirstOrDefault(a => a.GetAttributeValue("href", string.Empty).Contains("/teams/"))
+                    ?.GetAttributeValue("href", string.Empty))
+                .Where(link => !string.IsNullOrEmpty(link))
                 .ToList();
 
-            var teamInformationList = new List<TeamInformation>();
-
-            foreach (var teamDetailsLink in teamDetailsLinks)
+            using var semaphore = new SemaphoreSlim(MaxConcurrentTeams);
+            var tasks = validTeamLinks.Select(async link =>
             {
-                Console.WriteLine($"Processing {teamDetailsLink})");
-                if (string.IsNullOrEmpty(teamDetailsLink))
+                await semaphore.WaitAsync();
+                try
                 {
-                    continue;
+                    Console.WriteLine($"Processing {link}");
+                    var roster = await GetRosterAsync(context, link!, baseUrl);
+                    Console.WriteLine($"Processed {link}");
+                    return roster;
                 }
+                finally
+                {
+                    semaphore.Release();
+                }
+            });
 
-                var teamInformation = await GetTeamPlayersAsync(context, teamDetailsLink);
-                teamInformationList.Add(teamInformation);
-
-                Console.WriteLine($"Processed {teamDetailsLink})");
-            }
-
-            return teamInformationList;
+            return [.. await Task.WhenAll(tasks)];
         }
 
-        private static async Task<TeamInformation> GetTeamPlayersAsync(IBrowserContext context, string teamDetailsLinkSuffix)
+        private static async Task<TeamRoster> GetRosterAsync(IBrowserContext context, string teamDetailsLinkSuffix, string baseUrl)
         {
             var page = await context.NewPageAsync();
 
-            await page.GotoAsync($"https://www.plusliga.pl{teamDetailsLinkSuffix}");
+            await page.GotoAsync($"{baseUrl}{teamDetailsLinkSuffix}");
 
             var html = await page.ContentAsync();
 
@@ -82,70 +86,80 @@ namespace FantasyVolleyballLeague.Worker.TeamScrappers.Plusliga
             var teamName = doc.DocumentNode.FindDescendantWithClass("div", "section-background")
                 ?.Descendants("h1").FirstOrDefault()?.InnerText.Trim() ?? string.Empty;
 
-
-            var teamInformation = new TeamInformation
+            var roster = new TeamRoster
             {
                 Name = teamName,
-                Players = await GetPlayersInformationAsync(context, players)
+                Players = await GetPlayersAsync(context, players, baseUrl)
             };
 
             await page.CloseAsync();
 
-            return teamInformation;
+            return roster;
         }
 
-        private static async Task<List<PlayerInformation>> GetPlayersInformationAsync(
-            IBrowserContext context, 
-            List<HtmlNode> players)
+
+        private static async Task<List<PlayerProfile>> GetPlayersAsync(
+            IBrowserContext context,
+            List<HtmlNode> players,
+            string baseUrl)
         {
-            var playerInformationList = new List<PlayerInformation>();
-            foreach (var player in players)
+            var validPlayers = players
+                .Select(player => (
+                    Link: player.Descendants("a")
+                        .FirstOrDefault(a => a.GetAttributeValue("href", string.Empty).Contains("/players/"))?
+                        .GetAttributeValue("href", string.Empty),
+                    FullName: player.Descendants("h3").FirstOrDefault()?.InnerText.Trim() ?? string.Empty))
+                .Where(p => !string.IsNullOrEmpty(p.Link) && !string.IsNullOrEmpty(p.FullName))
+                .ToList();
+
+            using var semaphore = new SemaphoreSlim(MaxConcurrentPlayers);
+            var tasks = validPlayers.Select(async p =>
             {
-                var playerDetailsLink = player.Descendants("a")
-                    .FirstOrDefault(a => a.GetAttributeValue("href", string.Empty).Contains("/players/"))?
-                    .GetAttributeValue("href", string.Empty);
-                
-                var playerFullName = player.Descendants("h3").FirstOrDefault()?.InnerText.Trim() ?? string.Empty;
-                if (string.IsNullOrEmpty(playerDetailsLink) || string.IsNullOrEmpty(playerFullName))
+                await semaphore.WaitAsync();
+                try
                 {
-                    continue;
+                    return await GetPlayerAsync(context, p.FullName, p.Link!, baseUrl);
                 }
-                var playerInformation = await GetSinglePlayerDataAsync(context, playerFullName, playerDetailsLink);
-                playerInformationList.Add(playerInformation);
-            }
-            return playerInformationList;
+                finally
+                {
+                    semaphore.Release();
+                }
+            });
+
+            return [.. await Task.WhenAll(tasks)];
         }
 
-        private static async Task<PlayerInformation> GetSinglePlayerDataAsync(
-            IBrowserContext context, 
+        private static async Task<PlayerProfile> GetPlayerAsync(
+            IBrowserContext context,
             string playerFullName,
-            string playerDetailsLinkSuffix)
+            string playerDetailsLinkSuffix,
+            string baseUrl)
         {
             var page = await context.NewPageAsync();
             Console.WriteLine($"Processing player {playerDetailsLinkSuffix}");
-            await page.GotoAsync($"https://www.plusliga.pl{playerDetailsLinkSuffix}");
+            await page.GotoAsync($"{baseUrl}{playerDetailsLinkSuffix}");
             var html = await page.ContentAsync();
             var doc = new HtmlDocument();
             doc.LoadHtml(html);
-            
+
             var numberDivs = doc.DocumentNode.Descendants("div")
                 .Where(div => div.HasClass("number"))
                 .ToList();
 
             var dateOfBirth = GetNumberDivH3(numberDivs, 0) ?? string.Empty;
-            var position = GetNumberDivH3(numberDivs, 1) ?? string.Empty;
+            var position = PositionMapper.Map(GetNumberDivH3(numberDivs, 1) ?? string.Empty);
             var height = ParseNumberDivInt(numberDivs, 2, "h3");
             var weight = ParseNumberDivInt(numberDivs, 3, "h3");
-            var attackRange = ParseNumberDivInt(numberDivs, 4, "h3");
+            var attackReach = ParseNumberDivInt(numberDivs, 4, "h3");
             var shirtNumber = ParseNumberDivInt(numberDivs, 5, "span");
 
-            var playerInformation = new PlayerInformation(playerFullName, position, dateOfBirth, height, weight, attackRange, shirtNumber, playerDetailsLinkSuffix);
+            var profile = new PlayerProfile(playerFullName, position, dateOfBirth, height, weight, attackReach, shirtNumber, playerDetailsLinkSuffix);
 
             Console.WriteLine($"Processed player {playerDetailsLinkSuffix}");
 
             await page.CloseAsync();
 
-            return playerInformation;
+            return profile;
         }
 
         private static string? GetNumberDivH3(List<HtmlNode> divs, int index)
