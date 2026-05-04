@@ -1,4 +1,4 @@
-﻿using FantasyVolleyballLeague.Infrastructure.Database;
+using FantasyVolleyballLeague.Api.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -35,14 +35,7 @@ namespace FantasyVolleyballLeague.Api
         {
             var strategy = context.Database.CreateExecutionStrategy();
 
-            await strategy.ExecuteAsync(async () =>
-            {
-                await using var transaction = await context.Database.BeginTransactionAsync();
-
-                await context.Database.MigrateAsync();
-
-                await transaction.CommitAsync();
-            });
+            await strategy.ExecuteAsync(() => context.Database.MigrateAsync());
         }
     }
 }

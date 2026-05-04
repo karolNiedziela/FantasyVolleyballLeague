@@ -1,16 +1,14 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var sqlPassword = builder.AddParameter("sql-password", true);
-
-var sql = builder.AddSqlServer("fantasy-volleyball-league-sql", password: sqlPassword, port: 1433)
+var postgres = builder.AddPostgres("fantasy-volleyball-league-postgres")
     .WithLifetime(ContainerLifetime.Persistent)
     .WithDataVolume()
-    .WithContainerName("fantasy-volleyball-league-sql")
+    .WithContainerName("fantasy-volleyball-league-postgres")
     .AddDatabase("FantasyVolleyballLeagueDb");
 
 builder.AddProject<Projects.FantasyVolleyballLeague_Api>("fantasy-volleyball-league-api")
-    .WithReference(sql)
-    .WaitFor(sql);
+    .WithReference(postgres)
+    .WaitFor(postgres);
 
 
 await builder.Build().RunAsync();

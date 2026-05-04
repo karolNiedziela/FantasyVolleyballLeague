@@ -292,3 +292,9 @@ dotnet_diagnostic.CA2007.severity = suggestion
 
 #CA1056: URI-like properties should not be strings
 dotnet_diagnostic.CA1056.severity = suggestion
+
+#CA1054: URI-like parameters should not be strings
+dotnet_diagnostic.CA1054.severity = suggestion
+
+[**/Migrations/**.cs]
+generated_code = true

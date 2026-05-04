@@ -7,7 +7,6 @@
   <ItemGroup>
     <PackageReference Include="Dapper" />
     <PackageReference Include="HtmlAgilityPack" />
-    <PackageReference Include="Microsoft.Data.SqlClient" />
     <PackageReference Include="Microsoft.Extensions.Configuration" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
@@ -17,7 +16,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FantasyVolleyballLeague.Domain\FantasyVolleyballLeague.Domain.csproj" />
     <ProjectReference Include="..\FantasyVolleyballLeague.Worker\FantasyVolleyballLeague.Worker.csproj" />
   </ItemGroup>
 
