@@ -1,10 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Sdk Name="Aspire.AppHost.Sdk" Version="13.1.2" />
+  <Sdk Name="Aspire.AppHost.Sdk" Version="13.6.3" />
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <IsAspireHost>true</IsAspireHost>
+    <AspireUseCliBundle>true</AspireUseCliBundle>
     <UserSecretsId>b23d48ae-bf45-4c91-b7f0-38da3e65a01f</UserSecretsId>
   </PropertyGroup>
 
@@ -19,6 +20,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\src\FantasyVolleyballLeague.Api\FantasyVolleyballLeague.Api.csproj" />
+    <ProjectReference Include="..\src\FantasyVolleyballLeague.Scraper\FantasyVolleyballLeague.Scraper.csproj" />
+    <ProjectReference Include="..\src\FantasyVolleyballLeague.Importer\FantasyVolleyballLeague.Importer.csproj" />
   </ItemGroup>
 
 </Project>
