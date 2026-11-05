@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "FantasyVolleyballLeague.Scraper": {
+      "commandName": "Project",
+      "commandLineArgs": "--job Matches --current true"
+    }
+  }
+}
