@@ -10,42 +10,47 @@ namespace FantasyVolleyballLeague.Api.Infrastructure.Database.EntityTypeConfigur
         {
             builder.HasKey(x => x.Id);
 
-            builder.OwnsOne(x => x.Venue, venue =>
+            builder.ComplexProperty(x => x.Venue, venue =>
             {
                 venue.Property(v => v.Name)
                     .HasColumnName("VenueName")
-                    .HasMaxLength(200)
-                    .IsRequired();
+                    .HasMaxLength(200);
 
                 venue.Property(v => v.City)
                     .HasColumnName("VenueCity")
-                    .HasMaxLength(100)
-                    .IsRequired();
+                    .HasMaxLength(100);
             });
 
-            builder.OwnsOne(x => x.Officials, officials =>
+            builder.ComplexProperty(x => x.Officials, officials =>
             {
                 officials.Property(o => o.FirstReferee)
-                    .HasMaxLength(100)
-                    .IsRequired();
+                    .HasColumnName("Officials_FirstReferee")
+                    .HasMaxLength(100);
 
                 officials.Property(o => o.SecondReferee)
-                    .HasMaxLength(100)
-                    .IsRequired();
+                    .HasColumnName("Officials_SecondReferee")
+                    .HasMaxLength(100);
 
                 officials.Property(o => o.Commissioner)
-                    .HasMaxLength(100)
-                    .IsRequired();
+                    .HasColumnName("Officials_Commissioner")
+                    .HasMaxLength(100);
             });
 
-            builder.Property(x => x.Date)
-                .IsRequired();
-
-            builder.Property(x => x.ExternalId)
-                .IsRequired(false);
+            builder.Property(x => x.MatchNumber)
+                .HasMaxLength(20);
 
             builder.HasIndex(x => new { x.ExternalId, x.LeagueId })
                 .IsUnique();
+
+            builder.HasOne(x => x.Status)
+                .WithMany()
+                .HasForeignKey(x => x.StatusId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(x => x.StatisticsLevel)
+                .WithMany()
+                .HasForeignKey(x => x.StatisticsLevelId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne(x => x.League)
                 .WithMany()
@@ -57,20 +62,25 @@ namespace FantasyVolleyballLeague.Api.Infrastructure.Database.EntityTypeConfigur
                 .HasForeignKey(x => x.MvpId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasOne(x => x.HomeTeam)
+            builder.HasOne(x => x.HomeRoster)
                 .WithMany()
-                .HasForeignKey(x => x.HomeTeamId)
+                .HasForeignKey(x => x.HomeRosterId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasOne(x => x.AwayTeam)
+            builder.HasOne(x => x.AwayRoster)
                 .WithMany()
-                .HasForeignKey(x => x.AwayTeamId)
+                .HasForeignKey(x => x.AwayRosterId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasMany(x => x.Sets)
                 .WithOne(x => x.Match)
                 .HasForeignKey(x => x.MatchId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasOne(x => x.Round)
+                .WithMany()
+                .HasForeignKey(x => x.RoundId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

@@ -19,13 +19,17 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.Playwright" />
-    <PackageReference Include="Swashbuckle.AspNetCore" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
 
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\FantasyVolleyballLeague.ServiceDefaults\FantasyVolleyballLeague.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="FantasyVolleyballLeague.Importer" />
+    <InternalsVisibleTo Include="FantasyVolleyballLeague.ArchitectureTests" />
   </ItemGroup>
 
 </Project>

@@ -1,27 +1,42 @@
 namespace FantasyVolleyballLeague.Api.Domain
 {
-    internal sealed class Player
+    /// <summary>
+    /// A person, independent of rosters and seasons (season membership is <see cref="RosterPlayer"/>).
+    /// <see cref="ExternalId"/> is the player id on the league website; it is missing only for players
+    /// the importer could not resolve.
+    /// </summary>
+    internal sealed class Player : Entity
     {
-        public Guid Id { get; private set; }
+        public int? ExternalId { get; private set; }
 
+        /// <summary>
+        /// "First Last".
+        /// </summary>
         public string FullName { get; private set; } = string.Empty;
 
-        public int PositionId { get; private set; }
+        public DateOnly? DateOfBirth { get; private set; }
 
-        public PlayerPosition Position { get; private set; } = default!;
+        public int? HeightCm { get; private set; }
 
-        public Guid TeamId { get; private set; }
+        public int? WeightKg { get; private set; }
 
-        public Team Team { get; private set; } = default!;
+        public int? AttackReachCm { get; private set; }
 
         private Player() { }
 
-        public Player(Guid teamId, string fullName, int positionId)
+        public Player(string fullName, int? externalId)
         {
-            Id = Guid.CreateVersion7();
-            TeamId = teamId;
             FullName = fullName;
-            PositionId = positionId;
+            ExternalId = externalId;
+        }
+
+        public void UpdateProfile(string fullName, DateOnly? dateOfBirth, int? heightCm, int? weightKg, int? attackReachCm)
+        {
+            FullName = fullName;
+            DateOfBirth = dateOfBirth ?? DateOfBirth;
+            HeightCm = heightCm ?? HeightCm;
+            WeightKg = weightKg ?? WeightKg;
+            AttackReachCm = attackReachCm ?? AttackReachCm;
         }
     }
 }

@@ -1,19 +1,42 @@
 namespace FantasyVolleyballLeague.Api.Domain
 {
-    internal sealed class Match
+    internal sealed class Match : Entity
     {
         private readonly List<SetScore> _sets = [];
         private readonly List<PlayerMatchStatistics> _playerStatistics = [];
 
-        public Guid Id { get; private set; }
-
-        public DateTimeOffset Date { get; private set; }
-
+        /// <summary>
+        /// Match id on the league website.
+        /// </summary>
         public int? ExternalId { get; private set; }
 
-        public Venue Venue { get; private set; } = default!;
+        /// <summary>
+        /// UTC. For scheduled matches the time may not be confirmed yet (see <see cref="IsTimeConfirmed"/>).
+        /// </summary>
+        public DateTimeOffset? Date { get; private set; }
 
-        public MatchOfficials Officials { get; private set; } = default!;
+        public bool IsTimeConfirmed { get; private set; }
+
+        public int StatusId { get; private set; }
+
+        public MatchStatus Status { get; private set; } = default!;
+
+        public int StatisticsLevelId { get; private set; }
+
+        public StatisticsLevel StatisticsLevel { get; private set; } = default!;
+
+        public string? MatchNumber { get; private set; }
+
+        public int? Attendance { get; private set; }
+
+        public Venue Venue { get; private set; } = new(null, null);
+
+        public MatchOfficials Officials { get; private set; } = new(null, null, null);
+
+        /// <summary>
+        /// Scrape time of the raw file this match was imported from; newer files update the match.
+        /// </summary>
+        public DateTimeOffset SourceScrapedAt { get; private set; }
 
         public Guid LeagueId { get; private set; }
 
@@ -23,13 +46,17 @@ namespace FantasyVolleyballLeague.Api.Domain
 
         public Player? Mvp { get; private set; } = default!;
 
-        public Guid HomeTeamId { get; private set; }
+        public Guid HomeRosterId { get; private set; }
 
-        public Team HomeTeam { get; private set; } = default!;
+        public Roster HomeRoster { get; private set; } = default!;
 
-        public Guid AwayTeamId { get; private set; }
+        public Guid AwayRosterId { get; private set; }
 
-        public Team AwayTeam { get; private set; } = default!;
+        public Roster AwayRoster { get; private set; } = default!;
+
+        public Guid RoundId { get; private set; }
+
+        public Round Round { get; private set; } = default!;
 
         public IReadOnlyCollection<SetScore> Sets => _sets.AsReadOnly();
 
@@ -37,33 +64,59 @@ namespace FantasyVolleyballLeague.Api.Domain
 
         private Match() { }
 
-        public Match(
-            DateTimeOffset date,           
-            Guid leagueId,
-            Guid homeTeamId,
-            Guid awayTeamId,
-            Venue venue,
-            MatchOfficials officials,
-            int? externalId = null)
+        public Match(int? externalId, Guid leagueId, Guid roundId, Guid homeRosterId, Guid awayRosterId, DateTimeOffset? date, bool isTimeConfirmed)
         {
-            Id = Guid.CreateVersion7();
-            Date = date;
+            ExternalId = externalId;
             LeagueId = leagueId;
-            HomeTeamId = homeTeamId;
-            AwayTeamId = awayTeamId;
+            StatusId = MatchStatus.Scheduled.Id;
+            StatisticsLevelId = StatisticsLevel.None.Id;
+            Reschedule(roundId, homeRosterId, awayRosterId, date, isTimeConfirmed);
+        }
+
+        public void Reschedule(Guid roundId, Guid homeRosterId, Guid awayRosterId, DateTimeOffset? date, bool isTimeConfirmed)
+        {
+            RoundId = roundId;
+            HomeRosterId = homeRosterId;
+            AwayRosterId = awayRosterId;
+            Date = date;
+            IsTimeConfirmed = isTimeConfirmed;
+        }
+
+        public void UpdateDetails(int statusId, string? matchNumber, int? attendance, Venue venue, MatchOfficials officials)
+        {
+            StatusId = statusId;
+            MatchNumber = matchNumber;
+            Attendance = attendance;
             Venue = venue;
             Officials = officials;
-            ExternalId = externalId;
         }
 
-        public void RecordSet(int setNumber, int homeScore, int awayScore)
+        public void ReplaceSets(IEnumerable<(int HomeScore, int AwayScore)> sets)
         {
-            _sets.Add(new SetScore(setNumber, homeScore, awayScore, Id));
+            _sets.Clear();
+
+            var setNumber = 1;
+            foreach (var (homeScore, awayScore) in sets)
+            {
+                _sets.Add(new SetScore(setNumber++, homeScore, awayScore, Id));
+            }
         }
 
-        public void AssignMvp(Guid playerId)
+        public void ReplacePlayerStatistics(int statisticsLevelId, IEnumerable<PlayerMatchStatistics> playerStatistics)
+        {
+            StatisticsLevelId = statisticsLevelId;
+            _playerStatistics.Clear();
+            _playerStatistics.AddRange(playerStatistics);
+        }
+
+        public void AssignMvp(Guid? playerId)
         {
             MvpId = playerId;
+        }
+
+        public void MarkSynced(DateTimeOffset scrapedAt)
+        {
+            SourceScrapedAt = scrapedAt;
         }
     }
 }

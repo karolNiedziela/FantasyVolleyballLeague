@@ -16,9 +16,17 @@ namespace FantasyVolleyballLeague.Api.Infrastructure.Database.EntityTypeConfigur
 
             builder.ToTable(t => t.HasCheckConstraint("CK_Leagues_DivisionNumber", "\"DivisionNumber\" >= 1"));
 
+            builder.HasIndex(l => new { l.CountryId, l.GenderId, l.DivisionNumber })
+                .IsUnique();
+
             builder.HasOne(l => l.Country)
                 .WithMany()
                 .HasForeignKey(l => l.CountryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(l => l.Gender)
+                .WithMany()
+                .HasForeignKey(l => l.GenderId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

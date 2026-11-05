@@ -1,0 +1,5 @@
+[*.cs]
+
+# CA1515: Consider making public types internal
+# xUnit requires public test classes, and test projects are executables, so this rule would flag every test class.
+dotnet_diagnostic.CA1515.severity = none
