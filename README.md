@@ -1,24 +1,81 @@
-# 🏐 Fantasy Volleyball League & Match Stats Aggregator
+# 🏐 Fantasy Volleyball League
 
-This project is a web-based fantasy sports application focused on professional volleyball, with a special emphasis on PlusLiga (Polish Men's Volleyball League). It allows users to create fantasy teams using real players and earn points based on their actual performance in real matches.
+A volleyball data platform and, later, a fantasy game in the style of Fantasy Premier League: users build squads
+of real players and score points from their real match statistics.
 
-In addition to the fantasy game features, the application includes a stats aggregator that collects, processes, and structures player and match statistics from multiple sources — starting with PlusLiga.
+The current focus is the data: matches, results, player statistics, upcoming fixtures and historical seasons of
+the Polish men's leagues (TAURON Liga, formerly PlusLiga, from 2000/01 and TAURON 1. Liga from 2018/19).
 
----
+## ✨ Target features
 
-## ✨ Target Features
+### 📊 Volleyball data
+- Matches, set scores and full player statistics, including historical seasons
+- Upcoming fixtures
+- Players tracked across seasons and clubs
+- Rosters per season
 
-### 🎮 Fantasy League
-- Create your own volleyball fantasy team
-- Choose real-life players from actual leagues
+### 🎮 Fantasy league
+- Create your own volleyball fantasy team from real players
 - Score points based on players' real match performance
-- Leaderboards and rankings
-- Team management: transfers, lineups, and more
+- Leaderboards, transfers and lineups
 
-### 📊 Stats Aggregator (PlusLiga-focused)
-- Extract match and player statistics from official reports (PDF/HTML)
-- Normalize and structure data into JSON format
-- Track player performance over time
-- Match results, per-set scores, and full player stats
+## 🏗️ Architecture
 
----
+```mermaid
+flowchart LR
+    site[League websites<br/>tauronliga.pl, tauron1liga.pl] -->|Scraper<br/>Playwright| raw[(data/raw<br/>JSON files)]
+    raw -->|Importer| db[(PostgreSQL)]
+    api[Api<br/>domain + EF Core] --> db
+    apphost[Aspire AppHost] -.orchestrates.-> api
+    apphost -.-> db
+```
+
+Scraped data is stored as self-describing JSON files first. They are the source of truth: the database can be
+rebuilt from them at any time without scraping the websites again.
+
+| Project | Role |
+|---|---|
+| [`src/FantasyVolleyballLeague.Scraper`](src/FantasyVolleyballLeague.Scraper/README.md) | CLI that scrapes league websites into `data/raw`. |
+| [`src/FantasyVolleyballLeague.Importer`](src/FantasyVolleyballLeague.Importer/README.md) | Console app that loads `data/raw` into PostgreSQL (idempotent). |
+| `src/FantasyVolleyballLeague.Api` | ASP.NET Core minimal API (vertical slices): domain model, EF Core `DbContext` and migrations. |
+| `FantasyVolleyballLeague.AppHost` | .NET Aspire: PostgreSQL container, Api, and the Scraper and Importer as resources started on demand. |
+| `FantasyVolleyballLeague.ServiceDefaults` | Shared Aspire defaults (OpenTelemetry, health checks). |
+| `tests/` | Scraper parser tests (offline, on saved HTML pages), Importer tests and architecture tests. |
+
+## 🚀 Getting started
+
+Prerequisites: [.NET 10 SDK](https://dotnet.microsoft.com/download) and
+[Docker Desktop](https://www.docker.com/products/docker-desktop/).
+
+```powershell
+# 1. Start PostgreSQL and the Api (applies the database migrations); keep it running
+dotnet run --project FantasyVolleyballLeague.AppHost
+
+# 2. Install the Playwright browser used by the Scraper (once per Playwright version)
+dotnet build src/FantasyVolleyballLeague.Scraper
+pwsh src/FantasyVolleyballLeague.Scraper/bin/Debug/net10.0/playwright.ps1 install chromium
+
+# 3. Scrape data: rosters first, then matches (the full history takes a few hours)
+dotnet run --project src/FantasyVolleyballLeague.Scraper -- --job Rosters --from 2018
+dotnet run --project src/FantasyVolleyballLeague.Scraper -- --job Matches
+
+# 4. Import into the database (or start the "importer" resource in the Aspire dashboard)
+dotnet run --project src/FantasyVolleyballLeague.Importer
+```
+
+For a quick try, scrape only the current season: `--job Matches --current true`. To keep the data fresh, start
+`scraper-matches`, `scraper-rosters` and `importer` from the Aspire dashboard. See the
+[Scraper](src/FantasyVolleyballLeague.Scraper/README.md) and
+[Importer](src/FantasyVolleyballLeague.Importer/README.md) documentation for all options.
+
+## 🧪 Tests
+
+```powershell
+dotnet test
+```
+
+## 📐 Conventions
+
+Architecture and code style rules live in [`.claude/rules/architecture.md`](.claude/rules/architecture.md), and
+the project context in [`.claude/rules/project-overview.md`](.claude/rules/project-overview.md). Package versions
+are managed centrally in `Directory.Packages.props`; analyzer warnings are build errors.
