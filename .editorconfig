@@ -296,5 +296,11 @@ dotnet_diagnostic.CA1056.severity = suggestion
 #CA1054: URI-like parameters should not be strings
 dotnet_diagnostic.CA1054.severity = suggestion
 
-[**/Migrations/**.cs]
+# RS0030: Do not use banned APIs (see BannedSymbols.txt, e.g. Guid.NewGuid - ids must be time-ordered UUID v7)
+dotnet_diagnostic.RS0030.severity = error
+
+[**/Database/Migrations/**.cs]
 generated_code = true
+
+# S4581: EF Core scaffolds default GUID values as new Guid("00000000-..."); migrations are generated, not hand-written.
+dotnet_diagnostic.S4581.severity = none

@@ -9,6 +9,12 @@
 # Claude Code local settings
 .claude/settings.local.json
 
+# App Settings local settings
+**/appsettings.local.json
+
+# Scraped raw data (re-created by the Worker scraper)
+/data/
+
 # User-specific files
 *.rsuser
 *.suo

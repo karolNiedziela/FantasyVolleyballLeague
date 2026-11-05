@@ -1,0 +1,1 @@
+M:System.Guid.NewGuid;Random (v4) GUIDs are not sortable. Use EntityId.New() (time-ordered UUID v7) instead.
