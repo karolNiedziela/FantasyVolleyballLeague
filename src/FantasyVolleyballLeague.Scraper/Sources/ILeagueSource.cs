@@ -25,7 +25,17 @@ namespace FantasyVolleyballLeague.Scraper.Sources
         /// </summary>
         Task<IReadOnlyList<ScheduleEntry>> GetScheduleAsync(Season season, PlaywrightSession session);
 
+        /// <summary>
+        /// Scrapes the match with its player statistics. Throws <see cref="SourceBlockedException"/> when the
+        /// website blocks the client.
+        /// </summary>
         Task<MatchRecord> GetMatchAsync(LeagueOptions league, SeasonReference season, ScheduleEntry entry, PlaywrightSession session);
+
+        /// <summary>
+        /// Scrapes only what the match page itself provides (score, sets, date, teams, venue), with
+        /// <c>StatisticsLevel = None</c>. Used for matches whose statistics repeatedly fail to load.
+        /// </summary>
+        Task<MatchRecord> GetMatchWithoutStatisticsAsync(LeagueOptions league, SeasonReference season, ScheduleEntry entry, PlaywrightSession session);
 
         /// <summary>
         /// Seasons with rosters, newest first.

@@ -23,6 +23,12 @@ namespace FantasyVolleyballLeague.Scraper.Storage
         /// <summary>
         /// Matches that failed in the last run. They have no file, so the next run retries them.
         /// </summary>
-        public IReadOnlyList<int> FailedMatchIds { get; init; } = [];
+        public IReadOnlyList<MatchFailure> FailedMatches { get; init; } = [];
+
+        /// <summary>
+        /// Matches saved without player statistics after <see cref="JobOptions.MaxMatchAttempts"/> failed attempts
+        /// (<c>StatisticsLevel = None</c>). They are not scraped again unless forced.
+        /// </summary>
+        public IReadOnlyList<MatchFailure> MatchesWithoutStatistics { get; init; } = [];
     }
 }

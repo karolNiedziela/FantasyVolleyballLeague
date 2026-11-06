@@ -16,7 +16,7 @@ whole HTML pages into this conversation.
 
 1. **Reproduce.** Run the affected season, e.g.
    `dotnet run --project src/FantasyVolleyballLeague.Scraper -- --job Matches --league <Key> --from <year> --to <year> --force true`.
-   Collect: error messages, `FailedMatchIds` in `data/raw/matches/<Key>/<season>/_manifest.json`, and the data
+   Collect: error messages, `FailedMatches` and `MatchesWithoutStatistics` in `data/raw/matches/<Key>/<season>/_manifest.json`, and the data
    quality check (section C).
 2. **Analyse.** Ask `html-page-analyst` to compare the current page with the matching fixture in
    `tests/FantasyVolleyballLeague.Scraper.Tests/Fixtures/` and to locate the data the parser reads.
@@ -68,7 +68,7 @@ $p = $f | ForEach-Object { $_.HomeRoster.Players + $_.AwayRoster.Players }
 
 Expected for PLS: `BadSets = 0`, `NoClubId = 0`; `NoPlayerId` is the number of players in widget-era seasons
 (2019/20+, resolved later through rosters by the Importer); `LineupOnly` only for 2000/01–2007/08. Also check
-`FailedMatchIds` in the manifest and, after an import, `UnresolvedPlayers` in `data/import-report.json`.
+`FailedMatches` and `MatchesWithoutStatistics` in the manifest and, after an import, `UnresolvedPlayers` in `data/import-report.json`.
 
 ## Lessons from the PLS source (apply to every source)
 

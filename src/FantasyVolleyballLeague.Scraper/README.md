@@ -43,6 +43,7 @@ refresh on demand from the dashboard: `scraper-matches`
 | `--to`      | start year, e.g. `2018`        | Last season to process (inclusive).                                                        |
 | `--current` | `true`                         | Only the newest season listed on the website. Overrides `--from`/`--to`.                   |
 | `--force`   | `true`                         | Scrape again what is already stored: complete seasons, finished matches, existing rosters. |
+| `--max-attempts` | `3`                       | Failed attempts after which a match is saved without player statistics.                    |
 
 Boolean options take an explicit value (`--current true`). A season is
 identified by its start year, so `--from 2015 --to 2015` means 2015/16.
@@ -69,7 +70,14 @@ skipped, so a run resumes where the previous one stopped.
 
 ```json
 {
-  "Playwright": { "Headless": true, "MaxConcurrentTasks": 3 },
+  "Playwright": {
+    "Headless": true,
+    "MaxConcurrentTasks": 3,
+    "WidgetTimeoutMs": 15000,
+    "WidgetMaxRetries": 2,
+    "WidgetRetryDelayMs": 2000,
+    "WidgetMinIntervalMs": 500
+  },
   "Storage": { "DataRoot": "data" },
   "Leagues": [
     {
@@ -104,6 +112,10 @@ skipped, so a run resumes where the previous one stopped.
 | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `Playwright:Headless`           | `false` shows the browser, useful when debugging a parser.                                                                                                                                       |
 | `Playwright:MaxConcurrentTasks` | Matches (or roster players) scraped in parallel. Keep it low to be polite to the websites.                                                                                                       |
+| `Playwright:WidgetTimeoutMs`    | How long to wait for a statistics widget to render, per attempt (default 15000).                                                                                                                 |
+| `Playwright:WidgetMaxRetries`   | Retries of a failed widget load before the match is marked as failed (default 2).                                                                                                                |
+| `Playwright:WidgetRetryDelayMs` | Delay before the first retry, doubled for every next one (default 2000).                                                                                                                         |
+| `Playwright:WidgetMinIntervalMs`| Minimum time between two widget loads across all parallel tasks (default 500). The widget host (Cloudflare) blocks clients that send too many requests; a block is reported immediately.       |
 | `Storage:DataRoot`              | Root of the data folder. A relative path is resolved against the directory containing `FantasyVolleyballLeague.sln`, so the Scraper and the Importer share `<repo>/data` wherever they run from. |
 | `Leagues:Key`                   | Stable league identifier used in folder names. It does not change when the sponsor brand does.                                                                                                   |
 | `Leagues:Source`                | Which [source](#sources) scrapes the league. An unknown value stops the Scraper at startup.                                                                                                      |
@@ -134,7 +146,16 @@ flowchart TD
   includes upcoming fixtures. They are scraped again on every run until they are
   played.
 - **Failed matches** (e.g. a page timeout) are listed in the manifest's
-  `FailedMatchIds`. They have no file, so the next run retries them.
+  `FailedMatches` with their `Attempts`, `LastError` and `LastAttemptUtc`. They
+  have no file, so the next run retries them.
+- **After `Job:MaxMatchAttempts` failed attempts** (default 3, `--max-attempts`)
+  the match is saved without player statistics (`StatisticsLevel = None`: score,
+  sets, date, teams and venue from the match header) and listed in the
+  manifest's `MatchesWithoutStatistics`. It is not scraped again unless
+  `--force` is set, which also resets the attempt count.
+- **Website blocks** (Cloudflare on the widget host) are not the match's fault,
+  so they do not count as an attempt. The match stays unsaved and is retried on
+  the next run.
 - **A season is complete** only when it is not the newest season, every match is
   finished and nothing failed. Complete seasons are skipped unless `--force` is
   set.
@@ -223,7 +244,8 @@ Identifiers (`MatchId`, `ExternalId`) are the ids used by the league website.
 A roster file contains `Club` (`ExternalId`, `Name`) and `Players`
 (`ExternalId`, `FullName` as "First Last", `Position`, `ShirtNumber`,
 `DateOfBirth`, `Height`, `Weight`, `AttackReach`). The manifest stores the
-scrape time, `IsComplete`, match counts and `FailedMatchIds`.
+scrape time, `IsComplete`, match counts, `FailedMatches` and
+`MatchesWithoutStatistics`.
 
 ## Sources
 

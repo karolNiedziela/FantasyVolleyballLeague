@@ -3,20 +3,47 @@ using HtmlAgilityPack;
 
 namespace FantasyVolleyballLeague.Scraper.Sources.Poland.Pls.Matches
 {
-    internal static class PlsMatchScrapper
+    internal sealed class PlsMatchScrapper
     {
-        public static async Task<MatchRecord> GetMatchAsync(LeagueOptions league, SeasonReference season, ScheduleEntry entry, PlaywrightSession session)
-        {
-            var html = await session.GetHtmlAsync(PlsUrls.Match(league, entry.MatchId));
+        private readonly PlsWidgetLoader _widgetLoader;
 
-            var document = new HtmlDocument();
-            document.LoadHtml(html);
+        public PlsMatchScrapper(PlsWidgetLoader widgetLoader)
+        {
+            _widgetLoader = widgetLoader;
+        }
+
+        public async Task<MatchRecord> GetMatchAsync(LeagueOptions league, SeasonReference season, ScheduleEntry entry, PlaywrightSession session)
+        {
+            var document = await LoadMatchPageAsync(league, entry, session);
 
             var header = PlsMatchHeaderParser.Parse(document);
             var players = header.Status == MatchStatus.Finished
                 ? await GetPlayersAsync(session, document)
                 : MatchPlayers.Empty;
 
+            return ToMatchRecord(league, season, entry, header, players);
+        }
+
+        public static async Task<MatchRecord> GetMatchWithoutStatisticsAsync(LeagueOptions league, SeasonReference season, ScheduleEntry entry, PlaywrightSession session)
+        {
+            var document = await LoadMatchPageAsync(league, entry, session);
+
+            return ToMatchRecord(league, season, entry, PlsMatchHeaderParser.Parse(document), MatchPlayers.Empty);
+        }
+
+        private static async Task<HtmlDocument> LoadMatchPageAsync(LeagueOptions league, ScheduleEntry entry, PlaywrightSession session)
+        {
+            var html = await session.GetHtmlAsync(PlsUrls.Match(league, entry.MatchId));
+
+            var document = new HtmlDocument();
+            document.LoadHtml(html);
+
+            return document;
+        }
+
+        private static MatchRecord ToMatchRecord(
+            LeagueOptions league, SeasonReference season, ScheduleEntry entry, PlsMatchHeader header, MatchPlayers players)
+        {
             return new MatchRecord
             {
                 ScrapedAtUtc = DateTime.UtcNow,
@@ -47,12 +74,12 @@ namespace FantasyVolleyballLeague.Scraper.Sources.Poland.Pls.Matches
         /// <summary>
         /// Picks the parser of the statistics era the match page belongs to.
         /// </summary>
-        private static async Task<MatchPlayers> GetPlayersAsync(PlaywrightSession session, HtmlDocument document)
+        private async Task<MatchPlayers> GetPlayersAsync(PlaywrightSession session, HtmlDocument document)
         {
             if (PlsWidgetParser.CanParse(document))
             {
-                var homeTask = PlsWidgetParser.GetPlayersAsync(session, document, PlsWidgetParser.HomeIframeClass);
-                var awayTask = PlsWidgetParser.GetPlayersAsync(session, document, PlsWidgetParser.AwayIframeClass);
+                var homeTask = PlsWidgetParser.GetPlayersAsync(_widgetLoader, session, document, PlsWidgetParser.HomeIframeClass);
+                var awayTask = PlsWidgetParser.GetPlayersAsync(_widgetLoader, session, document, PlsWidgetParser.AwayIframeClass);
                 return new MatchPlayers(StatisticsLevel.Full, await homeTask, await awayTask);
             }
 

@@ -15,10 +15,12 @@ namespace FantasyVolleyballLeague.Scraper.Sources.Poland.Pls
     {
         public const string SourceKey = "Pls";
 
+        private readonly PlsMatchScrapper _matchScrapper;
         private readonly PlsRosterScrapper _rosterScrapper;
 
-        public PlsLeagueSource(PlsRosterScrapper rosterScrapper)
+        public PlsLeagueSource(PlsMatchScrapper matchScrapper, PlsRosterScrapper rosterScrapper)
         {
+            _matchScrapper = matchScrapper;
             _rosterScrapper = rosterScrapper;
         }
 
@@ -36,7 +38,12 @@ namespace FantasyVolleyballLeague.Scraper.Sources.Poland.Pls
 
         public Task<MatchRecord> GetMatchAsync(LeagueOptions league, SeasonReference season, ScheduleEntry entry, PlaywrightSession session)
         {
-            return PlsMatchScrapper.GetMatchAsync(league, season, entry, session);
+            return _matchScrapper.GetMatchAsync(league, season, entry, session);
+        }
+
+        public Task<MatchRecord> GetMatchWithoutStatisticsAsync(LeagueOptions league, SeasonReference season, ScheduleEntry entry, PlaywrightSession session)
+        {
+            return PlsMatchScrapper.GetMatchWithoutStatisticsAsync(league, season, entry, session);
         }
 
         public Task<IReadOnlyList<Season>> GetRosterSeasonsAsync(LeagueOptions league, PlaywrightSession session)

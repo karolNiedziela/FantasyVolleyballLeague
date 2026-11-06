@@ -21,26 +21,15 @@ namespace FantasyVolleyballLeague.Scraper.Sources.Poland.Pls.Matches
         }
 
         public static async Task<IReadOnlyList<PlayerMatchStatistics>> GetPlayersAsync(
-            PlaywrightSession session, HtmlDocument matchDocument, string iframeClass)
+            PlsWidgetLoader loader, PlaywrightSession session, HtmlDocument matchDocument, string iframeClass)
         {
             var iframeSource = GetIframeSource(matchDocument, iframeClass)
                 ?? throw new InvalidOperationException($"Iframe '{iframeClass}' not found");
 
-            var page = await session.Context.NewPageAsync();
-            try
-            {
-                await page.GotoAsync(iframeSource);
-                await page.WaitForSelectorAsync(".team-stats-widget");
+            var widgetDocument = new HtmlDocument();
+            widgetDocument.LoadHtml(await loader.LoadHtmlAsync(session, iframeSource));
 
-                var widgetDocument = new HtmlDocument();
-                widgetDocument.LoadHtml(await page.ContentAsync());
-
-                return Parse(widgetDocument);
-            }
-            finally
-            {
-                await page.CloseAsync();
-            }
+            return Parse(widgetDocument);
         }
 
         public static IReadOnlyList<PlayerMatchStatistics> Parse(HtmlDocument widgetDocument)
