@@ -52,7 +52,9 @@ A connection string from environment variables (as set by Aspire) takes preceden
   "Importer": {
     "Leagues": [
       { "Key": "PlusLiga", "Name": "TAURON Liga", "Country": "Poland", "Gender": "Men", "DivisionNumber": 1 },
-      { "Key": "PLS1Liga", "Name": "TAURON 1. Liga", "Country": "Poland", "Gender": "Men", "DivisionNumber": 2 }
+      { "Key": "PLS1Liga", "Name": "TAURON 1. Liga", "Country": "Poland", "Gender": "Men", "DivisionNumber": 2 },
+      { "Key": "TauronLigaKobiet", "Name": "TAURON Liga Kobiet", "Country": "Poland", "Gender": "Women", "DivisionNumber": 1 },
+      { "Key": "Tauron1LigaKobiet", "Name": "TAURON 1. Liga Kobiet", "Country": "Poland", "Gender": "Women", "DivisionNumber": 2 }
     ]
   }
 }

@@ -14,9 +14,14 @@ namespace FantasyVolleyballLeague.Api.Infrastructure.Database.EntityTypeConfigur
                 .IsRequired()
                 .HasMaxLength(100);
 
-            builder.HasIndex(p => p.ExternalId)
+            builder.HasIndex(p => new { p.GenderId, p.ExternalId })
                 .IsUnique()
                 .HasFilter("\"ExternalId\" IS NOT NULL");
+
+            builder.HasOne(p => p.Gender)
+                .WithMany()
+                .HasForeignKey(p => p.GenderId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

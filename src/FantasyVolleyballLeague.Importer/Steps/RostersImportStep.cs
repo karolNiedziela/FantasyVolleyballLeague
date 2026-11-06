@@ -74,9 +74,10 @@ namespace FantasyVolleyballLeague.Importer.Steps
             var seasonId = _catalog.ResolveSeason(leagueId, roster.Season);
             var rosterId = _catalog.ResolveRoster(leagueId, seasonId, roster.Club.Name, roster.Club.ExternalId);
 
+            var genderId = _catalog.GetGenderId(leagueId);
             var externalIds = roster.Players.Select(p => (int?)p.ExternalId).ToList();
             var players = await _dbContext.Set<Player>()
-                .Where(p => externalIds.Contains(p.ExternalId))
+                .Where(p => p.GenderId == genderId && externalIds.Contains(p.ExternalId))
                 .ToDictionaryAsync(p => p.ExternalId!.Value, cancellationToken);
             var rosterEntries = await _dbContext.Set<RosterPlayer>()
                 .Where(tp => tp.RosterId == rosterId)
@@ -86,9 +87,9 @@ namespace FantasyVolleyballLeague.Importer.Steps
             {
                 if (!players.TryGetValue(rosterPlayer.ExternalId, out var player))
                 {
-                    player = new Player(rosterPlayer.FullName, rosterPlayer.ExternalId);
+                    player = new Player(genderId, rosterPlayer.FullName, rosterPlayer.ExternalId);
                     _dbContext.Set<Player>().Add(player);
-                    _catalog.RegisterPlayer(rosterPlayer.ExternalId, player.Id);
+                    _catalog.RegisterPlayer(leagueId, rosterPlayer.ExternalId, player.Id);
                 }
 
                 player.UpdateProfile(
