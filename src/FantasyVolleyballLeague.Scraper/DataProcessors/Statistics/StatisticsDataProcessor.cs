@@ -76,7 +76,8 @@ namespace FantasyVolleyballLeague.Scraper.DataProcessors.Statistics
             var reference = season.Reference;
             var label = $"[{league.Key} {reference.FolderName}]";
 
-            if (!_jobOptions.Force && _store.TryReadManifest(league.Key, reference) is { IsComplete: true })
+            var previousManifest = _store.TryReadManifest(league.Key, reference);
+            if (!_jobOptions.Force && previousManifest is { IsComplete: true })
             {
                 Console.WriteLine($"{label} Season is complete. Skipping.");
                 return;
@@ -95,7 +96,19 @@ namespace FantasyVolleyballLeague.Scraper.DataProcessors.Statistics
                 .ToList();
             Console.WriteLine($"{label} {schedule.Count} matches listed, {pending.Count} to scrape.");
 
-            var failedMatchIds = await ScrapeMatchesAsync(league, source, reference, pending, label, session, cancellationToken);
+            // --force starts the attempt count from zero, so matches given up on earlier are tried again.
+            var previousFailures = _jobOptions.Force || previousManifest is null
+                ? new Dictionary<int, MatchFailure>()
+                : previousManifest.FailedMatches.ToDictionary(failure => failure.MatchId);
+
+            var outcome = await ScrapeMatchesAsync(league, source, reference, pending, previousFailures, label, session, cancellationToken);
+
+            var pendingIds = pending.Select(entry => entry.MatchId).ToHashSet();
+            var withoutStatistics = (previousManifest?.MatchesWithoutStatistics ?? [])
+                .Where(failure => !pendingIds.Contains(failure.MatchId))
+                .Concat(outcome.WithoutStatistics)
+                .OrderBy(failure => failure.MatchId)
+                .ToList();
 
             var records = schedule
                 .Select(entry => _store.TryReadMatch(league.Key, reference, entry.MatchId))
@@ -106,28 +119,32 @@ namespace FantasyVolleyballLeague.Scraper.DataProcessors.Statistics
             var manifest = new SeasonManifest
             {
                 ScrapedAtUtc = DateTime.UtcNow,
-                IsComplete = !isLatestSeason && failedMatchIds.Count == 0 && finishedCount == schedule.Count,
+                IsComplete = !isLatestSeason && outcome.Failed.Count == 0 && finishedCount == schedule.Count,
                 MatchCount = schedule.Count,
                 FinishedCount = finishedCount,
                 ScheduledCount = scheduledCount,
-                FailedMatchIds = failedMatchIds,
+                FailedMatches = outcome.Failed,
+                MatchesWithoutStatistics = withoutStatistics,
             };
             await _store.WriteManifestAsync(league.Key, reference, manifest, cancellationToken);
 
             Console.WriteLine(
-                $"{label} Done: {finishedCount} finished, {scheduledCount} scheduled, {failedMatchIds.Count} failed, complete: {manifest.IsComplete}.");
+                $"{label} Done: {finishedCount} finished, {scheduledCount} scheduled, {outcome.Failed.Count} failed, "
+                + $"{withoutStatistics.Count} without statistics, complete: {manifest.IsComplete}.");
         }
 
-        private async Task<IReadOnlyList<int>> ScrapeMatchesAsync(
+        private async Task<SeasonScrapeOutcome> ScrapeMatchesAsync(
             LeagueOptions league,
             ILeagueSource source,
             SeasonReference season,
             List<ScheduleEntry> entries,
+            Dictionary<int, MatchFailure> previousFailures,
             string label,
             PlaywrightSession session,
             CancellationToken cancellationToken)
         {
-            var failedMatchIds = new ConcurrentBag<int>();
+            var failed = new ConcurrentBag<MatchFailure>();
+            var withoutStatistics = new ConcurrentBag<MatchFailure>();
             var processed = 0;
 
             using var semaphore = new SemaphoreSlim(_playwrightOptions.MaxConcurrentTasks);
@@ -136,13 +153,17 @@ namespace FantasyVolleyballLeague.Scraper.DataProcessors.Statistics
                 await semaphore.WaitAsync(cancellationToken);
                 try
                 {
-                    var record = await source.GetMatchAsync(league, season, entry, session);
-                    await _store.WriteMatchAsync(record, cancellationToken);
-                }
-                catch (Exception ex) when (ex is PlaywrightException or TimeoutException or InvalidOperationException or FormatException)
-                {
-                    failedMatchIds.Add(entry.MatchId);
-                    Console.WriteLine($"{label} Match {entry.MatchId} failed: {ex.Message}");
+                    previousFailures.TryGetValue(entry.MatchId, out var previous);
+                    var result = await ScrapeMatchAsync(league, source, season, entry, previous, label, session, cancellationToken);
+                    if (result.Failed is not null)
+                    {
+                        failed.Add(result.Failed);
+                    }
+
+                    if (result.WithoutStatistics is not null)
+                    {
+                        withoutStatistics.Add(result.WithoutStatistics);
+                    }
                 }
                 finally
                 {
@@ -156,7 +177,109 @@ namespace FantasyVolleyballLeague.Scraper.DataProcessors.Statistics
                 }
             }));
 
-            return [.. failedMatchIds.Order()];
+            return new SeasonScrapeOutcome(
+                [.. failed.OrderBy(failure => failure.MatchId)],
+                [.. withoutStatistics.OrderBy(failure => failure.MatchId)]);
+        }
+
+        /// <summary>
+        /// Scrapes one match. A failed attempt is counted; after <see cref="JobOptions.MaxMatchAttempts"/> of them
+        /// the match is saved without player statistics. A website block is not the match's fault, so it is not counted.
+        /// </summary>
+        private async Task<MatchScrapeResult> ScrapeMatchAsync(
+            LeagueOptions league,
+            ILeagueSource source,
+            SeasonReference season,
+            ScheduleEntry entry,
+            MatchFailure? previous,
+            string label,
+            PlaywrightSession session,
+            CancellationToken cancellationToken)
+        {
+            var maxAttempts = _jobOptions.MaxMatchAttempts;
+            var attempts = previous?.Attempts ?? 0;
+            var lastError = previous?.LastError;
+
+            if (attempts < maxAttempts)
+            {
+                try
+                {
+                    var record = await source.GetMatchAsync(league, season, entry, session);
+                    await _store.WriteMatchAsync(record, cancellationToken);
+                    return MatchScrapeResult.Succeeded;
+                }
+                catch (SourceBlockedException ex)
+                {
+                    Console.WriteLine($"{label} Match {entry.MatchId} blocked, not counted as an attempt: {FirstLine(ex.Message)}");
+                    return MatchScrapeResult.NotSaved(entry.MatchId, attempts, FirstLine(ex.Message));
+                }
+                catch (Exception ex) when (IsMatchFailure(ex))
+                {
+                    attempts++;
+                    lastError = FirstLine(ex.Message);
+                    Console.WriteLine($"{label} Match {entry.MatchId} failed (attempt {attempts}/{maxAttempts}): {lastError}");
+                    if (attempts < maxAttempts)
+                    {
+                        return MatchScrapeResult.NotSaved(entry.MatchId, attempts, lastError);
+                    }
+                }
+            }
+
+            try
+            {
+                var record = await source.GetMatchWithoutStatisticsAsync(league, season, entry, session);
+                await _store.WriteMatchAsync(record, cancellationToken);
+                Console.WriteLine($"{label} Match {entry.MatchId} saved without statistics after {attempts} failed attempts.");
+                return MatchScrapeResult.SavedWithoutStatistics(entry.MatchId, attempts, lastError);
+            }
+            catch (SourceBlockedException ex)
+            {
+                Console.WriteLine($"{label} Match {entry.MatchId} blocked while saving without statistics: {FirstLine(ex.Message)}");
+                return MatchScrapeResult.NotSaved(entry.MatchId, attempts, lastError);
+            }
+            catch (Exception ex) when (IsMatchFailure(ex))
+            {
+                Console.WriteLine($"{label} Match {entry.MatchId} failed even without statistics: {FirstLine(ex.Message)}");
+                return MatchScrapeResult.NotSaved(entry.MatchId, attempts, FirstLine(ex.Message));
+            }
+        }
+
+        private static bool IsMatchFailure(Exception ex)
+        {
+            return ex is PlaywrightException or TimeoutException or InvalidOperationException or FormatException;
+        }
+
+        private static string FirstLine(string message)
+        {
+            return message.Split('\n')[0].Trim();
+        }
+
+        private sealed record SeasonScrapeOutcome(IReadOnlyList<MatchFailure> Failed, IReadOnlyList<MatchFailure> WithoutStatistics);
+
+        private sealed record MatchScrapeResult(MatchFailure? Failed, MatchFailure? WithoutStatistics)
+        {
+            public static readonly MatchScrapeResult Succeeded = new(null, null);
+
+            public static MatchScrapeResult NotSaved(int matchId, int attempts, string? lastError)
+            {
+                return new MatchScrapeResult(NewFailure(matchId, attempts, lastError), null);
+            }
+
+            public static MatchScrapeResult SavedWithoutStatistics(int matchId, int attempts, string? lastError)
+            {
+                return new MatchScrapeResult(null, NewFailure(matchId, attempts, lastError));
+            }
+
+            private static MatchFailure NewFailure(int matchId, int attempts, string? lastError)
+            {
+                return new MatchFailure
+                {
+                    MatchId = matchId,
+                    Attempts = attempts,
+                    LastError = lastError,
+                    LastAttemptUtc = DateTime.UtcNow,
+                };
+            }
         }
     }
 }

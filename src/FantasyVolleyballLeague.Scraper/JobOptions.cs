@@ -20,6 +20,7 @@ namespace FantasyVolleyballLeague.Scraper
             ["--to"] = $"{SectionName}:{nameof(ToSeason)}",
             ["--current"] = $"{SectionName}:{nameof(CurrentSeasonOnly)}",
             ["--force"] = $"{SectionName}:{nameof(Force)}",
+            ["--max-attempts"] = $"{SectionName}:{nameof(MaxMatchAttempts)}",
         };
 
         public JobKind Kind { get; set; } = JobKind.Matches;
@@ -45,6 +46,12 @@ namespace FantasyVolleyballLeague.Scraper
         /// Re-scrape data that is already stored (complete seasons, finished matches, existing rosters).
         /// </summary>
         public bool Force { get; set; }
+
+        /// <summary>
+        /// Failed scrape attempts (runs) after which a match is saved without player statistics.
+        /// Website blocks are not counted. <see cref="Force"/> starts the count from zero.
+        /// </summary>
+        public int MaxMatchAttempts { get; set; } = 3;
 
         public bool IncludesLeague(string leagueKey)
         {

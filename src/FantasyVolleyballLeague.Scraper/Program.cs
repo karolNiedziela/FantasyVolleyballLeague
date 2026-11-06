@@ -3,6 +3,7 @@ using FantasyVolleyballLeague.Scraper.DataProcessors.Statistics;
 using FantasyVolleyballLeague.Scraper.DataProcessors.Rosters;
 using FantasyVolleyballLeague.Scraper.Sources;
 using FantasyVolleyballLeague.Scraper.Sources.Poland.Pls;
+using FantasyVolleyballLeague.Scraper.Sources.Poland.Pls.Matches;
 using FantasyVolleyballLeague.Scraper.Sources.Poland.Pls.Rosters;
 using FantasyVolleyballLeague.Scraper.Storage;
 using Microsoft.Extensions.Configuration;
@@ -29,6 +30,8 @@ builder.Services.AddSingleton<RawDataStore>();
 builder.Services.AddScoped<LeagueSourceResolver>();
 
 // Poland: leagues run by PLS (Polska Liga Siatkówki S.A.).
+builder.Services.AddSingleton<PlsWidgetLoader>();
+builder.Services.AddScoped<PlsMatchScrapper>();
 builder.Services.AddScoped<PlsRosterScrapper>();
 builder.Services.AddScoped<ILeagueSource, PlsLeagueSource>();
 
