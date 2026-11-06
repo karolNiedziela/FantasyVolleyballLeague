@@ -83,6 +83,18 @@ skipped, so a run resumes where the previous one stopped.
       "Source": "Pls",
       "DisplayName": "TAURON 1. Liga",
       "BaseUrl": "https://www.tauron1liga.pl"
+    },
+    {
+      "Key": "TauronLigaKobiet",
+      "Source": "Pls",
+      "DisplayName": "TAURON Liga Kobiet",
+      "BaseUrl": "https://www.tauronligakobiet.pl"
+    },
+    {
+      "Key": "Tauron1LigaKobiet",
+      "Source": "Pls",
+      "DisplayName": "TAURON 1. Liga Kobiet",
+      "BaseUrl": "https://www.tauron1ligakobiet.pl"
     }
   ]
 }
