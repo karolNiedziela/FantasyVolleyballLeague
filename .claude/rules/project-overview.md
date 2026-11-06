@@ -28,7 +28,11 @@ season, and the old domains now return 301 redirects:
 |---|---|---|---|
 | `PlusLiga` | Men, division 1 ("TAURON Liga", formerly PlusLiga) | `https://www.tauronliga.pl` (was plusliga.pl) | 2000/01 |
 | `PLS1Liga` | Men, division 2 ("TAURON 1. Liga", formerly PLS 1 Liga) | `https://www.tauron1liga.pl` (was pls1liga.pl) | 2018/19 |
-| (not scraped) | Women, division 1 ("TAURON Liga Kobiet") | `https://www.tauronligakobiet.pl` (tauronliga.pl used to be the women's site) | 2008/09 |
+| `TauronLigaKobiet` | Women, division 1 ("TAURON Liga Kobiet") | `https://www.tauronligakobiet.pl` (tauronliga.pl used to be the women's site) | 2008/09 |
+| `Tauron1LigaKobiet` | Women, division 2 ("TAURON 1. Liga Kobiet") | `https://www.tauron1ligakobiet.pl` | 2026/27 (single season: the page has a button instead of a season dropdown) |
+
+The women's sites link players as `/zawodnicy/id/{playerId}/...` instead of `/players/id/...`. Player ids are
+unique only within one gender, so `Player` is keyed by `(GenderId, ExternalId)`.
 
 Config keys are stable identifiers used for folder names. They stay the same when the sponsor brand
 changes.

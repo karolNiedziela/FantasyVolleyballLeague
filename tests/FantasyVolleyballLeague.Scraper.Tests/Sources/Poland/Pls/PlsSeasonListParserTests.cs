@@ -20,6 +20,16 @@ namespace FantasyVolleyballLeague.Scraper.Tests.Sources.Poland.Pls
         }
 
         [Fact]
+        public void ParseGamesPageWithSingleSeasonReadsTheSeasonButton()
+        {
+            var seasons = PlsSeasonListParser.Parse(Fixture.Load("games_tour62_single_season.html"), "https://www.tauron1ligakobiet.pl");
+
+            var season = Assert.Single(seasons);
+            Assert.Equal((2026, 2027, 62), (season.StartYear, season.EndYear, season.Tour));
+            Assert.Equal("https://www.tauron1ligakobiet.pl/games/tour/62/nocookies/1.html", season.Url.AbsoluteUri);
+        }
+
+        [Fact]
         public void ParseTeamsPageReturnsTeamSeasonUrls()
         {
             var seasons = PlsSeasonListParser.Parse(Fixture.Load("teams_tour53.html"), BaseUrl);

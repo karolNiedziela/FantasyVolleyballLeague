@@ -5,7 +5,7 @@ namespace FantasyVolleyballLeague.Scraper.Sources.Poland.Pls
 {
     /// <summary>
     /// Extracts stable identifiers used by the PLS websites from their links,
-    /// e.g. <c>/players/id/1516/tour/23.html</c> or <c>/teams/id/18/tour/53.html</c>.
+    /// e.g. <c>/players/id/1516/tour/23.html</c> (<c>/zawodnicy/id/...</c> on the women's sites) or <c>/teams/id/18/tour/53.html</c>.
     /// </summary>
     internal static partial class PlsExternalIds
     {
@@ -35,7 +35,7 @@ namespace FantasyVolleyballLeague.Scraper.Sources.Poland.Pls
             return match.Success ? int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture) : null;
         }
 
-        [GeneratedRegex(@"/players/id/(\d+)")]
+        [GeneratedRegex(@"/(?:players|zawodnicy)/id/(\d+)")]
         private static partial Regex PlayerIdRegex();
 
         [GeneratedRegex(@"/teams/id/(\d+)")]
