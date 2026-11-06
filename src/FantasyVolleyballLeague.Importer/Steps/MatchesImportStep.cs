@@ -144,7 +144,7 @@ namespace FantasyVolleyballLeague.Importer.Steps
                 new MatchOfficials(file.FirstReferee, file.SecondReferee, file.Commissioner));
             match.ReplaceSets(file.Sets.Select(s => (s.HomePoints, s.AwayPoints)));
 
-            var context = new MatchImportContext(file, path, match.Id);
+            var context = new MatchImportContext(file, path, leagueId, match.Id);
             var statistics = BuildStatistics(context, homeRosterId, file.HomeRoster)
                 .Concat(BuildStatistics(context, awayRosterId, file.AwayRoster))
                 .ToList();
@@ -202,7 +202,7 @@ namespace FantasyVolleyballLeague.Importer.Steps
         {
             if (row.ExternalId is not null)
             {
-                return _catalog.ResolvePlayer(row.ExternalId.Value, row.Name);
+                return _catalog.ResolvePlayer(context.LeagueId, row.ExternalId.Value, row.Name);
             }
 
             var nameKey = PlayerNameKey.Create(row.Name);
@@ -225,7 +225,7 @@ namespace FantasyVolleyballLeague.Importer.Steps
             var file = context.File;
             _report.UnresolvedPlayers.Add(new UnresolvedPlayer(
                 file.League, $"{file.Season.StartYear}-{file.Season.EndYear}", file.MatchId, rosterName, row.Name, row.Number));
-            return _catalog.ResolveUnresolvedPlayer(row.Name);
+            return _catalog.ResolveUnresolvedPlayer(context.LeagueId, row.Name);
         }
 
         private Guid? ResolveMvp(MatchImportContext context)
@@ -238,7 +238,8 @@ namespace FantasyVolleyballLeague.Importer.Steps
 
             if (mvp.ExternalId is not null)
             {
-                return _catalog.FindPlayer(mvp.ExternalId.Value) ?? _catalog.ResolvePlayer(mvp.ExternalId.Value, mvp.Name);
+                return _catalog.FindPlayer(context.LeagueId, mvp.ExternalId.Value)
+                    ?? _catalog.ResolvePlayer(context.LeagueId, mvp.ExternalId.Value, mvp.Name);
             }
 
             if (context.ParticipantsByNameKey.TryGetValue(PlayerNameKey.Create(mvp.Name), out var playerId))
@@ -255,16 +256,19 @@ namespace FantasyVolleyballLeague.Importer.Steps
 
         private sealed class MatchImportContext
         {
-            public MatchImportContext(MatchFile file, string path, Guid matchId)
+            public MatchImportContext(MatchFile file, string path, Guid leagueId, Guid matchId)
             {
                 File = file;
                 Path = path;
+                LeagueId = leagueId;
                 MatchId = matchId;
             }
 
             public MatchFile File { get; }
 
             public string Path { get; }
+
+            public Guid LeagueId { get; }
 
             public Guid MatchId { get; }
 

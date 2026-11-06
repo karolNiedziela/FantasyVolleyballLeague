@@ -283,6 +283,9 @@ namespace FantasyVolleyballLeague.Api.Infrastructure.Database.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<int>("GenderId")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("HeightCm")
                         .HasColumnType("integer");
 
@@ -291,7 +294,7 @@ namespace FantasyVolleyballLeague.Api.Infrastructure.Database.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ExternalId")
+                    b.HasIndex("GenderId", "ExternalId")
                         .IsUnique()
                         .HasFilter("\"ExternalId\" IS NOT NULL");
 
@@ -700,6 +703,17 @@ namespace FantasyVolleyballLeague.Api.Infrastructure.Database.Migrations
                         .IsRequired();
 
                     b.Navigation("Season");
+                });
+
+            modelBuilder.Entity("FantasyVolleyballLeague.Api.Domain.Player", b =>
+                {
+                    b.HasOne("FantasyVolleyballLeague.Api.Domain.LeagueGender", "Gender")
+                        .WithMany()
+                        .HasForeignKey("GenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Gender");
                 });
 
             modelBuilder.Entity("FantasyVolleyballLeague.Api.Domain.PlayerMatchStatistics", b =>

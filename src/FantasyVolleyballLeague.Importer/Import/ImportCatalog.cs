@@ -21,8 +21,9 @@ namespace FantasyVolleyballLeague.Importer.Import
         private Dictionary<(Guid PhaseId, string Stage, string Name), Guid> _rounds = [];
         private Dictionary<(Guid SeasonId, int ExternalId), Guid> _rostersByExternalId = [];
         private Dictionary<(Guid SeasonId, string Name), Guid> _rostersByName = [];
-        private Dictionary<int, Guid> _playersByExternalId = [];
-        private Dictionary<string, Guid> _unresolvedPlayersByNameKey = [];
+        private Dictionary<Guid, int> _leagueGenders = [];
+        private Dictionary<(int GenderId, int ExternalId), Guid> _playersByExternalId = [];
+        private Dictionary<(int GenderId, string NameKey), Guid> _unresolvedPlayersByNameKey = [];
         private Dictionary<Guid, List<RosterMember>> _rosterMembers = [];
         private HashSet<(Guid RosterId, Guid PlayerId)> _rosterEntries = [];
 
@@ -50,15 +51,18 @@ namespace FantasyVolleyballLeague.Importer.Import
                 .ToDictionary(t => (t.SeasonId, t.ExternalId!.Value), t => t.Id);
             _rostersByName = rosters.ToDictionary(t => (t.SeasonId, t.Name), t => t.Id);
 
+            _leagueGenders = await _dbContext.Set<League>().AsNoTracking()
+                .ToDictionaryAsync(l => l.Id, l => l.GenderId, cancellationToken);
+
             var players = await _dbContext.Set<Player>().AsNoTracking()
-                .Select(p => new { p.Id, p.ExternalId, p.FullName })
+                .Select(p => new { p.Id, p.GenderId, p.ExternalId, p.FullName })
                 .ToListAsync(cancellationToken);
             _playersByExternalId = players
                 .Where(p => p.ExternalId is not null)
-                .ToDictionary(p => p.ExternalId!.Value, p => p.Id);
+                .ToDictionary(p => (p.GenderId, p.ExternalId!.Value), p => p.Id);
             _unresolvedPlayersByNameKey = players
                 .Where(p => p.ExternalId is null)
-                .GroupBy(p => PlayerNameKey.Create(p.FullName))
+                .GroupBy(p => (p.GenderId, NameKey: PlayerNameKey.Create(p.FullName)))
                 .ToDictionary(g => g.Key, g => g.First().Id);
             var playerNames = players.ToDictionary(p => p.Id, p => p.FullName);
 
@@ -96,6 +100,7 @@ namespace FantasyVolleyballLeague.Importer.Import
             }
 
             await _dbContext.SaveChangesAsync(cancellationToken);
+            _leagueGenders[league.Id] = genderId;
             return league.Id;
         }
 
@@ -167,44 +172,56 @@ namespace FantasyVolleyballLeague.Importer.Import
             return entity.Id;
         }
 
-        public Guid? FindPlayer(int externalId)
+        public Guid? FindPlayer(Guid leagueId, int externalId)
         {
-            return _playersByExternalId.TryGetValue(externalId, out var id) ? id : null;
+            return _playersByExternalId.TryGetValue((GetGenderId(leagueId), externalId), out var id) ? id : null;
         }
 
-        public Guid ResolvePlayer(int externalId, string fullName)
+        public Guid ResolvePlayer(Guid leagueId, int externalId, string fullName)
         {
-            if (_playersByExternalId.TryGetValue(externalId, out var id))
+            var genderId = GetGenderId(leagueId);
+            if (_playersByExternalId.TryGetValue((genderId, externalId), out var id))
             {
                 return id;
             }
 
-            var entity = new Player(fullName, externalId);
+            var entity = new Player(genderId, fullName, externalId);
             _dbContext.Set<Player>().Add(entity);
-            _playersByExternalId[externalId] = entity.Id;
+            _playersByExternalId[(genderId, externalId)] = entity.Id;
             return entity.Id;
         }
 
-        public void RegisterPlayer(int externalId, Guid playerId)
+        public void RegisterPlayer(Guid leagueId, int externalId, Guid playerId)
         {
-            _playersByExternalId[externalId] = playerId;
+            _playersByExternalId[(GetGenderId(leagueId), externalId)] = playerId;
         }
 
         /// <summary>
-        /// A player without a website id (could not be matched to a roster). Reuses an earlier one with the same name.
+        /// A player without a website id (could not be matched to a roster). Reuses an earlier one of the same gender with the same name.
         /// </summary>
-        public Guid ResolveUnresolvedPlayer(string fullName)
+        public Guid ResolveUnresolvedPlayer(Guid leagueId, string fullName)
         {
-            var nameKey = PlayerNameKey.Create(fullName);
-            if (_unresolvedPlayersByNameKey.TryGetValue(nameKey, out var id))
+            var genderId = GetGenderId(leagueId);
+            var key = (genderId, PlayerNameKey.Create(fullName));
+            if (_unresolvedPlayersByNameKey.TryGetValue(key, out var id))
             {
                 return id;
             }
 
-            var entity = new Player(fullName, null);
+            var entity = new Player(genderId, fullName, null);
             _dbContext.Set<Player>().Add(entity);
-            _unresolvedPlayersByNameKey[nameKey] = entity.Id;
+            _unresolvedPlayersByNameKey[key] = entity.Id;
             return entity.Id;
+        }
+
+        /// <summary>
+        /// Gender of a league that went through <see cref="EnsureLeagueAsync"/> (player ids are scoped by it).
+        /// </summary>
+        public int GetGenderId(Guid leagueId)
+        {
+            return _leagueGenders.TryGetValue(leagueId, out var genderId)
+                ? genderId
+                : throw new InvalidOperationException($"League {leagueId} was not ensured before resolving players.");
         }
 
         public IReadOnlyList<RosterMember> GetRosterMembers(Guid rosterId)
