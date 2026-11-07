@@ -3,10 +3,6 @@ using System.Text.Json;
 
 namespace FantasyVolleyballLeague.Importer.Import
 {
-    internal sealed record UnresolvedPlayer(string League, string Season, int MatchId, string Roster, string Name, int? Number);
-
-    internal sealed record FileError(string Path, string Message);
-
     /// <summary>
     /// Summary of an import run, written to <c>{DataRoot}/import-report.json</c>.
     /// </summary>
@@ -35,11 +31,27 @@ namespace FantasyVolleyballLeague.Importer.Import
         /// </summary>
         public int PlayersResolvedByRoster { get; set; }
 
+        /// <summary>
+        /// Players missing from the roster of the club in the match but found by name on another roster of the same
+        /// gender and season (a transfer during the season, or a club of another division).
+        /// </summary>
+        public int PlayersResolvedBySeason { get; set; }
+
+        /// <summary>
+        /// Roster entries created or completed from the career of a player who moved during the season.
+        /// </summary>
+        public int RosterEntriesFromCareer { get; set; }
+
         public List<UnresolvedPlayer> UnresolvedPlayers { get; } = [];
 
         public List<string> UnresolvedMvps { get; } = [];
 
         public List<FileError> FileErrors { get; } = [];
+
+        /// <summary>
+        /// Data the import could repair but that is wrong on the website, e.g. one player id used for both squads of a match.
+        /// </summary>
+        public List<FileError> Warnings { get; } = [];
 
         public async Task<string> WriteAsync(string dataRoot, CancellationToken cancellationToken)
         {

@@ -162,11 +162,23 @@ namespace FantasyVolleyballLeague.Importer.Steps
             foreach (var row in roster.Players)
             {
                 var playerId = ResolvePlayer(context, rosterId, roster.Name, row);
+                var isInOtherSquad = context.ParticipantRosters.TryGetValue(playerId, out var firstRosterId) && firstRosterId != rosterId;
+                if (isInOtherSquad && row.ExternalId is not null)
+                {
+                    // The website links two different players (one in each squad) to the same player id.
+                    _report.Warnings.Add(new FileError(
+                        context.Path,
+                        $"Player id {row.ExternalId} ('{row.Name}') is used for both squads of the match; this one was imported without a website id."));
+                    playerId = ResolveWithoutWebsiteId(context, roster.Name, row);
+                }
+
                 if (!context.Participants.Add(playerId))
                 {
                     _report.FileErrors.Add(new FileError(context.Path, $"Player '{row.Name}' resolved twice in one match; second line skipped."));
                     continue;
                 }
+
+                context.ParticipantRosters[playerId] = rosterId;
 
                 context.ParticipantsByNameKey.TryAdd(PlayerNameKey.Create(row.Name), playerId);
                 _catalog.EnsureRosterEntry(rosterId, playerId, row.Number, row.Name);
@@ -196,7 +208,8 @@ namespace FantasyVolleyballLeague.Importer.Steps
         }
 
         /// <summary>
-        /// Player id from the file → roster shirt number confirmed by name → roster name → unresolved player.
+        /// Player id from the file → roster shirt number confirmed by name → roster name (members who belonged to
+        /// the club on the match date first) → the only player of that name on any roster of the season → unresolved player.
         /// </summary>
         private Guid ResolvePlayer(MatchImportContext context, Guid rosterId, string rosterName, PlayerStatisticsFile row)
         {
@@ -206,22 +219,29 @@ namespace FantasyVolleyballLeague.Importer.Steps
             }
 
             var nameKey = PlayerNameKey.Create(row.Name);
-            var roster = _catalog.GetRosterMembers(rosterId);
-
-            var byNumber = row.Number is null ? [] : roster.Where(m => m.ShirtNumber == row.Number).ToList();
-            if (byNumber.Count == 1 && PlayerNameKey.ShareToken(byNumber[0].NameKey, nameKey))
+            var fromRoster = RosterMatching.Find(_catalog.GetRosterMembers(rosterId), row.Number, nameKey, context.Date);
+            if (fromRoster is not null)
             {
                 _report.PlayersResolvedByRoster++;
-                return byNumber[0].PlayerId;
+                return fromRoster.Value;
             }
 
-            var byName = roster.Where(m => m.NameKey == nameKey).ToList();
-            if (byName.Count == 1)
+            var fromSeason = _catalog.FindPlayerInSeason(context.LeagueId, context.File.Season.StartYear, row.Name);
+            if (fromSeason is not null)
             {
-                _report.PlayersResolvedByRoster++;
-                return byName[0].PlayerId;
+                _report.PlayersResolvedBySeason++;
+                return fromSeason.Value;
             }
 
+            return ResolveWithoutWebsiteId(context, rosterName, row);
+        }
+
+        /// <summary>
+        /// A separate player without a website id. Used when the id cannot be trusted (the website uses it for both
+        /// squads of the match), so neither the id nor the name may lead back to the player already in the match.
+        /// </summary>
+        private Guid ResolveWithoutWebsiteId(MatchImportContext context, string rosterName, PlayerStatisticsFile row)
+        {
             var file = context.File;
             _report.UnresolvedPlayers.Add(new UnresolvedPlayer(
                 file.League, $"{file.Season.StartYear}-{file.Season.EndYear}", file.MatchId, rosterName, row.Name, row.Number));
@@ -252,29 +272,5 @@ namespace FantasyVolleyballLeague.Importer.Steps
             return null;
         }
 
-        private sealed record ImportedMatch(Guid Id, DateTimeOffset SourceScrapedAt);
-
-        private sealed class MatchImportContext
-        {
-            public MatchImportContext(MatchFile file, string path, Guid leagueId, Guid matchId)
-            {
-                File = file;
-                Path = path;
-                LeagueId = leagueId;
-                MatchId = matchId;
-            }
-
-            public MatchFile File { get; }
-
-            public string Path { get; }
-
-            public Guid LeagueId { get; }
-
-            public Guid MatchId { get; }
-
-            public HashSet<Guid> Participants { get; } = [];
-
-            public Dictionary<string, Guid> ParticipantsByNameKey { get; } = [];
-        }
     }
 }

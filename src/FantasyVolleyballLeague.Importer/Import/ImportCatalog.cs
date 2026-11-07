@@ -5,8 +5,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FantasyVolleyballLeague.Importer.Import
 {
-    internal sealed record RosterMember(Guid PlayerId, int? ShirtNumber, string NameKey);
-
     /// <summary>
     /// Identifier cache with resolve-or-create logic shared by the import steps. It only keeps ids,
     /// so the change tracker can be cleared between batches. New entities are added to the context and
@@ -26,6 +24,9 @@ namespace FantasyVolleyballLeague.Importer.Import
         private Dictionary<(int GenderId, string NameKey), Guid> _unresolvedPlayersByNameKey = [];
         private Dictionary<Guid, List<RosterMember>> _rosterMembers = [];
         private HashSet<(Guid RosterId, Guid PlayerId)> _rosterEntries = [];
+        private Dictionary<Guid, (Guid LeagueId, int StartYear)> _seasonInfo = [];
+        private Dictionary<Guid, Guid> _rosterSeasons = [];
+        private SeasonNameIndex _seasonNames = new();
 
         public ImportCatalog(FantasyVolleyballLeagueDbContext dbContext)
         {
@@ -36,6 +37,7 @@ namespace FantasyVolleyballLeague.Importer.Import
         {
             _seasons = await _dbContext.Set<Season>().AsNoTracking()
                 .ToDictionaryAsync(s => (s.LeagueId, s.StartYear), s => s.Id, cancellationToken);
+            _seasonInfo = _seasons.ToDictionary(s => s.Value, s => (s.Key.LeagueId, s.Key.StartYear));
 
             _phases = await _dbContext.Set<Phase>().AsNoTracking()
                 .ToDictionaryAsync(p => (p.SeasonId, p.Name), p => p.Id, cancellationToken);
@@ -50,6 +52,7 @@ namespace FantasyVolleyballLeague.Importer.Import
                 .Where(t => t.ExternalId is not null)
                 .ToDictionary(t => (t.SeasonId, t.ExternalId!.Value), t => t.Id);
             _rostersByName = rosters.ToDictionary(t => (t.SeasonId, t.Name), t => t.Id);
+            _rosterSeasons = rosters.ToDictionary(t => t.Id, t => t.SeasonId);
 
             _leagueGenders = await _dbContext.Set<League>().AsNoTracking()
                 .ToDictionaryAsync(l => l.Id, l => l.GenderId, cancellationToken);
@@ -67,14 +70,22 @@ namespace FantasyVolleyballLeague.Importer.Import
             var playerNames = players.ToDictionary(p => p.Id, p => p.FullName);
 
             var rosterEntries = await _dbContext.Set<RosterPlayer>().AsNoTracking()
-                .Select(tp => new { tp.RosterId, tp.PlayerId, tp.ShirtNumber })
+                .Select(rosterEntry => new { rosterEntry.RosterId, rosterEntry.PlayerId, rosterEntry.ShirtNumber, rosterEntry.MemberFrom, rosterEntry.MemberTo })
                 .ToListAsync(cancellationToken);
-            _rosterEntries = [.. rosterEntries.Select(tp => (tp.RosterId, tp.PlayerId))];
-            _rosterMembers = rosterEntries
-                .GroupBy(tp => tp.RosterId)
-                .ToDictionary(
-                    g => g.Key,
-                    g => g.Select(tp => new RosterMember(tp.PlayerId, tp.ShirtNumber, PlayerNameKey.Create(playerNames[tp.PlayerId]))).ToList());
+            _rosterEntries = [.. rosterEntries.Select(rosterEntry => (rosterEntry.RosterId, rosterEntry.PlayerId))];
+            _seasonNames = new SeasonNameIndex();
+            _rosterMembers = [];
+            foreach (var rosterEntry in rosterEntries)
+            {
+                AddRosterMember(
+                    rosterEntry.RosterId,
+                    new RosterMember(
+                        rosterEntry.PlayerId,
+                        rosterEntry.ShirtNumber,
+                        PlayerNameKey.Create(playerNames[rosterEntry.PlayerId]),
+                        rosterEntry.MemberFrom,
+                        rosterEntry.MemberTo));
+            }
         }
 
         /// <summary>
@@ -115,6 +126,7 @@ namespace FantasyVolleyballLeague.Importer.Import
             var entity = new Season(season.StartYear, season.EndYear, leagueId, season.ExternalId);
             _dbContext.Set<Season>().Add(entity);
             _seasons[key] = entity.Id;
+            _seasonInfo[entity.Id] = (leagueId, season.StartYear);
             return entity.Id;
         }
 
@@ -164,12 +176,29 @@ namespace FantasyVolleyballLeague.Importer.Import
             var entity = new Roster(name, leagueId, seasonId, externalId);
             _dbContext.Set<Roster>().Add(entity);
             _rostersByName[(seasonId, name)] = entity.Id;
+            _rosterSeasons[entity.Id] = seasonId;
             if (externalId is not null)
             {
                 _rostersByExternalId[(seasonId, externalId.Value)] = entity.Id;
             }
 
             return entity.Id;
+        }
+
+        /// <summary>
+        /// The roster of the club (by club id) in a season, or <c>null</c> when the club has none there.
+        /// </summary>
+        public Guid? FindRoster(Guid seasonId, int clubExternalId)
+        {
+            return _rostersByExternalId.TryGetValue((seasonId, clubExternalId), out var id) ? id : null;
+        }
+
+        /// <summary>
+        /// The only player of that name on any roster of the same gender and season, in any division.
+        /// </summary>
+        public Guid? FindPlayerInSeason(Guid leagueId, int startYear, string fullName)
+        {
+            return _seasonNames.Find(GetGenderId(leagueId), startYear, PlayerNameKey.Create(fullName));
         }
 
         public Guid? FindPlayer(Guid leagueId, int externalId)
@@ -239,8 +268,8 @@ namespace FantasyVolleyballLeague.Importer.Import
                 return;
             }
 
-            _dbContext.Set<RosterPlayer>().Add(new RosterPlayer(rosterId, playerId, shirtNumber, null));
-            AddRosterMember(rosterId, new RosterMember(playerId, shirtNumber, PlayerNameKey.Create(fullName)));
+            _dbContext.Set<RosterPlayer>().Add(new RosterPlayer(rosterId, playerId, shirtNumber, null, null, null));
+            AddRosterMember(rosterId, new RosterMember(playerId, shirtNumber, PlayerNameKey.Create(fullName), null, null));
         }
 
         public bool HasRosterEntry(Guid rosterId, Guid playerId)
@@ -248,11 +277,11 @@ namespace FantasyVolleyballLeague.Importer.Import
             return _rosterEntries.Contains((rosterId, playerId));
         }
 
-        public void RegisterRosterEntry(Guid rosterId, Guid playerId, int? shirtNumber, string fullName)
+        public void RegisterRosterEntry(Guid rosterId, Guid playerId, int? shirtNumber, string fullName, DateOnly? from, DateOnly? to)
         {
             if (_rosterEntries.Add((rosterId, playerId)))
             {
-                AddRosterMember(rosterId, new RosterMember(playerId, shirtNumber, PlayerNameKey.Create(fullName)));
+                AddRosterMember(rosterId, new RosterMember(playerId, shirtNumber, PlayerNameKey.Create(fullName), from, to));
             }
         }
 
@@ -265,6 +294,11 @@ namespace FantasyVolleyballLeague.Importer.Import
             }
 
             members.Add(member);
+
+            if (_rosterSeasons.TryGetValue(rosterId, out var seasonId) && _seasonInfo.TryGetValue(seasonId, out var season))
+            {
+                _seasonNames.Add(GetGenderId(season.LeagueId), season.StartYear, member.NameKey, member.PlayerId);
+            }
         }
     }
 }
