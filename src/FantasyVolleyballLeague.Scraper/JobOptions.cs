@@ -2,12 +2,6 @@ using FantasyVolleyballLeague.Scraper.Models;
 
 namespace FantasyVolleyballLeague.Scraper
 {
-    internal enum JobKind
-    {
-        Matches,
-        Rosters,
-    }
-
     internal sealed class JobOptions
     {
         public const string SectionName = "Job";

@@ -19,7 +19,7 @@ namespace FantasyVolleyballLeague.Scraper.Sources.Poland.Pls.Matches
             var header = PlsMatchHeaderParser.Parse(document);
             var players = header.Status == MatchStatus.Finished
                 ? await GetPlayersAsync(session, document)
-                : MatchPlayers.Empty;
+                : PlsMatchPlayers.Empty;
 
             return ToMatchRecord(league, season, entry, header, players);
         }
@@ -28,7 +28,7 @@ namespace FantasyVolleyballLeague.Scraper.Sources.Poland.Pls.Matches
         {
             var document = await LoadMatchPageAsync(league, entry, session);
 
-            return ToMatchRecord(league, season, entry, PlsMatchHeaderParser.Parse(document), MatchPlayers.Empty);
+            return ToMatchRecord(league, season, entry, PlsMatchHeaderParser.Parse(document), PlsMatchPlayers.Empty);
         }
 
         private static async Task<HtmlDocument> LoadMatchPageAsync(LeagueOptions league, ScheduleEntry entry, PlaywrightSession session)
@@ -42,7 +42,7 @@ namespace FantasyVolleyballLeague.Scraper.Sources.Poland.Pls.Matches
         }
 
         private static MatchRecord ToMatchRecord(
-            LeagueOptions league, SeasonReference season, ScheduleEntry entry, PlsMatchHeader header, MatchPlayers players)
+            LeagueOptions league, SeasonReference season, ScheduleEntry entry, PlsMatchHeader header, PlsMatchPlayers players)
         {
             return new MatchRecord
             {
@@ -74,18 +74,18 @@ namespace FantasyVolleyballLeague.Scraper.Sources.Poland.Pls.Matches
         /// <summary>
         /// Picks the parser of the statistics era the match page belongs to.
         /// </summary>
-        private async Task<MatchPlayers> GetPlayersAsync(PlaywrightSession session, HtmlDocument document)
+        private async Task<PlsMatchPlayers> GetPlayersAsync(PlaywrightSession session, HtmlDocument document)
         {
             if (PlsWidgetParser.CanParse(document))
             {
                 var homeTask = PlsWidgetParser.GetPlayersAsync(_widgetLoader, session, document, PlsWidgetParser.HomeIframeClass);
                 var awayTask = PlsWidgetParser.GetPlayersAsync(_widgetLoader, session, document, PlsWidgetParser.AwayIframeClass);
-                return new MatchPlayers(StatisticsLevel.Full, await homeTask, await awayTask);
+                return new PlsMatchPlayers(StatisticsLevel.Full, await homeTask, await awayTask);
             }
 
             if (PlsTableColoredParser.CanParse(document))
             {
-                return new MatchPlayers(
+                return new PlsMatchPlayers(
                     StatisticsLevel.Full,
                     PlsTableColoredParser.GetPlayers(document, 0),
                     PlsTableColoredParser.GetPlayers(document, 1));
@@ -95,7 +95,7 @@ namespace FantasyVolleyballLeague.Scraper.Sources.Poland.Pls.Matches
             var away = PlsArchiveTableParser.GetPlayers(document, 1);
             var level = home.Count + away.Count > 0 ? StatisticsLevel.LineupOnly : StatisticsLevel.None;
 
-            return new MatchPlayers(level, home, away);
+            return new PlsMatchPlayers(level, home, away);
         }
 
         private static MatchRosterRecord ToRosterRecord(PlsMatchHeaderRoster roster, IReadOnlyList<PlayerMatchStatistics> players)
@@ -107,14 +107,6 @@ namespace FantasyVolleyballLeague.Scraper.Sources.Poland.Pls.Matches
                 SetsWon = roster.SetsWon,
                 Players = players,
             };
-        }
-
-        private sealed record MatchPlayers(
-            StatisticsLevel Level,
-            IReadOnlyList<PlayerMatchStatistics> Home,
-            IReadOnlyList<PlayerMatchStatistics> Away)
-        {
-            public static readonly MatchPlayers Empty = new(StatisticsLevel.None, [], []);
         }
     }
 }
