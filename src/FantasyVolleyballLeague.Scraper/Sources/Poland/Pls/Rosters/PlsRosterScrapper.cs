@@ -33,7 +33,7 @@ namespace FantasyVolleyballLeague.Scraper.Sources.Poland.Pls.Rosters
                 await semaphore.WaitAsync();
                 try
                 {
-                    return await GetPlayerAsync(league, entry, session);
+                    return await GetPlayerAsync(league, season.Tour, entry, session);
                 }
                 finally
                 {
@@ -54,12 +54,15 @@ namespace FantasyVolleyballLeague.Scraper.Sources.Poland.Pls.Rosters
         /// <summary>
         /// Enriches the team page entry with the profile page. A failed profile page keeps the team page data only.
         /// </summary>
-        private static async Task<PlayerProfile> GetPlayerAsync(LeagueOptions league, PlsRosterEntry entry, PlaywrightSession session)
+        private static async Task<PlayerProfile> GetPlayerAsync(LeagueOptions league, int? tour, PlsRosterEntry entry, PlaywrightSession session)
         {
             PlsPlayerDetails? details = null;
+            IReadOnlyList<PlayerCareerEntry> career = [];
             try
             {
-                details = PlsRosterParser.ParsePlayerProfile(await LoadAsync(session, $"{league.BaseUrl}{entry.ProfileUrl}"));
+                var profile = await LoadAsync(session, $"{league.BaseUrl}{entry.ProfileUrl}");
+                details = PlsRosterParser.ParsePlayerProfile(profile);
+                career = ToCareerEntries(PlsRosterParser.ParseCareer(profile), tour);
             }
             catch (Exception ex) when (ex is PlaywrightException or TimeoutException)
             {
@@ -76,7 +79,28 @@ namespace FantasyVolleyballLeague.Scraper.Sources.Poland.Pls.Rosters
                 Height = details?.Height,
                 Weight = details?.Weight,
                 AttackReach = details?.AttackReach,
+                Career = career,
             };
+        }
+
+        /// <summary>
+        /// Keeps the stints of the roster's season (the career table lists every season of the player).
+        /// </summary>
+        internal static IReadOnlyList<PlayerCareerEntry> ToCareerEntries(IReadOnlyList<PlsCareerRow> rows, int? tour)
+        {
+            var seasonRows = rows.Where(row => row.Tour == tour);
+
+            return seasonRows
+                .OrderBy(row => row.From)
+                .Select(row => new PlayerCareerEntry
+                {
+                    ClubExternalId = row.ClubExternalId,
+                    From = row.From,
+                    To = row.To,
+                    ShirtNumber = row.ShirtNumber,
+                    Position = row.Position,
+                })
+                .ToList();
         }
 
         private static async Task<HtmlDocument> LoadAsync(PlaywrightSession session, string url)
