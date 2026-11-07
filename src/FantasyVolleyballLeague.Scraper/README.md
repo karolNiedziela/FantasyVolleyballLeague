@@ -243,7 +243,11 @@ Identifiers (`MatchId`, `ExternalId`) are the ids used by the league website.
 
 A roster file contains `Club` (`ExternalId`, `Name`) and `Players`
 (`ExternalId`, `FullName` as "First Last", `Position`, `ShirtNumber`,
-`DateOfBirth`, `Height`, `Weight`, `AttackReach`). The manifest stores the
+`DateOfBirth`, `Height`, `Weight`, `AttackReach`, `Career`). `Career` lists the
+stints of the player in clubs during the season of the roster, read from the
+"Kariera zawodowa w lidze" table of the player page (`ClubExternalId`, `From`,
+`To`, `ShirtNumber`, `Position`). It tells which club a player who moved
+during the season played for on a given day. The manifest stores the
 scrape time, `IsComplete`, match counts, `FailedMatches` and
 `MatchesWithoutStatistics`.
 

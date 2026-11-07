@@ -13,7 +13,7 @@
         public required string FullName { get; init; }
 
         /// <summary>
-        /// English position name (see <see cref="PlsPositionMapper"/>).
+        /// English position name, e.g. "Outside Hitter".
         /// </summary>
         public string? Position { get; init; }
 
@@ -26,5 +26,11 @@
         public int? Weight { get; init; }
 
         public int? AttackReach { get; init; }
+
+        /// <summary>
+        /// Stints in clubs during the roster's season (more than one when the player moved mid-season).
+        /// Empty when the player page could not be read.
+        /// </summary>
+        public IReadOnlyList<PlayerCareerEntry> Career { get; init; } = [];
     }
 }

@@ -35,5 +35,35 @@ namespace FantasyVolleyballLeague.Scraper.Tests.Sources.Poland.Pls
 
             Assert.Equal(new PlsPlayerDetails(new DateOnly(2000, 1, 18), "Setter", 195, 91, 319, 8), details);
         }
+
+        [Fact]
+        public void ParseCareerReadsEveryStintWithClubAndSeason()
+        {
+            var career = PlsRosterParser.ParseCareer(Fixture.Load("player_1668_tour32.html"));
+
+            Assert.Equal(9, career.Count);
+            var opposite = PlsPositionMapper.Map("Atakujący");
+            Assert.Contains(new PlsCareerRow(83, 32, new DateOnly(2019, 10, 25), new DateOnly(2020, 1, 30), 10, opposite), career);
+            Assert.Contains(new PlsCareerRow(15, 32, new DateOnly(2020, 1, 30), new DateOnly(2020, 3, 25), 94, opposite), career);
+            Assert.Contains(new PlsCareerRow(68, 35, new DateOnly(2020, 9, 11), new DateOnly(2021, 5, 9), 94, opposite), career);
+        }
+
+        [Fact]
+        public void ToCareerEntriesKeepsOnlyTheSeasonOfTheRosterOldestFirst()
+        {
+            var career = PlsRosterParser.ParseCareer(Fixture.Load("player_1668_tour32.html"));
+
+            var entries = PlsRosterScrapper.ToCareerEntries(career, 32);
+
+            Assert.Equal([83, 15], entries.Select(entry => entry.ClubExternalId));
+            Assert.Equal(new DateOnly(2019, 10, 25), entries[0].From);
+            Assert.Equal(new DateOnly(2020, 3, 25), entries[1].To);
+        }
+
+        [Fact]
+        public void ParseCareerWithoutCareerTableReturnsNothing()
+        {
+            Assert.Empty(PlsRosterParser.ParseCareer(Fixture.Load("teams_tour53.html")));
+        }
     }
 }

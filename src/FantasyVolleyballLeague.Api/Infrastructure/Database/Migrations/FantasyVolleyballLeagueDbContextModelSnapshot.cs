@@ -471,6 +471,12 @@ namespace FantasyVolleyballLeague.Api.Infrastructure.Database.Migrations
                         .HasColumnType("uuid")
                         .HasDefaultValueSql("uuidv7()");
 
+                    b.Property<DateOnly?>("MemberFrom")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("MemberTo")
+                        .HasColumnType("date");
+
                     b.Property<Guid>("PlayerId")
                         .HasColumnType("uuid");
 
