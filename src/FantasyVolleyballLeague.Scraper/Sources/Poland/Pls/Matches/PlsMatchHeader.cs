@@ -2,8 +2,6 @@ using FantasyVolleyballLeague.Scraper.Models;
 
 namespace FantasyVolleyballLeague.Scraper.Sources.Poland.Pls.Matches
 {
-    internal sealed record PlsMatchHeaderRoster(string Name, int? ExternalId, int? SetsWon);
-
     /// <summary>
     /// Match data available on every match page regardless of the statistics era.
     /// </summary>

@@ -101,12 +101,12 @@ namespace FantasyVolleyballLeague.Scraper.DataProcessors.Statistics
                 ? new Dictionary<int, MatchFailure>()
                 : previousManifest.FailedMatches.ToDictionary(failure => failure.MatchId);
 
-            var outcome = await ScrapeMatchesAsync(league, source, reference, pending, previousFailures, label, session, cancellationToken);
+            var issues = await ScrapePendingMatchesAsync(league, source, reference, pending, previousFailures, label, session, cancellationToken);
 
             var pendingIds = pending.Select(entry => entry.MatchId).ToHashSet();
             var withoutStatistics = (previousManifest?.MatchesWithoutStatistics ?? [])
                 .Where(failure => !pendingIds.Contains(failure.MatchId))
-                .Concat(outcome.WithoutStatistics)
+                .Concat(issues.WithoutStatistics)
                 .OrderBy(failure => failure.MatchId)
                 .ToList();
 
@@ -119,21 +119,21 @@ namespace FantasyVolleyballLeague.Scraper.DataProcessors.Statistics
             var manifest = new SeasonManifest
             {
                 ScrapedAtUtc = DateTime.UtcNow,
-                IsComplete = !isLatestSeason && outcome.Failed.Count == 0 && finishedCount == schedule.Count,
+                IsComplete = !isLatestSeason && issues.Failed.Count == 0 && finishedCount == schedule.Count,
                 MatchCount = schedule.Count,
                 FinishedCount = finishedCount,
                 ScheduledCount = scheduledCount,
-                FailedMatches = outcome.Failed,
+                FailedMatches = issues.Failed,
                 MatchesWithoutStatistics = withoutStatistics,
             };
             await _store.WriteManifestAsync(league.Key, reference, manifest, cancellationToken);
 
             Console.WriteLine(
-                $"{label} Done: {finishedCount} finished, {scheduledCount} scheduled, {outcome.Failed.Count} failed, "
+                $"{label} Done: {finishedCount} finished, {scheduledCount} scheduled, {issues.Failed.Count} failed, "
                 + $"{withoutStatistics.Count} without statistics, complete: {manifest.IsComplete}.");
         }
 
-        private async Task<SeasonScrapeOutcome> ScrapeMatchesAsync(
+        private async Task<SeasonScrapeIssues> ScrapePendingMatchesAsync(
             LeagueOptions league,
             ILeagueSource source,
             SeasonReference season,
@@ -177,7 +177,7 @@ namespace FantasyVolleyballLeague.Scraper.DataProcessors.Statistics
                 }
             }));
 
-            return new SeasonScrapeOutcome(
+            return new SeasonScrapeIssues(
                 [.. failed.OrderBy(failure => failure.MatchId)],
                 [.. withoutStatistics.OrderBy(failure => failure.MatchId)]);
         }
@@ -252,34 +252,6 @@ namespace FantasyVolleyballLeague.Scraper.DataProcessors.Statistics
         private static string FirstLine(string message)
         {
             return message.Split('\n')[0].Trim();
-        }
-
-        private sealed record SeasonScrapeOutcome(IReadOnlyList<MatchFailure> Failed, IReadOnlyList<MatchFailure> WithoutStatistics);
-
-        private sealed record MatchScrapeResult(MatchFailure? Failed, MatchFailure? WithoutStatistics)
-        {
-            public static readonly MatchScrapeResult Succeeded = new(null, null);
-
-            public static MatchScrapeResult NotSaved(int matchId, int attempts, string? lastError)
-            {
-                return new MatchScrapeResult(NewFailure(matchId, attempts, lastError), null);
-            }
-
-            public static MatchScrapeResult SavedWithoutStatistics(int matchId, int attempts, string? lastError)
-            {
-                return new MatchScrapeResult(null, NewFailure(matchId, attempts, lastError));
-            }
-
-            private static MatchFailure NewFailure(int matchId, int attempts, string? lastError)
-            {
-                return new MatchFailure
-                {
-                    MatchId = matchId,
-                    Attempts = attempts,
-                    LastError = lastError,
-                    LastAttemptUtc = DateTime.UtcNow,
-                };
-            }
         }
     }
 }
