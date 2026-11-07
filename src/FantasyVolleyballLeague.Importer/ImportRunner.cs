@@ -32,9 +32,9 @@ namespace FantasyVolleyballLeague.Importer
             var reportPath = await _report.WriteAsync(_reader.DataRoot, cancellationToken);
             Console.WriteLine(
                 $"Rosters: {_report.RostersImported}; matches inserted: {_report.MatchesInserted}, updated: {_report.MatchesUpdated}, " +
-                $"skipped: {_report.MatchesSkipped}; players by roster: {_report.PlayersResolvedByRoster}, " +
+                $"skipped: {_report.MatchesSkipped}; players by roster: {_report.PlayersResolvedByRoster}, by season: {_report.PlayersResolvedBySeason}, " +
                 $"unresolved players: {_report.UnresolvedPlayers.Count}, matches without MVP: {_report.MatchesWithoutMvp}, " +
-                $"file errors: {_report.FileErrors.Count}");
+                $"file errors: {_report.FileErrors.Count}, warnings: {_report.Warnings.Count}");
             Console.WriteLine($"Report: {reportPath}");
         }
     }
