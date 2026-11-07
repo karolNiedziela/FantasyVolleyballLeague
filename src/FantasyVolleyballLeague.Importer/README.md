@@ -93,7 +93,10 @@ For every roster file:
    (`ExternalId`) first, then by name within the season.
 2. **Players** are matched by their website id. New players are created; existing ones get their profile updated
    (full name, date of birth, height, weight, attack reach).
-3. **Roster entries** (`RosterPlayer`: shirt number, position) are created or updated.
+3. **Roster entries** (`RosterPlayer`: shirt number, position, `MemberFrom`/`MemberTo`) are created or updated. The dates
+   come from the `Career` of the player (the stint in this club). A player who moved during the season is also given
+   an entry, with the dates of the stint, in the roster of each other club from his career (a roster lists only the
+   end of the season). Files scraped before the career was read have no dates; the entries then have no dates.
 
 ### Step 2: matches
 
@@ -115,7 +118,13 @@ Each statistics line is matched to a player within the roster of its team:
 1. **Player id** from the file (archive and table-era seasons).
 2. **Shirt number** in the roster, confirmed by a shared name token (widget era).
 3. **Name** in the roster.
-4. Otherwise an **unresolved player** without a website id is created (or reused when the same name was already
+   Members who belonged to the club on the match date (`MemberFrom`/`MemberTo`, one day of tolerance because the
+   website's dates are not exact) are tried first, so a shirt number worn by two players one after the other is
+   unambiguous.
+4. The only player of that **name on any roster of the same gender and season**, in any division. This finds a
+   player who moved during the season (the roster of his former club does not list him) and clubs of another
+   division (e.g. a play-off opponent).
+5. Otherwise an **unresolved player** without a website id is created (or reused when the same name was already
    unresolved) and listed in the report.
 
 Names are compared as a set of upper-case tokens without diacritics, so `Benjamin Toniutti` (roster) equals
@@ -134,9 +143,12 @@ Rosters: 30; matches inserted: 751, updated: 0, skipped: 0; players by roster: 1
 |---|---|
 | `RostersImported`, `MatchesInserted`, `MatchesUpdated`, `MatchesSkipped` | What was imported in this run. |
 | `PlayersResolvedByRoster` | Statistics lines matched through a roster (no player id in the file). |
+| `PlayersResolvedBySeason` | Lines matched by name on another roster of the same gender and season (step 4 above). |
+| `RosterEntriesFromCareer` | Roster entries created from the career of a player who moved during the season. |
 | `UnresolvedPlayers` | Players that could not be matched. Usually means the roster of that season was not scraped. |
 | `UnresolvedMvps` | MVPs given by name that are not among the match participants. |
 | `FileErrors` | Files that could not be read (invalid JSON, unsupported `SchemaVersion`, unknown status) or duplicate lines. Such files are skipped; the rest of the import continues. |
+| `Warnings` | Wrong data on the website that the import repaired, e.g. one player id used for both squads of a match (two players merged into one profile): the second line is imported as a separate player without a website id. |
 
 ## Database schema
 

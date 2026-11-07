@@ -48,6 +48,7 @@ namespace FantasyVolleyballLeague.Importer.Steps
                 var files = _reader.GetFiles("rosters", league.Key);
                 Console.WriteLine($"  [{league.Key}] {files.Count} roster files");
 
+                var stints = new List<ClubStint>();
                 foreach (var path in files)
                 {
                     RosterFile roster;
@@ -61,15 +62,55 @@ namespace FantasyVolleyballLeague.Importer.Steps
                         continue;
                     }
 
-                    await ImportRosterAsync(leagueId, roster, cancellationToken);
+                    await ImportRosterAsync(leagueId, roster, stints, cancellationToken);
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     _dbContext.ChangeTracker.Clear();
                     _report.RostersImported++;
                 }
+
+                await ApplyStintsAsync(stints, cancellationToken);
             }
         }
 
-        private async Task ImportRosterAsync(Guid leagueId, RosterFile roster, CancellationToken cancellationToken)
+        /// <summary>
+        /// Gives a player who moved during the season a roster entry (with the dates) in each club he played for.
+        /// A roster lists the players of the end of the season, so the former club does not list him. It runs after
+        /// all rosters of the league, because the former club's roster may be imported later than the new club's.
+        /// </summary>
+        private async Task ApplyStintsAsync(List<ClubStint> stints, CancellationToken cancellationToken)
+        {
+            var stintsByRoster = stints
+                .Select(stint => (RosterId: _catalog.FindRoster(stint.SeasonId, stint.ClubExternalId), Stint: stint))
+                .Where(item => item.RosterId is not null)
+                .GroupBy(item => item.RosterId!.Value);
+
+            foreach (var group in stintsByRoster)
+            {
+                var entries = await _dbContext.Set<RosterPlayer>()
+                    .Where(rosterEntry => rosterEntry.RosterId == group.Key)
+                    .ToDictionaryAsync(rosterEntry => rosterEntry.PlayerId, cancellationToken);
+
+                foreach (var (_, stint) in group)
+                {
+                    if (entries.TryGetValue(stint.PlayerId, out var entry))
+                    {
+                        entry.Update(stint.ShirtNumber, stint.PositionId, stint.From, stint.To);
+                    }
+                    else if (!_catalog.HasRosterEntry(group.Key, stint.PlayerId))
+                    {
+                        _dbContext.Set<RosterPlayer>().Add(
+                            new RosterPlayer(group.Key, stint.PlayerId, stint.ShirtNumber, stint.PositionId, stint.From, stint.To));
+                        _catalog.RegisterRosterEntry(group.Key, stint.PlayerId, stint.ShirtNumber, stint.FullName, stint.From, stint.To);
+                        _report.RosterEntriesFromCareer++;
+                    }
+                }
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                _dbContext.ChangeTracker.Clear();
+            }
+        }
+
+        private async Task ImportRosterAsync(Guid leagueId, RosterFile roster, List<ClubStint> stints, CancellationToken cancellationToken)
         {
             var seasonId = _catalog.ResolveSeason(leagueId, roster.Season);
             var rosterId = _catalog.ResolveRoster(leagueId, seasonId, roster.Club.Name, roster.Club.ExternalId);
@@ -80,8 +121,8 @@ namespace FantasyVolleyballLeague.Importer.Steps
                 .Where(p => p.GenderId == genderId && externalIds.Contains(p.ExternalId))
                 .ToDictionaryAsync(p => p.ExternalId!.Value, cancellationToken);
             var rosterEntries = await _dbContext.Set<RosterPlayer>()
-                .Where(tp => tp.RosterId == rosterId)
-                .ToDictionaryAsync(tp => tp.PlayerId, cancellationToken);
+                .Where(rosterEntry => rosterEntry.RosterId == rosterId)
+                .ToDictionaryAsync(rosterEntry => rosterEntry.PlayerId, cancellationToken);
 
             foreach (var rosterPlayer in roster.Players)
             {
@@ -103,16 +144,38 @@ namespace FantasyVolleyballLeague.Importer.Steps
                     .FirstOrDefault(p => string.Equals(p.Name, rosterPlayer.Position, StringComparison.OrdinalIgnoreCase))
                     ?.Id;
 
+                var (memberFrom, memberTo) = CareerMembership.ForClub(rosterPlayer.Career, roster.Club.ExternalId);
                 if (rosterEntries.TryGetValue(player.Id, out var entry))
                 {
-                    entry.Update(rosterPlayer.ShirtNumber, positionId);
+                    entry.Update(rosterPlayer.ShirtNumber, positionId, memberFrom, memberTo);
                 }
                 else if (!_catalog.HasRosterEntry(rosterId, player.Id))
                 {
-                    _dbContext.Set<RosterPlayer>().Add(new RosterPlayer(rosterId, player.Id, rosterPlayer.ShirtNumber, positionId));
+                    _dbContext.Set<RosterPlayer>().Add(
+                        new RosterPlayer(rosterId, player.Id, rosterPlayer.ShirtNumber, positionId, memberFrom, memberTo));
                 }
 
-                _catalog.RegisterRosterEntry(rosterId, player.Id, rosterPlayer.ShirtNumber, rosterPlayer.FullName);
+                _catalog.RegisterRosterEntry(rosterId, player.Id, rosterPlayer.ShirtNumber, rosterPlayer.FullName, memberFrom, memberTo);
+
+                AddStintsInOtherClubs(stints, seasonId, roster.Club.ExternalId, player.Id, rosterPlayer);
+            }
+        }
+
+        private static void AddStintsInOtherClubs(List<ClubStint> stints, Guid seasonId, int ownClubExternalId, Guid playerId, RosterPlayerFile rosterPlayer)
+        {
+            var otherClubs = rosterPlayer.Career
+                .Where(entry => entry.ClubExternalId != ownClubExternalId)
+                .GroupBy(entry => entry.ClubExternalId);
+
+            foreach (var club in otherClubs)
+            {
+                var (from, to) = CareerMembership.ForClub(rosterPlayer.Career, club.Key);
+                var latest = club.OrderBy(entry => entry.From).Last();
+                var positionId = PlayerPosition.All
+                    .FirstOrDefault(p => string.Equals(p.Name, latest.Position, StringComparison.OrdinalIgnoreCase))
+                    ?.Id;
+
+                stints.Add(new ClubStint(seasonId, club.Key, playerId, rosterPlayer.FullName, latest.ShirtNumber, positionId, from, to));
             }
         }
     }

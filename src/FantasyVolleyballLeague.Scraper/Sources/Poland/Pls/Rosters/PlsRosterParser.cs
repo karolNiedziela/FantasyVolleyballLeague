@@ -4,18 +4,6 @@ using HtmlAgilityPack;
 
 namespace FantasyVolleyballLeague.Scraper.Sources.Poland.Pls.Rosters
 {
-    internal sealed record PlsRosterEntry(int ExternalId, string FullName, int? ShirtNumber, string? Position, string ProfileUrl);
-
-    internal sealed record PlsTeamPage(string? Name, IReadOnlyList<PlsRosterEntry> Players);
-
-    internal sealed record PlsPlayerDetails(
-        DateOnly? DateOfBirth,
-        string? Position,
-        int? Height,
-        int? Weight,
-        int? AttackReach,
-        int? ShirtNumber);
-
     internal static class PlsRosterParser
     {
         /// <summary>
@@ -79,6 +67,56 @@ namespace FantasyVolleyballLeague.Scraper.Sources.Poland.Pls.Rosters
                 HtmlNodeExtensions.ParseIntOrNull(GetValue("Waga")),
                 HtmlNodeExtensions.ParseIntOrNull(GetValue("Zasięg z wyskoku do ataku")),
                 HtmlNodeExtensions.ParseIntOrNull(GetValue("Numer")));
+        }
+
+        /// <summary>
+        /// Career table of the player page (<c>h2</c> "KARIERA ZAWODOWA W LIDZE" followed by a table). Every row is
+        /// <c>from | to | position | number | team</c>, where the team is a link <c>/teams/id/{clubId}/tour/{tour}.html</c>
+        /// that also tells which season the stint belongs to. Rows that cannot be read are skipped.
+        /// </summary>
+        public static IReadOnlyList<PlsCareerRow> ParseCareer(HtmlDocument document)
+        {
+            var title = document.DocumentNode.Descendants("h2")
+                .FirstOrDefault(h2 => h2.CleanText().StartsWith("KARIERA ZAWODOWA", StringComparison.OrdinalIgnoreCase));
+            var table = title?.ParentNode?.Descendants("table").FirstOrDefault();
+            if (table is null)
+            {
+                return [];
+            }
+
+            return table.Descendants("tr")
+                .Select(ParseCareerRow)
+                .OfType<PlsCareerRow>()
+                .ToList();
+        }
+
+        private static PlsCareerRow? ParseCareerRow(HtmlNode row)
+        {
+            var cells = row.Elements("td").ToArray();
+            if (cells.Length < 5)
+            {
+                return null;
+            }
+
+            var teamUrl = cells[4].Descendants("a").FirstOrDefault()?.GetAttributeValue("href", string.Empty);
+            var clubId = PlsExternalIds.FromTeamUrl(teamUrl);
+            var tour = PlsExternalIds.FromTourUrl(teamUrl);
+            var from = ParseDate(cells[0].CleanText());
+            var to = ParseDate(cells[1].CleanText());
+            if (clubId is null || tour is null || from is null || to is null)
+            {
+                return null;
+            }
+
+            var position = cells[2].CleanText();
+
+            return new PlsCareerRow(
+                clubId.Value,
+                tour.Value,
+                from.Value,
+                to.Value,
+                HtmlNodeExtensions.ParseIntOrNull(cells[3].CleanText()),
+                string.IsNullOrEmpty(position) ? null : PlsPositionMapper.Map(position));
         }
 
         private static PlsRosterEntry? ParseRosterEntry(HtmlNode box)
