@@ -1,4 +1,4 @@
-namespace FantasyVolleyballLeague.Api.Common.Endpoints
+namespace FantasyVolleyballLeague.DataApi.Common.Endpoints
 {
     internal interface IEndpoint
     {

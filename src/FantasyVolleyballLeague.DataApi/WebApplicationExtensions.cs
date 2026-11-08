@@ -1,9 +1,9 @@
-using FantasyVolleyballLeague.Api.Infrastructure.Database;
+using FantasyVolleyballLeague.VolleyballData.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 
-namespace FantasyVolleyballLeague.Api
+namespace FantasyVolleyballLeague.DataApi
 {
     internal static class WebApplicationExtensions
     {

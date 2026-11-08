@@ -37,8 +37,9 @@ rebuilt from them at any time without scraping the websites again.
 |---|---|
 | [`src/FantasyVolleyballLeague.Scraper`](src/FantasyVolleyballLeague.Scraper/README.md) | CLI that scrapes league websites into `data/raw`. |
 | [`src/FantasyVolleyballLeague.Importer`](src/FantasyVolleyballLeague.Importer/README.md) | Console app that loads `data/raw` into PostgreSQL (idempotent). |
-| `src/FantasyVolleyballLeague.Api` | ASP.NET Core minimal API (vertical slices): domain model, EF Core `DbContext` and migrations. |
-| `FantasyVolleyballLeague.AppHost` | .NET Aspire: PostgreSQL container, Api, and the Scraper and Importer as resources started on demand. |
+| `src/FantasyVolleyballLeague.VolleyballData` | Volleyball data model: domain, EF Core `DbContext` and migrations. |
+| `src/FantasyVolleyballLeague.DataApi` | Public read-only ASP.NET Core minimal API (vertical slices, versioned). |
+| `FantasyVolleyballLeague.AppHost` | .NET Aspire: PostgreSQL container, DataApi, and the Scraper and Importer as resources started on demand. |
 | `FantasyVolleyballLeague.ServiceDefaults` | Shared Aspire defaults (OpenTelemetry, health checks). |
 | `tests/` | Scraper parser tests (offline, on saved HTML pages), Importer tests and architecture tests. |
 

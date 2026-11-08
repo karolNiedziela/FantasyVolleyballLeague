@@ -1,6 +1,6 @@
 using System.Text.Json;
-using FantasyVolleyballLeague.Api.Domain;
-using FantasyVolleyballLeague.Api.Infrastructure.Database;
+using FantasyVolleyballLeague.VolleyballData.Domain;
+using FantasyVolleyballLeague.VolleyballData.Database;
 using FantasyVolleyballLeague.Importer.Import;
 using FantasyVolleyballLeague.Importer.Records;
 using Microsoft.EntityFrameworkCore;

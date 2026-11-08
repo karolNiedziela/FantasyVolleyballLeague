@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore.Storage;
 
-namespace FantasyVolleyballLeague.Api.Infrastructure.Database
+namespace FantasyVolleyballLeague.VolleyballData.Database
 {
     internal interface IUnitOfWork
     {

@@ -1,6 +1,6 @@
-using FantasyVolleyballLeague.Api.Infrastructure.Database;
+using FantasyVolleyballLeague.VolleyballData.Database;
 
-namespace FantasyVolleyballLeague.Api.Infrastructure
+namespace FantasyVolleyballLeague.DataApi.Infrastructure
 {
     internal static class DependencyInjection
     {

@@ -1,6 +1,6 @@
 using System.Reflection;
 
-namespace FantasyVolleyballLeague.Api.Common.Endpoints
+namespace FantasyVolleyballLeague.DataApi.Common.Endpoints
 {
     internal static class EndpointExtensions
     {

@@ -1,9 +1,9 @@
 using Asp.Versioning;
-using FantasyVolleyballLeague.Api;
-using FantasyVolleyballLeague.Api.Common.Endpoints;
-using FantasyVolleyballLeague.Api.Common.Versioning;
-using FantasyVolleyballLeague.Api.Infrastructure;
-using FantasyVolleyballLeague.Api.Infrastructure.Database;
+using FantasyVolleyballLeague.DataApi;
+using FantasyVolleyballLeague.DataApi.Common.Endpoints;
+using FantasyVolleyballLeague.DataApi.Common.Versioning;
+using FantasyVolleyballLeague.DataApi.Infrastructure;
+using FantasyVolleyballLeague.VolleyballData.Database;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);

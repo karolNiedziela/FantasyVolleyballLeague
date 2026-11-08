@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace FantasyVolleyballLeague.Api.Infrastructure.Database.Migrations
+namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
 {
     /// <inheritdoc />
     public partial class RosterPlayerMembership : Migration

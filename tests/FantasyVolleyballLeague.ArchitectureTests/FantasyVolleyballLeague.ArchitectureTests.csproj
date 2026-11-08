@@ -15,7 +15,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\FantasyVolleyballLeague.Api\FantasyVolleyballLeague.Api.csproj" />
+    <ProjectReference Include="..\..\src\FantasyVolleyballLeague.DataApi\FantasyVolleyballLeague.DataApi.csproj" />
+    <ProjectReference Include="..\..\src\FantasyVolleyballLeague.VolleyballData\FantasyVolleyballLeague.VolleyballData.csproj" />
   </ItemGroup>
 
   <ItemGroup>

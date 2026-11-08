@@ -1,4 +1,4 @@
-﻿using FantasyVolleyballLeague.Api.Domain;
+﻿using FantasyVolleyballLeague.VolleyballData.Domain;
 
 namespace FantasyVolleyballLeague.Importer
 {
