@@ -1,10 +1,10 @@
-using FantasyVolleyballLeague.Api.Domain;
+using FantasyVolleyballLeague.VolleyballData.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage;
 using System.Reflection;
 
-namespace FantasyVolleyballLeague.Api.Infrastructure.Database
+namespace FantasyVolleyballLeague.VolleyballData.Database
 {
     internal sealed class FantasyVolleyballLeagueDbContext : DbContext, IDbContext, IUnitOfWork
     {

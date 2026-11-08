@@ -1,4 +1,4 @@
-namespace FantasyVolleyballLeague.Api.Domain
+namespace FantasyVolleyballLeague.VolleyballData.Domain
 {
     /// <summary>
     /// A player's line in a match. Counting statistics are <c>null</c> when the source does not provide them

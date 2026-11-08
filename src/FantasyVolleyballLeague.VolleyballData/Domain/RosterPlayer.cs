@@ -1,4 +1,4 @@
-namespace FantasyVolleyballLeague.Api.Domain
+namespace FantasyVolleyballLeague.VolleyballData.Domain
 {
     /// <summary>
     /// A player in a roster (club in a season), with shirt number and position.

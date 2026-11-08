@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 
-namespace FantasyVolleyballLeague.Api.Infrastructure.Database
+namespace FantasyVolleyballLeague.VolleyballData.Database
 {
     internal interface IDbContext
     {

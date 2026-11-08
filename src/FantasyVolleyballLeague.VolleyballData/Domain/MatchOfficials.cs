@@ -1,4 +1,4 @@
-namespace FantasyVolleyballLeague.Api.Domain
+namespace FantasyVolleyballLeague.VolleyballData.Domain
 {
     /// <summary>
     /// Officials are not known for scheduled matches, so every name is optional.

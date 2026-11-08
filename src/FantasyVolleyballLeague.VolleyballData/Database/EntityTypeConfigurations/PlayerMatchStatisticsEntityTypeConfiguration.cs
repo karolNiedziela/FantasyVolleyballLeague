@@ -1,8 +1,8 @@
-﻿using FantasyVolleyballLeague.Api.Domain;
+﻿using FantasyVolleyballLeague.VolleyballData.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace FantasyVolleyballLeague.Api.Infrastructure.Database.EntityTypeConfigurations
+namespace FantasyVolleyballLeague.VolleyballData.Database.EntityTypeConfigurations
 {
     internal sealed class PlayerMatchStatisticsEntityTypeConfiguration : IEntityTypeConfiguration<PlayerMatchStatistics>
     {

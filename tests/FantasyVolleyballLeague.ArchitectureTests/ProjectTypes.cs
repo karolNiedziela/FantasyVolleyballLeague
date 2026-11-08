@@ -1,20 +1,34 @@
 using System.Reflection;
-using FantasyVolleyballLeague.Api.Common.Endpoints;
+using FantasyVolleyballLeague.DataApi.Common.Endpoints;
+using FantasyVolleyballLeague.VolleyballData.Domain;
 
 namespace FantasyVolleyballLeague.ArchitectureTests
 {
-    internal static class ApiTypes
+    /// <summary>
+    /// Types of one production project, used by the architecture tests.
+    /// </summary>
+    internal sealed class ProjectTypes
     {
-        public const string RootNamespace = "FantasyVolleyballLeague.Api";
-
         private const BindingFlags AllDeclared =
             BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
 
-        public static Assembly Assembly { get; } = typeof(IEndpoint).Assembly;
+        private readonly string rootNamespace;
 
-        public static IEnumerable<Type> InNamespace(string relativeNamespace)
+        private ProjectTypes(Assembly assembly, string rootNamespace)
         {
-            var fullNamespace = $"{RootNamespace}.{relativeNamespace}";
+            Assembly = assembly;
+            this.rootNamespace = rootNamespace;
+        }
+
+        public static ProjectTypes DataApi { get; } = new ProjectTypes(typeof(IEndpoint).Assembly, "FantasyVolleyballLeague.DataApi");
+
+        public static ProjectTypes VolleyballData { get; } = new ProjectTypes(typeof(Entity).Assembly, "FantasyVolleyballLeague.VolleyballData");
+
+        public Assembly Assembly { get; }
+
+        public IEnumerable<Type> InNamespace(string relativeNamespace)
+        {
+            var fullNamespace = $"{rootNamespace}.{relativeNamespace}";
             return Assembly.GetTypes()
                 .Where(t => t.Namespace is not null
                     && (t.Namespace == fullNamespace || t.Namespace.StartsWith($"{fullNamespace}.", StringComparison.Ordinal)));

@@ -1,4 +1,4 @@
-namespace FantasyVolleyballLeague.Api.Domain
+namespace FantasyVolleyballLeague.VolleyballData.Domain
 {
     /// <summary>
     /// How detailed the player statistics of a match are. Archive seasons (2000/01–2007/08) only list lineups.

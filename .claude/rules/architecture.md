@@ -2,14 +2,27 @@
 
 ### Project structure
 
-Single API project (`FantasyVolleyballLeague.Api`). Do not split into separate Domain/Infrastructure
-class libraries. All code lives inside:
+The backend is split by product area, not by technical layer. Do not add Domain/Infrastructure class libraries.
 
-    src/FantasyVolleyballLeague.Api/
-    ├── Common/          # Shared plumbing (endpoint scanning, base types)
-    ├── Domain/          # Shared entity classes (EF Core models)
-    ├── Features/        # Vertical slices — one folder per feature
-    └── Infrastructure/  # DbContext, EF configurations, DI wiring
+- `FantasyVolleyballLeague.VolleyballData`: the volleyball data model shared by every consumer
+  (the DataApi, the Importer and a future Fantasy game). It depends on no web project.
+
+      src/FantasyVolleyballLeague.VolleyballData/
+      ├── Domain/          # Entity classes
+      └── Database/        # DbContext, EF configurations, DI wiring, migrations
+
+- `FantasyVolleyballLeague.DataApi`: the public, read-only, versioned API for third parties.
+
+      src/FantasyVolleyballLeague.DataApi/
+      ├── Common/          # Shared plumbing (endpoint scanning, versioning, base types)
+      ├── Features/        # Vertical slices — one folder per feature
+      └── Infrastructure/  # DI wiring
+
+- A future Fantasy game gets its own projects (domain and API) that reference `VolleyballData`.
+  Never reference `DataApi` from another project.
+- `VolleyballData` types are `internal` and exposed through `InternalsVisibleTo`
+  (DataApi, Importer, ArchitectureTests). EF commands: `--project src/FantasyVolleyballLeague.VolleyballData
+  --startup-project src/FantasyVolleyballLeague.DataApi`.
 
 ### Vertical slice architecture
 
@@ -50,8 +63,9 @@ pagination, URL versioning, OpenAPI). Where it conflicts with this file, this fi
 
 ### Namespaces
 
-Root namespace: `FantasyVolleyballLeague.Api`.
-Follow folder structure: `FantasyVolleyballLeague.Api.Features.Rosters.GetRosters`, etc.
+Root namespaces: `FantasyVolleyballLeague.DataApi` and `FantasyVolleyballLeague.VolleyballData`.
+Follow folder structure: `FantasyVolleyballLeague.DataApi.Features.Rosters.GetRosters`,
+`FantasyVolleyballLeague.VolleyballData.Domain`, etc.
 
 ### Dependency injection
 

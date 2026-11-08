@@ -1,4 +1,4 @@
-namespace FantasyVolleyballLeague.Api.Domain
+namespace FantasyVolleyballLeague.VolleyballData.Domain
 {
     /// <summary>
     /// A person, independent of rosters and seasons (season membership is <see cref="RosterPlayer"/>).

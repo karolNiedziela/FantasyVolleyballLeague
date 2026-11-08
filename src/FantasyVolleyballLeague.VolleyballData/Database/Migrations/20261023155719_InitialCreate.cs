@@ -6,7 +6,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
 
-namespace FantasyVolleyballLeague.Api.Infrastructure.Database.Migrations
+namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration

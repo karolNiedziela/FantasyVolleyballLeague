@@ -1,6 +1,6 @@
 ﻿using Asp.Versioning;
 
-namespace FantasyVolleyballLeague.Api.Common.Versioning
+namespace FantasyVolleyballLeague.DataApi.Common.Versioning
 {
     internal static class ApiVersions
     {

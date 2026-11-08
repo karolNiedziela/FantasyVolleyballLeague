@@ -1,4 +1,6 @@
-namespace FantasyVolleyballLeague.Api.Infrastructure.Database
+using Microsoft.Extensions.DependencyInjection;
+
+namespace FantasyVolleyballLeague.VolleyballData.Database
 {
     internal static class DependencyInjection
     {
