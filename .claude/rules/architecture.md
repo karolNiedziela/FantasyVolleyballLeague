@@ -39,6 +39,14 @@ public interface IEndpoint
 Endpoints are auto-registered via `AddEndpoints()` / `MapEndpoints()` in `Program.cs`.
 Do not use controllers.
 
+### REST conventions
+
+Follow the `dotnet-rest-api-rules` skill (resource naming, status codes, Problem Details,
+pagination, URL versioning, OpenAPI). Where it conflicts with this file, this file wins:
+- One `IEndpoint` class and one handler per use case, not a static `Map<Resource>` class
+  and not a service layer behind an interface.
+- Handlers read `DbContext` directly.
+
 
 ### Namespaces
 
