@@ -1,4 +1,4 @@
-using FantasyVolleyballLeague.Api.Common.Endpoints;
+using FantasyVolleyballLeague.DataApi.Common.Endpoints;
 
 namespace FantasyVolleyballLeague.ArchitectureTests
 {
@@ -8,14 +8,12 @@ namespace FantasyVolleyballLeague.ArchitectureTests
     public sealed class LayeringTests
     {
         [Theory]
-        [InlineData("Infrastructure")]
-        [InlineData("Features")]
-        public void DomainDoesNotDependOn(string relativeNamespace)
+        [InlineData("FantasyVolleyballLeague.VolleyballData.Database")]
+        [InlineData("FantasyVolleyballLeague.DataApi")]
+        public void DomainDoesNotDependOn(string forbiddenNamespace)
         {
-            var forbiddenNamespace = $"{ApiTypes.RootNamespace}.{relativeNamespace}";
-
-            var violations = ApiTypes.InNamespace("Domain")
-                .SelectMany(type => ApiTypes.SignatureDependencies(type)
+            var violations = ProjectTypes.VolleyballData.InNamespace("Domain")
+                .SelectMany(type => ProjectTypes.SignatureDependencies(type)
                     .Where(dependency => dependency.Namespace?.StartsWith(forbiddenNamespace, StringComparison.Ordinal) == true)
                     .Select(dependency => $"{type.Name} -> {dependency.FullName}"))
                 .ToList();
@@ -26,7 +24,7 @@ namespace FantasyVolleyballLeague.ArchitectureTests
         [Fact]
         public void NoMvcControllers()
         {
-            var controllers = ApiTypes.Assembly.GetTypes()
+            var controllers = ProjectTypes.DataApi.Assembly.GetTypes()
                 .Where(type => BaseTypes(type).Any(baseType => baseType.FullName is "Microsoft.AspNetCore.Mvc.ControllerBase"))
                 .Select(type => type.FullName)
                 .ToList();
@@ -37,7 +35,7 @@ namespace FantasyVolleyballLeague.ArchitectureTests
         [Fact]
         public void EndpointsImplementIEndpoint()
         {
-            var violations = ApiTypes.Assembly.GetTypes()
+            var violations = ProjectTypes.DataApi.Assembly.GetTypes()
                 .Where(type => type is { IsClass: true, IsAbstract: false } && type.Name.EndsWith("Endpoint", StringComparison.Ordinal))
                 .Where(type => !typeof(IEndpoint).IsAssignableFrom(type))
                 .Select(type => type.FullName)

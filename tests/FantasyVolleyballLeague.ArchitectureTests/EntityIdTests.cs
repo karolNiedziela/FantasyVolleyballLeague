@@ -1,4 +1,4 @@
-using FantasyVolleyballLeague.Api.Domain;
+using FantasyVolleyballLeague.VolleyballData.Domain;
 
 namespace FantasyVolleyballLeague.ArchitectureTests
 {
@@ -22,7 +22,7 @@ namespace FantasyVolleyballLeague.ArchitectureTests
         [Fact]
         public void EveryDomainTypeWithGuidIdDerivesFromEntity()
         {
-            var violations = ApiTypes.InNamespace("Domain")
+            var violations = ProjectTypes.VolleyballData.InNamespace("Domain")
                 .Where(type => type.IsClass && type != typeof(Entity))
                 .Where(type => type.GetProperty(nameof(Entity.Id))?.PropertyType == typeof(Guid))
                 .Where(type => !type.IsSubclassOf(typeof(Entity)) || type.GetProperty(nameof(Entity.Id))!.DeclaringType != typeof(Entity))
@@ -35,7 +35,7 @@ namespace FantasyVolleyballLeague.ArchitectureTests
         [Fact]
         public void DomainContainsEntities()
         {
-            Assert.Contains(ApiTypes.InNamespace("Domain"), type => type.IsSubclassOf(typeof(Entity)));
+            Assert.Contains(ProjectTypes.VolleyballData.InNamespace("Domain"), type => type.IsSubclassOf(typeof(Entity)));
         }
 
         private sealed class TestEntity : Entity;

@@ -2,7 +2,7 @@
 
 Console application that loads the raw JSON files written by the
 [Scraper](../FantasyVolleyballLeague.Scraper/README.md) (`data/raw`) into PostgreSQL, using the EF Core
-`FantasyVolleyballLeagueDbContext` and domain model of `FantasyVolleyballLeague.Api`.
+`FantasyVolleyballLeagueDbContext` and domain model of `FantasyVolleyballLeague.VolleyballData`.
 
 ```mermaid
 flowchart LR
@@ -152,11 +152,11 @@ Rosters: 30; matches inserted: 751, updated: 0, skipped: 0; players by roster: 1
 
 ## Database schema
 
-The Importer does not create or migrate the schema. The Api applies its EF Core migrations on startup in
+The Importer does not create or migrate the schema. The DataApi applies the EF Core migrations on startup in
 Development (so starting the AppHost is enough), or apply them directly:
 
 ```powershell
-dotnet ef database update --project src/FantasyVolleyballLeague.Api --connection "<connection string>"
+dotnet ef database update --project src/FantasyVolleyballLeague.VolleyballData --startup-project src/FantasyVolleyballLeague.DataApi --connection "<connection string>"
 ```
 
 ### Rebuilding the database from scratch
@@ -165,7 +165,7 @@ dotnet ef database update --project src/FantasyVolleyballLeague.Api --connection
 # 1. Drop the database (data can be recreated from data/raw)
 docker exec fantasy-volleyball-league-postgres sh -c 'PGPASSWORD="$POSTGRES_PASSWORD" psql -U postgres -h localhost -d postgres -c "DROP DATABASE \"FantasyVolleyballLeagueDb\" WITH (FORCE);"'
 # 2. Recreate the schema
-dotnet ef database update --project src/FantasyVolleyballLeague.Api --connection "<connection string>"
+dotnet ef database update --project src/FantasyVolleyballLeague.VolleyballData --startup-project src/FantasyVolleyballLeague.DataApi --connection "<connection string>"
 # 3. Import everything
 dotnet run --project src/FantasyVolleyballLeague.Importer
 ```

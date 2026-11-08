@@ -8,7 +8,7 @@ var postgres = builder.AddPostgres("fantasy-volleyball-league-postgres")
     .WithPgAdmin(pgAdmin => pgAdmin.WithLifetime(ContainerLifetime.Persistent))
     .AddDatabase("FantasyVolleyballLeagueDb");
 
-var api = builder.AddProject<Projects.FantasyVolleyballLeague_Api>("fantasy-volleyball-league-api")
+var api = builder.AddProject<Projects.FantasyVolleyballLeague_DataApi>("fantasy-volleyball-league-api")
     .WithReference(postgres)
     .WaitFor(postgres)
     .WithHttpHealthCheck("/health");
