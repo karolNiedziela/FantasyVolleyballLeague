@@ -1,3 +1,4 @@
+using FantasyVolleyballLeague.DataApi.Common.Versioning;
 using System.Reflection;
 
 namespace FantasyVolleyballLeague.DataApi.Common.Endpoints
@@ -22,9 +23,13 @@ namespace FantasyVolleyballLeague.DataApi.Common.Endpoints
         {
             var endpoints = app.Services.GetRequiredService<IEnumerable<IEndpoint>>();
 
+            var v1 = app.NewVersionedApi()
+                .MapGroup("/api/v{version:apiVersion}")
+                .HasApiVersion(ApiVersions.V1);
+
             foreach (var endpoint in endpoints)
             {
-                endpoint.MapEndpoint(app);
+                endpoint.MapEndpoint(v1);
             }
 
             return app;
