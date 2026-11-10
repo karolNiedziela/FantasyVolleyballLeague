@@ -13,13 +13,13 @@ namespace FantasyVolleyballLeague.Importer.Tests.Import
         [InlineData("Jakub Szymański", "Szymanski Jakub")]
         public void CreateIgnoresOrderCaseAndDiacritics(string first, string second)
         {
-            Assert.Equal(PlayerNameKey.Create(first), PlayerNameKey.Create(second));
+            PlayerNameKey.Create(second).ShouldBe(PlayerNameKey.Create(first));
         }
 
         [Fact]
         public void CreateDistinguishesDifferentPlayers()
         {
-            Assert.NotEqual(PlayerNameKey.Create("Jakub Szymański"), PlayerNameKey.Create("Jakub Kochanowski"));
+            PlayerNameKey.Create("Jakub Kochanowski").ShouldNotBe(PlayerNameKey.Create("Jakub Szymański"));
         }
 
         [Theory]
@@ -27,7 +27,7 @@ namespace FantasyVolleyballLeague.Importer.Tests.Import
         [InlineData("Kaczmarek Łukasz", "Kochanowski Jakub", false)]
         public void ShareTokenDetectsCommonSurname(string first, string second, bool expected)
         {
-            Assert.Equal(expected, PlayerNameKey.ShareToken(PlayerNameKey.Create(first), PlayerNameKey.Create(second)));
+            PlayerNameKey.ShareToken(PlayerNameKey.Create(first), PlayerNameKey.Create(second)).ShouldBe(expected);
         }
     }
 }
