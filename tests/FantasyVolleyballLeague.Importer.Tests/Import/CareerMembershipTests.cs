@@ -17,8 +17,8 @@ namespace FantasyVolleyballLeague.Importer.Tests.Import
                 Entry(Visla, new DateOnly(2020, 1, 30), new DateOnly(2020, 3, 25)),
             };
 
-            Assert.Equal((new DateOnly(2019, 10, 25), new DateOnly(2020, 1, 30)), CareerMembership.ForClub(career, Radom));
-            Assert.Equal((new DateOnly(2020, 1, 30), new DateOnly(2020, 3, 25)), CareerMembership.ForClub(career, Visla));
+            CareerMembership.ForClub(career, Radom).ShouldBe((new DateOnly(2019, 10, 25), new DateOnly(2020, 1, 30)));
+            CareerMembership.ForClub(career, Visla).ShouldBe((new DateOnly(2020, 1, 30), new DateOnly(2020, 3, 25)));
         }
 
         [Fact]
@@ -30,14 +30,14 @@ namespace FantasyVolleyballLeague.Importer.Tests.Import
                 Entry(Radom, new DateOnly(2020, 1, 10), new DateOnly(2020, 5, 1)),
             };
 
-            Assert.Equal((new DateOnly(2019, 9, 1), new DateOnly(2020, 5, 1)), CareerMembership.ForClub(career, Radom));
+            CareerMembership.ForClub(career, Radom).ShouldBe((new DateOnly(2019, 9, 1), new DateOnly(2020, 5, 1)));
         }
 
         [Fact]
         public void ForClubWithoutAStintReturnsUnknownDates()
         {
-            Assert.Equal((null, null), CareerMembership.ForClub([], Radom));
-            Assert.Equal((null, null), CareerMembership.ForClub([Entry(Visla, new DateOnly(2020, 1, 1), new DateOnly(2020, 2, 1))], Radom));
+            CareerMembership.ForClub([], Radom).ShouldBe((null, null));
+            CareerMembership.ForClub([Entry(Visla, new DateOnly(2020, 1, 1), new DateOnly(2020, 2, 1))], Radom).ShouldBe((null, null));
         }
 
         private static CareerEntryFile Entry(int clubId, DateOnly from, DateOnly to)

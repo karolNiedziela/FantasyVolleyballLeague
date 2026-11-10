@@ -10,13 +10,13 @@ namespace FantasyVolleyballLeague.ArchitectureTests
         [Fact]
         public void EntityAssignsUuidV7Id()
         {
-            Assert.Equal(7, new TestEntity().Id.Version);
+            new TestEntity().Id.Version.ShouldBe(7);
         }
 
         [Fact]
         public void EntityIdCreatesUuidV7()
         {
-            Assert.Equal(7, EntityId.New().Version);
+            EntityId.New().Version.ShouldBe(7);
         }
 
         [Fact]
@@ -29,13 +29,13 @@ namespace FantasyVolleyballLeague.ArchitectureTests
                 .Select(type => type.Name)
                 .ToList();
 
-            Assert.Empty(violations);
+            violations.ShouldBeEmpty();
         }
 
         [Fact]
         public void DomainContainsEntities()
         {
-            Assert.Contains(ProjectTypes.VolleyballData.InNamespace("Domain"), type => type.IsSubclassOf(typeof(Entity)));
+            ProjectTypes.VolleyballData.InNamespace("Domain").ShouldContain(type => type.IsSubclassOf(typeof(Entity)));
         }
 
         private sealed class TestEntity : Entity;

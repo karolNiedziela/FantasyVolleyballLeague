@@ -13,7 +13,7 @@ namespace FantasyVolleyballLeague.Importer.Tests.Import
         [InlineData(2020, 1, 30)]
         public void CoversDateIncludesTheWholeStint(int year, int month, int day)
         {
-            Assert.True(Member(From, To).CoversDate(new DateOnly(year, month, day)));
+            Member(From, To).CoversDate(new DateOnly(year, month, day)).ShouldBeTrue();
         }
 
         [Theory]
@@ -21,7 +21,7 @@ namespace FantasyVolleyballLeague.Importer.Tests.Import
         [InlineData(2020, 1, 31)]
         public void CoversDateToleratesOneDayOutsideTheStint(int year, int month, int day)
         {
-            Assert.True(Member(From, To).CoversDate(new DateOnly(year, month, day)));
+            Member(From, To).CoversDate(new DateOnly(year, month, day)).ShouldBeTrue();
         }
 
         [Theory]
@@ -29,15 +29,15 @@ namespace FantasyVolleyballLeague.Importer.Tests.Import
         [InlineData(2020, 2, 1)]
         public void CoversDateRejectsMoreThanOneDayOutsideTheStint(int year, int month, int day)
         {
-            Assert.False(Member(From, To).CoversDate(new DateOnly(year, month, day)));
+            Member(From, To).CoversDate(new DateOnly(year, month, day)).ShouldBeFalse();
         }
 
         [Fact]
         public void CoversDateWithUnknownDatesCoversEverything()
         {
-            Assert.True(Member(null, null).CoversDate(new DateOnly(2000, 1, 1)));
-            Assert.True(Member(From, null).CoversDate(new DateOnly(2030, 1, 1)));
-            Assert.True(Member(null, To).CoversDate(new DateOnly(1999, 1, 1)));
+            Member(null, null).CoversDate(new DateOnly(2000, 1, 1)).ShouldBeTrue();
+            Member(From, null).CoversDate(new DateOnly(2030, 1, 1)).ShouldBeTrue();
+            Member(null, To).CoversDate(new DateOnly(1999, 1, 1)).ShouldBeTrue();
         }
 
         private static RosterMember Member(DateOnly? from, DateOnly? to)

@@ -11,9 +11,9 @@ namespace FantasyVolleyballLeague.Scraper.Tests.Sources.Poland.Pls
         {
             var clubs = PlsRosterParser.ParseClubs(Fixture.Load("teams_tour53.html"));
 
-            Assert.Equal(14, clubs.Count);
-            Assert.Contains(new ClubLink(2, "Aluron CMC Warta Zawiercie"), clubs);
-            Assert.Contains(new ClubLink(3, "Asseco Resovia Rzeszów"), clubs);
+            clubs.Count.ShouldBe(14);
+            clubs.ShouldContain(new ClubLink(2, "Aluron CMC Warta Zawiercie"));
+            clubs.ShouldContain(new ClubLink(3, "Asseco Resovia Rzeszów"));
         }
 
         [Fact]
@@ -21,11 +21,11 @@ namespace FantasyVolleyballLeague.Scraper.Tests.Sources.Poland.Pls
         {
             var teamPage = PlsRosterParser.ParseTeamPage(Fixture.Load("team_18_tour53.html"));
 
-            Assert.Equal("GKS Katowice", teamPage.Name);
-            var krulicki = Assert.Single(teamPage.Players, player => player.ExternalId == 278);
-            Assert.Equal(("Bartłomiej Krulicki", 1, "Middle Blocker"), (krulicki.FullName, krulicki.ShirtNumber, krulicki.Position));
-            var szymanski = Assert.Single(teamPage.Players, player => player.ExternalId == 837);
-            Assert.Equal(("Jakub Szymański", 2, "Outside Hitter"), (szymanski.FullName, szymanski.ShirtNumber, szymanski.Position));
+            teamPage.Name.ShouldBe("GKS Katowice");
+            var krulicki = teamPage.Players.Where(player => player.ExternalId == 278).ShouldHaveSingleItem();
+            (krulicki.FullName, krulicki.ShirtNumber, krulicki.Position).ShouldBe(("Bartłomiej Krulicki", 1, "Middle Blocker"));
+            var szymanski = teamPage.Players.Where(player => player.ExternalId == 837).ShouldHaveSingleItem();
+            (szymanski.FullName, szymanski.ShirtNumber, szymanski.Position).ShouldBe(("Jakub Szymański", 2, "Outside Hitter"));
         }
 
         [Fact]
@@ -33,7 +33,7 @@ namespace FantasyVolleyballLeague.Scraper.Tests.Sources.Poland.Pls
         {
             var details = PlsRosterParser.ParsePlayerProfile(Fixture.Load("player_3169_tour53.html"));
 
-            Assert.Equal(new PlsPlayerDetails(new DateOnly(2000, 1, 18), "Setter", 195, 91, 319, 8), details);
+            details.ShouldBe(new PlsPlayerDetails(new DateOnly(2000, 1, 18), "Setter", 195, 91, 319, 8));
         }
 
         [Fact]
@@ -41,11 +41,11 @@ namespace FantasyVolleyballLeague.Scraper.Tests.Sources.Poland.Pls
         {
             var career = PlsRosterParser.ParseCareer(Fixture.Load("player_1668_tour32.html"));
 
-            Assert.Equal(9, career.Count);
+            career.Count.ShouldBe(9);
             var opposite = PlsPositionMapper.Map("Atakujący");
-            Assert.Contains(new PlsCareerRow(83, 32, new DateOnly(2019, 10, 25), new DateOnly(2020, 1, 30), 10, opposite), career);
-            Assert.Contains(new PlsCareerRow(15, 32, new DateOnly(2020, 1, 30), new DateOnly(2020, 3, 25), 94, opposite), career);
-            Assert.Contains(new PlsCareerRow(68, 35, new DateOnly(2020, 9, 11), new DateOnly(2021, 5, 9), 94, opposite), career);
+            career.ShouldContain(new PlsCareerRow(83, 32, new DateOnly(2019, 10, 25), new DateOnly(2020, 1, 30), 10, opposite));
+            career.ShouldContain(new PlsCareerRow(15, 32, new DateOnly(2020, 1, 30), new DateOnly(2020, 3, 25), 94, opposite));
+            career.ShouldContain(new PlsCareerRow(68, 35, new DateOnly(2020, 9, 11), new DateOnly(2021, 5, 9), 94, opposite));
         }
 
         [Fact]
@@ -55,15 +55,15 @@ namespace FantasyVolleyballLeague.Scraper.Tests.Sources.Poland.Pls
 
             var entries = PlsRosterScrapper.ToCareerEntries(career, 32);
 
-            Assert.Equal([83, 15], entries.Select(entry => entry.ClubExternalId));
-            Assert.Equal(new DateOnly(2019, 10, 25), entries[0].From);
-            Assert.Equal(new DateOnly(2020, 3, 25), entries[1].To);
+            entries.Select(entry => entry.ClubExternalId).ShouldBe([83, 15]);
+            entries[0].From.ShouldBe(new DateOnly(2019, 10, 25));
+            entries[1].To.ShouldBe(new DateOnly(2020, 3, 25));
         }
 
         [Fact]
         public void ParseCareerWithoutCareerTableReturnsNothing()
         {
-            Assert.Empty(PlsRosterParser.ParseCareer(Fixture.Load("teams_tour53.html")));
+            PlsRosterParser.ParseCareer(Fixture.Load("teams_tour53.html")).ShouldBeEmpty();
         }
     }
 }

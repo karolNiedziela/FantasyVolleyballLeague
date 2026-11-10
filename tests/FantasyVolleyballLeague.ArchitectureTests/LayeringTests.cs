@@ -18,7 +18,7 @@ namespace FantasyVolleyballLeague.ArchitectureTests
                     .Select(dependency => $"{type.Name} -> {dependency.FullName}"))
                 .ToList();
 
-            Assert.Empty(violations);
+            violations.ShouldBeEmpty();
         }
 
         [Fact]
@@ -29,7 +29,7 @@ namespace FantasyVolleyballLeague.ArchitectureTests
                 .Select(type => type.FullName)
                 .ToList();
 
-            Assert.Empty(controllers);
+            controllers.ShouldBeEmpty();
         }
 
         [Fact]
@@ -41,7 +41,7 @@ namespace FantasyVolleyballLeague.ArchitectureTests
                 .Select(type => type.FullName)
                 .ToList();
 
-            Assert.Empty(violations);
+            violations.ShouldBeEmpty();
         }
 
         private static IEnumerable<Type> BaseTypes(Type type)

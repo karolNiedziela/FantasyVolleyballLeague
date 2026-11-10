@@ -12,7 +12,7 @@ namespace FantasyVolleyballLeague.Importer.Tests.Import
         [InlineData("-12%", -12)]
         public void ParsePercentReadsWebsiteFormats(string value, double expected)
         {
-            Assert.Equal((decimal)expected, StatisticsParsing.ParsePercent(value));
+            StatisticsParsing.ParsePercent(value).ShouldBe((decimal)expected);
         }
 
         [Theory]
@@ -21,7 +21,7 @@ namespace FantasyVolleyballLeague.Importer.Tests.Import
         [InlineData("-")]
         public void ParsePercentReturnsNullWithoutValue(string? value)
         {
-            Assert.Null(StatisticsParsing.ParsePercent(value));
+            StatisticsParsing.ParsePercent(value).ShouldBeNull();
         }
 
         [Fact]
@@ -29,8 +29,8 @@ namespace FantasyVolleyballLeague.Importer.Tests.Import
         {
             var offset = StatisticsParsing.ToUtcOffset(new DateTime(2026, 10, 16, 15, 30, 0, DateTimeKind.Unspecified));
 
-            Assert.Equal(TimeSpan.Zero, offset.Offset);
-            Assert.Equal(new DateTime(2026, 10, 16, 15, 30, 0, DateTimeKind.Utc), offset.UtcDateTime);
+            offset.Offset.ShouldBe(TimeSpan.Zero);
+            offset.UtcDateTime.ShouldBe(new DateTime(2026, 10, 16, 15, 30, 0, DateTimeKind.Utc));
         }
     }
 }

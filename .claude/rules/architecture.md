@@ -98,3 +98,9 @@ Enforced via `.editorconfig`:
 - Braces: always required, even for single-line blocks
 - Expression-bodied members: allowed for accessors and properties, not for constructors or methods
 - `readonly` fields: preferred where possible
+
+## Tests
+
+- Test framework: xunit. Assertions: **Shouldly** (`actual.ShouldBe(expected)`), not xunit `Assert`.
+- Shouldly is a global using in every test project.
+- Expression trees cannot hold tuple literals or `is { }` patterns, so for those use `foreach` + `ShouldBe`, or `.Any(...).ShouldBeTrue()`, instead of `ShouldContain(predicate)`.
