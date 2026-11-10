@@ -11,7 +11,7 @@ namespace FantasyVolleyballLeague.Scraper.Tests.Sources.Poland.Pls
         [InlineData("attention required")]
         public void IsBlockPageTitleDetectsCloudflarePages(string title)
         {
-            Assert.True(PlsWidgetLoader.IsBlockPageTitle(title));
+            PlsWidgetLoader.IsBlockPageTitle(title).ShouldBeTrue();
         }
 
         [Theory]
@@ -19,16 +19,16 @@ namespace FantasyVolleyballLeague.Scraper.Tests.Sources.Poland.Pls
         [InlineData("Team stats")]
         public void IsBlockPageTitleIgnoresOtherPages(string title)
         {
-            Assert.False(PlsWidgetLoader.IsBlockPageTitle(title));
+            PlsWidgetLoader.IsBlockPageTitle(title).ShouldBeFalse();
         }
 
         [Fact]
         public void IsRetryableCoversPlaywrightTimeouts()
         {
-            Assert.True(PlsWidgetLoader.IsRetryable(new TimeoutException("Timeout 15000ms exceeded.")));
-            Assert.True(PlsWidgetLoader.IsRetryable(new PlaywrightException("Page crashed")));
-            Assert.True(PlsWidgetLoader.IsRetryable(new SourceBlockedException("blocked")));
-            Assert.False(PlsWidgetLoader.IsRetryable(new FormatException()));
+            PlsWidgetLoader.IsRetryable(new TimeoutException("Timeout 15000ms exceeded.")).ShouldBeTrue();
+            PlsWidgetLoader.IsRetryable(new PlaywrightException("Page crashed")).ShouldBeTrue();
+            PlsWidgetLoader.IsRetryable(new SourceBlockedException("blocked")).ShouldBeTrue();
+            PlsWidgetLoader.IsRetryable(new FormatException()).ShouldBeFalse();
         }
     }
 }

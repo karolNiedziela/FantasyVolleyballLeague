@@ -11,11 +11,14 @@ namespace FantasyVolleyballLeague.Scraper.Tests.Sources.Poland.Pls
             var schedule = PlsSeasonScheduleParser.Parse(Fixture.Load("games_tour53.html"));
 
             // 14 teams, 26 rounds: 14 * 26 / 2 = 182 matches. The page also lists a few ticker matches.
-            Assert.Equal(182, schedule.Count);
-            Assert.All(schedule, entry => Assert.Equal(("Regular Season", 1), (entry.Phase.Name, entry.Phase.Order)));
-            Assert.All(schedule, entry => Assert.Equal(string.Empty, entry.Stage.Name));
-            Assert.Equal(26, schedule.Select(entry => entry.Round.Order).Distinct().Count());
-            Assert.Contains(schedule, entry => entry.Round is { Name: "Kolejka 1", Order: 1 });
+            schedule.Count.ShouldBe(182);
+            foreach (var entry in schedule)
+            {
+                (entry.Phase.Name, entry.Phase.Order).ShouldBe(("Regular Season", 1));
+                entry.Stage.Name.ShouldBe(string.Empty);
+            }
+            schedule.Select(entry => entry.Round.Order).Distinct().Count().ShouldBe(26);
+            schedule.Any(entry => entry.Round is { Name: "Kolejka 1", Order: 1 }).ShouldBeTrue();
         }
 
         [Fact]
@@ -23,10 +26,10 @@ namespace FantasyVolleyballLeague.Scraper.Tests.Sources.Poland.Pls
         {
             var schedule = PlsSeasonScheduleParser.Parse(Fixture.Load("games_tour52.html"));
 
-            var match = Assert.Single(schedule, entry => entry.MatchId == 1104742);
-            Assert.Equal(("Playoff", 2), (match.Phase.Name, match.Phase.Order));
-            Assert.Equal(("I Ćwierćfinał", 1), (match.Stage.Name, match.Stage.Order));
-            Assert.Equal(("Para 1", 1), (match.Round.Name, match.Round.Order));
+            var match = schedule.Where(entry => entry.MatchId == 1104742).ShouldHaveSingleItem();
+            (match.Phase.Name, match.Phase.Order).ShouldBe(("Playoff", 2));
+            (match.Stage.Name, match.Stage.Order).ShouldBe(("I Ćwierćfinał", 1));
+            (match.Round.Name, match.Round.Order).ShouldBe(("Para 1", 1));
         }
 
         [Fact]
@@ -34,12 +37,10 @@ namespace FantasyVolleyballLeague.Scraper.Tests.Sources.Poland.Pls
         {
             var schedule = PlsSeasonScheduleParser.Parse(Fixture.Load("games_tour5.html"));
 
-            Assert.Equal(
-                ["Regular Season", "Playoff", "Relegation"],
-                schedule.Select(entry => entry.Phase.Name).Distinct());
-            var match = Assert.Single(schedule, entry => entry.MatchId == 1000675);
-            Assert.Equal("Playoff", match.Phase.Name);
-            Assert.Equal("I Ćwierćfinał", match.Stage.Name);
+            schedule.Select(entry => entry.Phase.Name).Distinct().ShouldBe(["Regular Season", "Playoff", "Relegation"]);
+            var match = schedule.Where(entry => entry.MatchId == 1000675).ShouldHaveSingleItem();
+            match.Phase.Name.ShouldBe("Playoff");
+            match.Stage.Name.ShouldBe("I Ćwierćfinał");
         }
 
         [Fact]
@@ -47,9 +48,9 @@ namespace FantasyVolleyballLeague.Scraper.Tests.Sources.Poland.Pls
         {
             var schedule = PlsSeasonScheduleParser.Parse(Fixture.Load("games_tour23.html"));
 
-            var match = Assert.Single(schedule, entry => entry.MatchId == 5604);
-            Assert.Equal("Playoff", match.Phase.Name);
-            Assert.Equal("I Mecz o 13 miejsce", match.Stage.Name);
+            var match = schedule.Where(entry => entry.MatchId == 5604).ShouldHaveSingleItem();
+            match.Phase.Name.ShouldBe("Playoff");
+            match.Stage.Name.ShouldBe("I Mecz o 13 miejsce");
         }
 
         [Theory]
@@ -59,7 +60,7 @@ namespace FantasyVolleyballLeague.Scraper.Tests.Sources.Poland.Pls
         [InlineData("Runda III: Mecze o 5. miejsce", "III Mecze o 5. miejsce")]
         public void NormalizeHeadingMatchesLegacyFolderNames(string heading, string expected)
         {
-            Assert.Equal(expected, PlsSeasonScheduleParser.NormalizeHeading(heading));
+            PlsSeasonScheduleParser.NormalizeHeading(heading).ShouldBe(expected);
         }
     }
 }

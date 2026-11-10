@@ -11,12 +11,12 @@ namespace FantasyVolleyballLeague.Scraper.Tests.Sources.Poland.Pls
         {
             var header = PlsMatchHeaderParser.Parse(Fixture.Load("match_1104808.html"));
 
-            Assert.Equal(MatchStatus.Finished, header.Status);
-            Assert.Equal(new PlsMatchHeaderRoster("GKS Katowice", 18, 3), header.HomeRoster);
-            Assert.Equal(new PlsMatchHeaderRoster("Aluron CMC Warta Zawiercie", 2, 0), header.AwayRoster);
-            Assert.Equal([new SetScore(26, 24), new SetScore(25, 23), new SetScore(25, 22)], header.Sets);
-            Assert.Equal(new DateTime(2026, 10, 16, 15, 30, 0, DateTimeKind.Utc), header.DateUtc);
-            Assert.True(header.IsTimeConfirmed);
+            header.Status.ShouldBe(MatchStatus.Finished);
+            header.HomeRoster.ShouldBe(new PlsMatchHeaderRoster("GKS Katowice", 18, 3));
+            header.AwayRoster.ShouldBe(new PlsMatchHeaderRoster("Aluron CMC Warta Zawiercie", 2, 0));
+            header.Sets.ShouldBe([new SetScore(26, 24), new SetScore(25, 23), new SetScore(25, 22)]);
+            header.DateUtc.ShouldBe(new DateTime(2026, 10, 16, 15, 30, 0, DateTimeKind.Utc));
+            header.IsTimeConfirmed.ShouldBeTrue();
         }
 
         [Fact]
@@ -24,13 +24,13 @@ namespace FantasyVolleyballLeague.Scraper.Tests.Sources.Poland.Pls
         {
             var header = PlsMatchHeaderParser.Parse(Fixture.Load("match_1104989.html"));
 
-            Assert.Equal(MatchStatus.Scheduled, header.Status);
-            Assert.Empty(header.Sets);
-            Assert.Null(header.HomeRoster.SetsWon);
-            Assert.Equal(2, header.HomeRoster.ExternalId);
-            Assert.False(header.IsTimeConfirmed);
+            header.Status.ShouldBe(MatchStatus.Scheduled);
+            header.Sets.ShouldBeEmpty();
+            header.HomeRoster.SetsWon.ShouldBeNull();
+            header.HomeRoster.ExternalId.ShouldBe(2);
+            header.IsTimeConfirmed.ShouldBeFalse();
             // 27.03.2027 local midnight (CET, UTC+1).
-            Assert.Equal(new DateTime(2027, 3, 26, 23, 0, 0, DateTimeKind.Utc), header.DateUtc);
+            header.DateUtc.ShouldBe(new DateTime(2027, 3, 26, 23, 0, 0, DateTimeKind.Utc));
         }
 
         [Fact]
@@ -38,12 +38,12 @@ namespace FantasyVolleyballLeague.Scraper.Tests.Sources.Poland.Pls
         {
             var header = PlsMatchHeaderParser.Parse(Fixture.Load("match_1000675.html"));
 
-            Assert.Equal(MatchStatus.Finished, header.Status);
-            Assert.Equal(new PlsMatchHeaderRoster("SKRA BEŁCHATÓW", 61, 3), header.HomeRoster);
-            Assert.Equal((3, 0), (header.AwayRoster.ExternalId, header.AwayRoster.SetsWon));
-            Assert.Equal([new SetScore(25, 20), new SetScore(25, 23), new SetScore(25, 17)], header.Sets);
-            Assert.Equal(("A-1", 600), (header.MatchNumber, header.Attendance));
-            Assert.Equal(new DateTime(2005, 3, 18, 18, 0, 0, DateTimeKind.Utc), header.DateUtc);
+            header.Status.ShouldBe(MatchStatus.Finished);
+            header.HomeRoster.ShouldBe(new PlsMatchHeaderRoster("SKRA BEŁCHATÓW", 61, 3));
+            (header.AwayRoster.ExternalId, header.AwayRoster.SetsWon).ShouldBe((3, 0));
+            header.Sets.ShouldBe([new SetScore(25, 20), new SetScore(25, 23), new SetScore(25, 17)]);
+            (header.MatchNumber, header.Attendance).ShouldBe(("A-1", 600));
+            header.DateUtc.ShouldBe(new DateTime(2005, 3, 18, 18, 0, 0, DateTimeKind.Utc));
         }
 
         [Fact]
@@ -51,9 +51,9 @@ namespace FantasyVolleyballLeague.Scraper.Tests.Sources.Poland.Pls
         {
             var header = PlsMatchHeaderParser.Parse(Fixture.Load("match_1104115.html"));
 
-            Assert.Equal(new PlayerReference("Benjamin Toniutti", 341), header.Mvp);
-            Assert.Equal(("A-1", 2741), (header.MatchNumber, header.Attendance));
-            Assert.Equal(3, header.Sets.Count);
+            header.Mvp.ShouldBe(new PlayerReference("Benjamin Toniutti", 341));
+            (header.MatchNumber, header.Attendance).ShouldBe(("A-1", 2741));
+            header.Sets.Count.ShouldBe(3);
         }
 
         [Fact]
@@ -61,12 +61,10 @@ namespace FantasyVolleyballLeague.Scraper.Tests.Sources.Poland.Pls
         {
             var header = PlsMatchHeaderParser.Parse(Fixture.Load("match_5604.html"));
 
-            Assert.Equal(new PlsMatchHeaderRoster("MKS Będzin", 52, 1), header.HomeRoster);
-            Assert.Equal((75, 3), (header.AwayRoster.ExternalId, header.AwayRoster.SetsWon));
-            Assert.Equal(
-                [new SetScore(25, 22), new SetScore(19, 25), new SetScore(20, 25), new SetScore(16, 25)],
-                header.Sets);
-            Assert.NotNull(header.Mvp?.ExternalId);
+            header.HomeRoster.ShouldBe(new PlsMatchHeaderRoster("MKS Będzin", 52, 1));
+            (header.AwayRoster.ExternalId, header.AwayRoster.SetsWon).ShouldBe((75, 3));
+            header.Sets.ShouldBe([new SetScore(25, 22), new SetScore(19, 25), new SetScore(20, 25), new SetScore(16, 25)]);
+            header.Mvp?.ExternalId.ShouldNotBeNull();
         }
     }
 }
