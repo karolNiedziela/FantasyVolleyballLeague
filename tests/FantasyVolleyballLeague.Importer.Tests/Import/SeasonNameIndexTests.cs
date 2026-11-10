@@ -14,7 +14,7 @@ namespace FantasyVolleyballLeague.Importer.Tests.Import
             var player = Guid.CreateVersion7();
             index.Add(Men, 2019, PlayerNameKey.Create("Michał Filip"), player);
 
-            Assert.Equal(player, index.Find(Men, 2019, PlayerNameKey.Create("Filip Michal")));
+            index.Find(Men, 2019, PlayerNameKey.Create("Filip Michal")).ShouldBe(player);
         }
 
         [Fact]
@@ -25,7 +25,7 @@ namespace FantasyVolleyballLeague.Importer.Tests.Import
             index.Add(Men, 2019, "FILIP MICHAL", player);
             index.Add(Men, 2019, "FILIP MICHAL", player);
 
-            Assert.Equal(player, index.Find(Men, 2019, "FILIP MICHAL"));
+            index.Find(Men, 2019, "FILIP MICHAL").ShouldBe(player);
         }
 
         [Fact]
@@ -35,7 +35,7 @@ namespace FantasyVolleyballLeague.Importer.Tests.Import
             index.Add(Men, 2019, "NOWAK JAN", Guid.CreateVersion7());
             index.Add(Men, 2019, "NOWAK JAN", Guid.CreateVersion7());
 
-            Assert.Null(index.Find(Men, 2019, "NOWAK JAN"));
+            index.Find(Men, 2019, "NOWAK JAN").ShouldBeNull();
         }
 
         [Fact]
@@ -44,8 +44,8 @@ namespace FantasyVolleyballLeague.Importer.Tests.Import
             var index = new SeasonNameIndex();
             index.Add(Women, 2019, "WOJCIK MARTA", Guid.CreateVersion7());
 
-            Assert.Null(index.Find(Men, 2019, "WOJCIK MARTA"));
-            Assert.Null(index.Find(Women, 2020, "WOJCIK MARTA"));
+            index.Find(Men, 2019, "WOJCIK MARTA").ShouldBeNull();
+            index.Find(Women, 2020, "WOJCIK MARTA").ShouldBeNull();
         }
     }
 }

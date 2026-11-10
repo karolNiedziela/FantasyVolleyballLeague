@@ -12,11 +12,11 @@ namespace FantasyVolleyballLeague.Scraper.Tests.Sources.Poland.Pls
         {
             var seasons = PlsSeasonListParser.Parse(Fixture.Load("games_tour53.html"), BaseUrl);
 
-            Assert.Equal((2026, 2027, 53), (seasons[0].StartYear, seasons[0].EndYear, seasons[0].Tour));
-            Assert.Equal((2025, 52), (seasons[1].StartYear, seasons[1].Tour));
-            Assert.Equal((2024, 47), (seasons[2].StartYear, seasons[2].Tour));
-            Assert.Equal("https://www.tauronliga.pl/games/tour/53/nocookies/1.html", seasons[0].Url.AbsoluteUri);
-            Assert.Contains(seasons, s => s.StartYear == 2000);
+            (seasons[0].StartYear, seasons[0].EndYear, seasons[0].Tour).ShouldBe((2026, 2027, 53));
+            (seasons[1].StartYear, seasons[1].Tour).ShouldBe((2025, 52));
+            (seasons[2].StartYear, seasons[2].Tour).ShouldBe((2024, 47));
+            seasons[0].Url.AbsoluteUri.ShouldBe("https://www.tauronliga.pl/games/tour/53/nocookies/1.html");
+            seasons.ShouldContain(s => s.StartYear == 2000);
         }
 
         [Fact]
@@ -24,9 +24,9 @@ namespace FantasyVolleyballLeague.Scraper.Tests.Sources.Poland.Pls
         {
             var seasons = PlsSeasonListParser.Parse(Fixture.Load("games_tour62_single_season.html"), "https://www.tauron1ligakobiet.pl");
 
-            var season = Assert.Single(seasons);
-            Assert.Equal((2026, 2027, 62), (season.StartYear, season.EndYear, season.Tour));
-            Assert.Equal("https://www.tauron1ligakobiet.pl/games/tour/62/nocookies/1.html", season.Url.AbsoluteUri);
+            var season = seasons.ShouldHaveSingleItem();
+            (season.StartYear, season.EndYear, season.Tour).ShouldBe((2026, 2027, 62));
+            season.Url.AbsoluteUri.ShouldBe("https://www.tauron1ligakobiet.pl/games/tour/62/nocookies/1.html");
         }
 
         [Fact]
@@ -34,8 +34,8 @@ namespace FantasyVolleyballLeague.Scraper.Tests.Sources.Poland.Pls
         {
             var seasons = PlsSeasonListParser.Parse(Fixture.Load("teams_tour53.html"), BaseUrl);
 
-            Assert.Equal(53, seasons[0].Tour);
-            Assert.Equal("https://www.tauronliga.pl/teams/tour/53/nocookies/1.html", seasons[0].Url.AbsoluteUri);
+            seasons[0].Tour.ShouldBe(53);
+            seasons[0].Url.AbsoluteUri.ShouldBe("https://www.tauronliga.pl/teams/tour/53/nocookies/1.html");
         }
     }
 }
