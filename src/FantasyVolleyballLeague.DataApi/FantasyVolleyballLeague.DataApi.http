@@ -1,1 +1,3 @@
-@FantasyVolleyballLeague.Api_HostAddress = http://localhost:5067
+### OpenAPI document
+GET {{DataApi_HostAddress}}/openapi/v1.json
+Accept: application/json

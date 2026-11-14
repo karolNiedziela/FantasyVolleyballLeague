@@ -10,6 +10,8 @@
     <InternalsVisibleTo Include="FantasyVolleyballLeague.DataApi" />
     <InternalsVisibleTo Include="FantasyVolleyballLeague.Importer" />
     <InternalsVisibleTo Include="FantasyVolleyballLeague.ArchitectureTests" />
+    <InternalsVisibleTo Include="FantasyVolleyballLeague.DataApi.UnitTests" />
+    <InternalsVisibleTo Include="FantasyVolleyballLeague.DataApi.IntegrationTests" />
   </ItemGroup>
 
 </Project>

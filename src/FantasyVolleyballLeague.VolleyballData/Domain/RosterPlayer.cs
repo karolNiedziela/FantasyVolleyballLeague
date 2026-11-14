@@ -1,8 +1,5 @@
 namespace FantasyVolleyballLeague.VolleyballData.Domain
 {
-    /// <summary>
-    /// A player in a roster (club in a season), with shirt number and position.
-    /// </summary>
     internal sealed class RosterPlayer : Entity
     {
         public Guid RosterId { get; private set; }

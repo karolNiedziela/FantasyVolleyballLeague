@@ -10,9 +10,6 @@ namespace FantasyVolleyballLeague.Importer.Records
 
         public int? ShirtNumber { get; init; }
 
-        /// <summary>
-        /// English position name, e.g. "Outside Hitter".
-        /// </summary>
         public string? Position { get; init; }
     }
 }

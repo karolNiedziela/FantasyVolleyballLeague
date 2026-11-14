@@ -60,7 +60,7 @@ now `importer`):
 | `domain`   | `src/FantasyVolleyballLeague.VolleyballData/Domain`                                   |
 | `db`       | EF Core configurations and migrations (`VolleyballData/Database`)                     |
 | `api`      | `src/FantasyVolleyballLeague.DataApi` (endpoints, features, startup)                  |
-| `apphost`  | `FantasyVolleyballLeague.AppHost`, `FantasyVolleyballLeague.ServiceDefaults`          |
+| `apphost`  | `FantasyVolleyballLeague.AppHost`, `ServiceDefaults`, `src/FantasyVolleyballLeague.Contracts` |
 | `tests`    | `tests/` when only tests change                                                       |
 | `deps`     | Package versions in `Directory.Packages.props`                                        |
 | `claude`   | `.claude/` (rules, agents, skills)                                                    |

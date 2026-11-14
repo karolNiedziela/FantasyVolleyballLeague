@@ -27,11 +27,14 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\FantasyVolleyballLeague.ServiceDefaults\FantasyVolleyballLeague.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\FantasyVolleyballLeague.Contracts\FantasyVolleyballLeague.Contracts.csproj" />
     <ProjectReference Include="..\FantasyVolleyballLeague.VolleyballData\FantasyVolleyballLeague.VolleyballData.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="FantasyVolleyballLeague.ArchitectureTests" />
+    <InternalsVisibleTo Include="FantasyVolleyballLeague.DataApi.UnitTests" />
+    <InternalsVisibleTo Include="FantasyVolleyballLeague.DataApi.IntegrationTests" />
   </ItemGroup>
 
 </Project>
