@@ -1,3 +1,4 @@
+using FantasyVolleyballLeague.ArchitectureTests.Fixtures;
 using FantasyVolleyballLeague.DataApi.Common.Endpoints;
 
 namespace FantasyVolleyballLeague.ArchitectureTests
