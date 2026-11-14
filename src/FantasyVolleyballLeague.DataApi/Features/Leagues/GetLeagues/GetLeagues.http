@@ -1,0 +1,51 @@
+### List leagues (defaults: sorted by name, offset 0, limit 25)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues
+Accept: application/json
+
+### Page through the list
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues?offset=0&limit=2
+Accept: application/json
+
+### Second page (follow links.next from the previous response)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues?offset=2&limit=2
+Accept: application/json
+
+### Sort by name, descending
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues?sort=-name
+Accept: application/json
+
+### Sort by division, then by name
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues?sort=divisionNumber,-name
+Accept: application/json
+
+### Only men's leagues (gender 1 = Men, 2 = Women)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues?gender=1
+Accept: application/json
+
+### Women's top division
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues?gender=2&division=1
+Accept: application/json
+
+### Filters, sort and paging together
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues?gender=1&sort=-divisionNumber&offset=0&limit=10
+Accept: application/json
+
+### Offset beyond the end: 200 with empty items, not an error
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues?offset=1000
+Accept: application/json
+
+### Error: unknown sort field (400, errors.sort)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues?sort=height
+Accept: application/json
+
+### Error: limit out of range (400, errors.limit)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues?limit=0
+Accept: application/json
+
+### Error: limit above the maximum of 100 (400, errors.limit)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues?limit=1000
+Accept: application/json
+
+### Error: negative offset (400, errors.offset)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues?offset=-1
+Accept: application/json

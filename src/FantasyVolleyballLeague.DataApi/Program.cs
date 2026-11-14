@@ -5,13 +5,16 @@ using FantasyVolleyballLeague.DataApi.Common.ErrorHandling;
 using FantasyVolleyballLeague.DataApi.Common.Handlers;
 using FantasyVolleyballLeague.DataApi.Common.Versioning;
 using FantasyVolleyballLeague.DataApi.Infrastructure;
+using FantasyVolleyballLeague.Contracts;
 using FantasyVolleyballLeague.VolleyballData.Database;
 using Microsoft.Extensions.Options;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.AddNpgsqlDbContext<FantasyVolleyballLeagueDbContext>("FantasyVolleyballLeagueDb");
+builder.AddNpgsqlDbContext<FantasyVolleyballLeagueDbContext>(
+    DatabaseResource.Name,
+    configureDbContextOptions: options => options.ThrowOnUnorderedPaging());
 builder.Services.AddInfrastructure();
 builder.Services.AddHandlers();
 builder.AddServiceDefaults();
@@ -38,7 +41,15 @@ builder.Services.AddApiVersioning(options =>
     options.GroupNameFormat = "'v'V";
     options.SubstituteApiVersionInUrl = true;
 })
-.AddOpenApi();
+.AddOpenApi(options =>
+{
+    options.Document.AddDocumentTransformer((document, _, _) =>
+    {
+        document.Info.Description = "Read-only API with Polish professional volleyball league data: leagues, seasons, rosters, players and matches.";
+
+        return Task.CompletedTask;
+    });
+});
 
 var app = builder.Build();
 
