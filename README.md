@@ -41,6 +41,7 @@ rebuilt from them at any time without scraping the websites again.
 | `src/FantasyVolleyballLeague.DataApi` | Public read-only ASP.NET Core minimal API (vertical slices, versioned). |
 | `FantasyVolleyballLeague.AppHost` | .NET Aspire: PostgreSQL container, DataApi, and the Scraper and Importer as resources started on demand. |
 | `FantasyVolleyballLeague.ServiceDefaults` | Shared Aspire defaults (OpenTelemetry, health checks). |
+| `src/FantasyVolleyballLeague.Contracts` | Constants shared by the AppHost, the apps and the integration tests (database name, pinned Postgres image). |
 | `tests/` | Scraper parser tests (offline, on saved HTML pages), Importer tests and architecture tests. |
 
 ## 🚀 Getting started

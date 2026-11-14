@@ -63,6 +63,7 @@ Known pitfalls:
 | `FantasyVolleyballLeague.Importer` | **Importer** console app. Reads `data/raw`, upserts into Postgres using the VolleyballData DbContext (`InternalsVisibleTo`). |
 | `FantasyVolleyballLeague.AppHost` | Aspire: Postgres container, DataApi (healthy once migrations are applied), and explicit-start resources started from the dashboard: `scraper-matches` (current season matches), `scraper-rosters` (current season rosters) and `importer` (waits for the DataApi). Historical backfills run from the Scraper CLI. |
 | `FantasyVolleyballLeague.ServiceDefaults` | Aspire service defaults (OpenTelemetry, health checks). |
+| `FantasyVolleyballLeague.Contracts` | Constants shared by the AppHost, the DataApi, the Importer and the integration tests (`DatabaseResource`: database name and the pinned Postgres image). No packages. |
 
 ### Data pipeline
 
