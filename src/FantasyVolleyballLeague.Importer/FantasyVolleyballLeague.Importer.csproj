@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FantasyVolleyballLeague.VolleyballData\FantasyVolleyballLeague.VolleyballData.csproj" />
+    <ProjectReference Include="..\FantasyVolleyballLeague.Contracts\FantasyVolleyballLeague.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

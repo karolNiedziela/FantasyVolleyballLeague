@@ -1,14 +1,17 @@
+using FantasyVolleyballLeague.Contracts;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
-var postgres = builder.AddPostgres("fantasy-volleyball-league-postgres")
+var postgres = builder.AddPostgres("postgres")
+    .WithImage(DatabaseResource.PostgresImage, DatabaseResource.PostgresImageTag)
     .WithLifetime(ContainerLifetime.Persistent)
-    .WithDataVolume()
+    .WithDataVolume("fantasy-volleyball-league-postgres-data")
     .WithHostPort(5432)
     .WithContainerName("fantasy-volleyball-league-postgres")
     .WithPgAdmin(pgAdmin => pgAdmin.WithLifetime(ContainerLifetime.Persistent))
-    .AddDatabase("FantasyVolleyballLeagueDb");
+    .AddDatabase(DatabaseResource.Name);
 
-var api = builder.AddProject<Projects.FantasyVolleyballLeague_DataApi>("fantasy-volleyball-league-api")
+var dataApi = builder.AddProject<Projects.FantasyVolleyballLeague_DataApi>("data-api")
     .WithReference(postgres)
     .WaitFor(postgres)
     .WithHttpHealthCheck("/health");
@@ -22,9 +25,10 @@ builder.AddProject<Projects.FantasyVolleyballLeague_Scraper>("scraper-rosters")
     .WithArgs("--job", "Rosters", "--current", "true")
     .WithExplicitStart();
 
+// Waits for the DataApi, not only Postgres: the DataApi applies the EF migrations on startup.
 builder.AddProject<Projects.FantasyVolleyballLeague_Importer>("importer")
     .WithReference(postgres)
-    .WaitFor(api)
+    .WaitFor(dataApi)
     .WithExplicitStart();
 
 await builder.Build().RunAsync();

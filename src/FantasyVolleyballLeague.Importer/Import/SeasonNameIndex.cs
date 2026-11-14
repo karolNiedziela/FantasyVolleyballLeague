@@ -21,7 +21,6 @@ namespace FantasyVolleyballLeague.Importer.Import
             players.Add(playerId);
         }
 
-        /// <returns>The player, or <c>null</c> when the name is unknown or belongs to more than one player.</returns>
         public Guid? Find(int genderId, int startYear, string nameKey)
         {
             return _players.TryGetValue((genderId, startYear, nameKey), out var players) && players.Count == 1

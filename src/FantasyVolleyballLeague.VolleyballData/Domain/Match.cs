@@ -5,9 +5,6 @@ namespace FantasyVolleyballLeague.VolleyballData.Domain
         private readonly List<SetScore> _sets = [];
         private readonly List<PlayerMatchStatistics> _playerStatistics = [];
 
-        /// <summary>
-        /// Match id on the league website.
-        /// </summary>
         public int? ExternalId { get; private set; }
 
         /// <summary>

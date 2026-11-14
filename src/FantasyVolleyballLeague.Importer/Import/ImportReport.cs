@@ -3,9 +3,6 @@ using System.Text.Json;
 
 namespace FantasyVolleyballLeague.Importer.Import
 {
-    /// <summary>
-    /// Summary of an import run, written to <c>{DataRoot}/import-report.json</c>.
-    /// </summary>
     internal sealed class ImportReport
     {
         private static readonly JsonSerializerOptions JsonOptions = new()

@@ -2,7 +2,7 @@ using System.Reflection;
 using FantasyVolleyballLeague.DataApi.Common.Endpoints;
 using FantasyVolleyballLeague.VolleyballData.Domain;
 
-namespace FantasyVolleyballLeague.ArchitectureTests
+namespace FantasyVolleyballLeague.ArchitectureTests.Fixtures
 {
     /// <summary>
     /// Types of one production project, used by the architecture tests.
