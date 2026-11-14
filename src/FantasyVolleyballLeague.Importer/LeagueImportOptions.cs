@@ -9,19 +9,10 @@ namespace FantasyVolleyballLeague.Importer
         /// </summary>
         public string Key { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Current display name of the league (e.g. "TAURON Liga").
-        /// </summary>
         public string Name { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Country name, e.g. "Poland" (see <see cref="LeagueCountry"/>).
-        /// </summary>
         public string Country { get; set; } = string.Empty;
 
-        /// <summary>
-        /// "Men" or "Women" (see <see cref="LeagueGender"/>).
-        /// </summary>
         public string Gender { get; set; } = string.Empty;
 
         public short DivisionNumber { get; set; }

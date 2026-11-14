@@ -22,9 +22,6 @@ namespace FantasyVolleyballLeague.Importer.Steps
 
         public HashSet<Guid> Participants { get; } = [];
 
-        /// <summary>
-        /// The roster each participant played for in this match.
-        /// </summary>
         public Dictionary<Guid, Guid> ParticipantRosters { get; } = [];
 
         /// <summary>

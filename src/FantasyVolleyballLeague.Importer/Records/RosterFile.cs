@@ -1,8 +1,5 @@
 namespace FantasyVolleyballLeague.Importer.Records
 {
-    /// <summary>
-    /// Raw roster file written by the scraper (<c>data/raw/rosters/{League}/{YYYY-YYYY}/{ClubId}.json</c>, schema 1).
-    /// </summary>
     internal sealed record RosterFile
     {
         public int SchemaVersion { get; init; }

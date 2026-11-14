@@ -158,9 +158,6 @@ namespace FantasyVolleyballLeague.Importer.Import
             return entity.Id;
         }
 
-        /// <summary>
-        /// Finds the team by club id, then by name within the season; creates it when missing.
-        /// </summary>
         public Guid ResolveRoster(Guid leagueId, Guid seasonId, string name, int? externalId)
         {
             if (externalId is not null && _rostersByExternalId.TryGetValue((seasonId, externalId.Value), out var id))
@@ -185,9 +182,6 @@ namespace FantasyVolleyballLeague.Importer.Import
             return entity.Id;
         }
 
-        /// <summary>
-        /// The roster of the club (by club id) in a season, or <c>null</c> when the club has none there.
-        /// </summary>
         public Guid? FindRoster(Guid seasonId, int clubExternalId)
         {
             return _rostersByExternalId.TryGetValue((seasonId, clubExternalId), out var id) ? id : null;
