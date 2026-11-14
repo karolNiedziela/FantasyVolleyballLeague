@@ -15,9 +15,6 @@ namespace FantasyVolleyballLeague.Importer.Import
             return string.Join(' ', Tokens(fullName).Order(StringComparer.Ordinal));
         }
 
-        /// <summary>
-        /// True when the names share at least one token, e.g. the same surname with a different first-name spelling.
-        /// </summary>
         public static bool ShareToken(string firstKey, string secondKey)
         {
             var firstTokens = firstKey.Split(' ', StringSplitOptions.RemoveEmptyEntries);

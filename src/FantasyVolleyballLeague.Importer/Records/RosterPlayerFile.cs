@@ -9,9 +9,6 @@ namespace FantasyVolleyballLeague.Importer.Records
         /// </summary>
         public string FullName { get; init; } = string.Empty;
 
-        /// <summary>
-        /// English position name, e.g. "Outside Hitter".
-        /// </summary>
         public string? Position { get; init; }
 
         public int? ShirtNumber { get; init; }

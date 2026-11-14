@@ -1,8 +1,5 @@
 namespace FantasyVolleyballLeague.Importer.Records
 {
-    /// <summary>
-    /// Raw match file written by the scraper (<c>data/raw/matches/{League}/{YYYY-YYYY}/{MatchId}.json</c>, schema 1).
-    /// </summary>
     internal sealed record MatchFile
     {
         public int SchemaVersion { get; init; }
@@ -21,14 +18,8 @@ namespace FantasyVolleyballLeague.Importer.Records
 
         public int MatchId { get; init; }
 
-        /// <summary>
-        /// "Scheduled" or "Finished".
-        /// </summary>
         public string Status { get; init; } = string.Empty;
 
-        /// <summary>
-        /// "None", "LineupOnly" or "Full".
-        /// </summary>
         public string StatisticsLevel { get; init; } = string.Empty;
 
         public DateTime? Date { get; init; }

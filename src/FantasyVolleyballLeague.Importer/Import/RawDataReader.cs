@@ -24,9 +24,6 @@ namespace FantasyVolleyballLeague.Importer.Import
 
         public string DataRoot { get; }
 
-        /// <summary>
-        /// Data files of a league ordered by season (oldest first), without manifests.
-        /// </summary>
         public IReadOnlyList<string> GetFiles(string kind, string leagueKey)
         {
             var leagueDirectory = Path.Combine(DataRoot, "raw", kind, leagueKey);
