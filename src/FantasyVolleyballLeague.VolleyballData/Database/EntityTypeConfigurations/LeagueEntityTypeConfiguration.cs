@@ -12,7 +12,8 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.EntityTypeConfiguratio
 
             builder.Property(l => l.Name)
                 .IsRequired()
-                .HasMaxLength(100);
+                .HasMaxLength(100)
+                .UseCollation("pl-x-icu");
 
             builder.ToTable(t => t.HasCheckConstraint("CK_Leagues_DivisionNumber", "\"DivisionNumber\" >= 1"));
 
