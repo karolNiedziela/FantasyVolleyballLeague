@@ -1,3 +1,4 @@
+using FantasyVolleyballLeague.ArchitectureTests.Fixtures;
 using FantasyVolleyballLeague.VolleyballData.Domain;
 
 namespace FantasyVolleyballLeague.ArchitectureTests
