@@ -22,6 +22,7 @@
     <ProjectReference Include="..\src\FantasyVolleyballLeague.DataApi\FantasyVolleyballLeague.DataApi.csproj" />
     <ProjectReference Include="..\src\FantasyVolleyballLeague.Scraper\FantasyVolleyballLeague.Scraper.csproj" />
     <ProjectReference Include="..\src\FantasyVolleyballLeague.Importer\FantasyVolleyballLeague.Importer.csproj" />
+    <ProjectReference Include="..\src\FantasyVolleyballLeague.Contracts\FantasyVolleyballLeague.Contracts.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
 </Project>
