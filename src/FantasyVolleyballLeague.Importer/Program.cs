@@ -1,5 +1,6 @@
 ﻿using FantasyVolleyballLeague.VolleyballData.Database;
 using FantasyVolleyballLeague.Importer;
+using FantasyVolleyballLeague.Contracts;
 using FantasyVolleyballLeague.Importer.Import;
 using FantasyVolleyballLeague.Importer.Steps;
 using Microsoft.Extensions.Configuration;
@@ -17,7 +18,7 @@ var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
 builder.Configuration.AddJsonFile("appsettings.local.json", optional: true);
 builder.Configuration.AddEnvironmentVariables();
 
-builder.AddNpgsqlDbContext<FantasyVolleyballLeagueDbContext>("FantasyVolleyballLeagueDb");
+builder.AddNpgsqlDbContext<FantasyVolleyballLeagueDbContext>(DatabaseResource.Name);
 
 builder.Services.Configure<ImporterOptions>(builder.Configuration.GetSection(ImporterOptions.SectionName));
 builder.Services.Configure<StorageOptions>(builder.Configuration.GetSection(StorageOptions.SectionName));
