@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace FantasyVolleyballLeague.DataApi.Common.ErrorHandling
 {
@@ -24,14 +25,13 @@ namespace FantasyVolleyballLeague.DataApi.Common.ErrorHandling
             Exception exception,
             CancellationToken cancellationToken)
         {
-            LogUnhandledException(exception, httpContext.TraceIdentifier);
-
-            var problem = new ProblemDetails
+            var problem = exception switch
             {
-                Status = StatusCodes.Status500InternalServerError,
-                Title = "Internal Server Error",
-                Detail = _environment.IsDevelopment() ? exception.Message : null,
+                BadHttpRequestException badRequest => CreateBadRequestProblem(httpContext, badRequest),
+                _ => CreateInternalServerErrorProblem(httpContext, exception),
             };
+
+            httpContext.Response.StatusCode = problem.Status!.Value;
 
             await _problemDetails.WriteAsync(new ProblemDetailsContext
             {
@@ -42,7 +42,34 @@ namespace FantasyVolleyballLeague.DataApi.Common.ErrorHandling
             return true;
         }
 
+        private ProblemDetails CreateBadRequestProblem(HttpContext httpContext, BadHttpRequestException exception)
+        {
+            LogBadRequest(exception.Message, httpContext.TraceIdentifier);
+
+            return new ProblemDetails
+            {
+                Status = exception.StatusCode,
+                Title = ReasonPhrases.GetReasonPhrase(exception.StatusCode),
+                Detail = exception.Message,
+            };
+        }
+
+        private ProblemDetails CreateInternalServerErrorProblem(HttpContext httpContext, Exception exception)
+        {
+            LogUnhandledException(exception, httpContext.TraceIdentifier);
+
+            return new ProblemDetails
+            {
+                Status = StatusCodes.Status500InternalServerError,
+                Title = "Internal Server Error",
+                Detail = _environment.IsDevelopment() ? exception.Message : null,
+            };
+        }
+
         [LoggerMessage(Level = LogLevel.Error, Message = "Unhandled exception. TraceId: {TraceId}")]
         private partial void LogUnhandledException(Exception exception, string traceId);
+
+        [LoggerMessage(Level = LogLevel.Warning, Message = "Bad request: {Reason}. TraceId: {TraceId}")]
+        private partial void LogBadRequest(string reason, string traceId);
     }
 }
