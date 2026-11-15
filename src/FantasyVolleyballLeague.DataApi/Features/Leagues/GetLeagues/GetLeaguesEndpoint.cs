@@ -1,6 +1,7 @@
 using FantasyVolleyballLeague.DataApi.Common.API.Paging;
 using FantasyVolleyballLeague.DataApi.Common.API.Sorting;
 using FantasyVolleyballLeague.DataApi.Common.Endpoints;
+using FantasyVolleyballLeague.DataApi.Common.Handlers;
 using FantasyVolleyballLeague.VolleyballData.Domain;
 
 namespace FantasyVolleyballLeague.DataApi.Features.Leagues.GetLeagues
@@ -22,7 +23,7 @@ namespace FantasyVolleyballLeague.DataApi.Features.Leagues.GetLeagues
 
         private static async Task<PagedOk<GetLeaguesResponse>> GetLeagues(
             [AsParameters] GetLeaguesQuery query,
-            GetLeaguesQueryHandler handler,
+            IQueryHandler<GetLeaguesQuery, PagedResponse<GetLeaguesResponse>> handler,
             CancellationToken cancellationToken)
         {
             var result = await handler.HandleAsync(query, cancellationToken);
