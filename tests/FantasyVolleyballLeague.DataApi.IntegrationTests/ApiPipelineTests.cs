@@ -44,10 +44,17 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests
                 .ShouldContain("Fields: name, divisionNumber. Default: name.", Case.Sensitive);
 
             var schemas = root.GetProperty("components").GetProperty("schemas");
-            var page = schemas.GetProperty("PagedResponseOfGetLeaguesResponse").GetProperty("properties");
-            page.TryGetProperty("links", out _).ShouldBeTrue();
-            var links = schemas.GetProperty("PageLinks").GetProperty("properties");
-            links.EnumerateObject().Select(property => property.Name).ShouldBe(["self", "first", "prev", "next", "last"], ignoreOrder: true);
+            PropertyNames(schemas, "PagedResponseOfGetLeaguesResponse").ShouldBe(["items", "offset", "limit", "totalCount", "links"], ignoreOrder: true);
+            PropertyNames(schemas, "PageLinks").ShouldBe(["self", "first", "prev", "next", "last"], ignoreOrder: true);
+            PropertyNames(schemas, "GetLeaguesResponse").ShouldBe(["id", "name", "divisionNumber", "country", "gender"], ignoreOrder: true);
+            PropertyNames(schemas, "LookupResponse").ShouldBe(["id", "name"], ignoreOrder: true);
+        }
+
+        private static List<string> PropertyNames(JsonElement schemas, string schemaName)
+        {
+            return schemas.GetProperty(schemaName).GetProperty("properties").EnumerateObject()
+                .Select(property => property.Name)
+                .ToList();
         }
 
         [Fact]
