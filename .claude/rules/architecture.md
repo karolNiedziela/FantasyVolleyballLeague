@@ -43,7 +43,7 @@ Each feature owns everything it needs. Organise by feature, not by technical lay
   (route prefix, OpenAPI tag) lives in `Features/<Feature>/<Feature>Routes.cs`, for example `LeaguesRoutes`. Policies
   for the whole API (authorization, rate limiting) go on the `v1` group in `MapEndpoints`, not on each endpoint.
 - Handlers must not call other handlers.
-- Features read from DbContext directly — no generic repository pattern.
+- Features read from the DbContext directly (through `IDbContext`) — no generic repository pattern.
 
 ### Endpoints
 
@@ -64,6 +64,13 @@ An endpoint whose query implements `ISortableQuery<>` must call `.WithSorting<TQ
 implements `IPagedQuery` must call `.WithPaging()`. Without them a bad `sort` or `limit` gives a 500 instead of a 400
 (and no upper limit on `limit`). No architecture test enforces this, so check it in every list endpoint.
 
+A parameter that cannot be parsed (`?offset=abc`) is a different case: the framework fails before the filters run.
+`RouteHandlerOptions.ThrowOnBadRequest` is on in every environment (the default is Development only), so the framework
+throws a `BadHttpRequestException` and `GlobalExceptionHandler` answers with Problem Details that keep the exception's
+status code and use its message as `detail`. Without the flag a bad parameter is a bare 400 in production, while in
+Development the exception became a 500. Range and allow-list checks (`limit`, `offset`, `sort`) stay in the filters and
+return the `errors` dictionary.
+
 Paging: a list endpoint returns `PagedResults.Ok(page)`. The response body is `{ items, offset, limit, totalCount, links }`
 and `links` (`self`, `first`, `prev`, `next`, `last`, absolute URLs) is filled by `PagedOk` from the request URL, because a
 handler does not know the URL. `self` always has the effective `offset` and `limit`. `prev` and `next` are `null` on the first
@@ -80,7 +87,7 @@ Follow the `dotnet-rest-api-rules` skill (resource naming, status codes, Problem
 pagination, URL versioning, OpenAPI). Where it conflicts with this file, this file wins:
 - One `IEndpoint` class and one handler per use case, not a static `Map<Resource>` class
   and not a service layer behind an interface.
-- Handlers read `DbContext` directly.
+- Handlers read the database through `IDbContext` directly, with no repository layer.
 
 
 ### Namespaces
@@ -92,6 +99,17 @@ Follow folder structure: `FantasyVolleyballLeague.DataApi.Features.Rosters.GetRo
 ### Dependency injection
 
 Use explicit constructor injection with `private readonly` fields. Do not use primary constructors.
+
+Every injected collaborator is an interface, registered in DI, with the interface next to its implementation: handlers
+are injected into endpoints as `IQueryHandler<TQuery, TResponse>`, handlers read the database through `IDbContext`
+(`Set<T>()`; writes will use `IUnitOfWork`), and a collaborator such as `IStandingsCalculator` is an interface too.
+Exceptions: framework types (`ILogger<T>`, `IOptions<T>`, `CancellationToken`), records and DTOs, and static pure
+functions that need no injection.
+
+Complex logic goes into its own class behind such an interface. It takes plain records and returns plain records (not
+entities) and does not touch the database, so it is unit tested directly. Queries and the flow of a handler are tested
+against real Postgres. Mocking `IDbContext` does not work with EF Core (`ToListAsync` and `CountAsync` need a real
+query provider), so handler tests use the real context, not a substitute.
 
 ## Sorting and collation
 
@@ -149,6 +167,9 @@ Enforced via `.editorconfig`:
   root `global.json`). Run with `dotnet test --solution FantasyVolleyballLeague.sln` or
   `dotnet test --project tests/<Project>`. Assertions: **Shouldly** (`actual.ShouldBe(expected)`), not xunit `Assert`.
 - Shouldly is a global using in every test project.
+- Test methods are named `Subject_Should_Outcome`, for example `ChangeDateOfPayments_Should_Change_DateOfPayment` or
+  `HandleAsync_Should_FilterByGender`. CA1707 (underscores) is switched off for `tests/` in `tests/.editorconfig`
+  for this reason. Tests written before this convention keep their old names until they are touched.
 - The DataApi has two test projects:
   - `DataApi.UnitTests`: pure logic, no database and no Docker (sort parser, filters, link builder, argument checks).
   - `DataApi.IntegrationTests`: real Postgres and the real HTTP pipeline. **Docker must be running.**

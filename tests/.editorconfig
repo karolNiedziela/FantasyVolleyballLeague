@@ -3,3 +3,7 @@
 # CA1515: Consider making public types internal
 # xUnit requires public test classes, and test projects are executables, so this rule would flag every test class.
 dotnet_diagnostic.CA1515.severity = none
+
+# CA1707: Identifiers should not contain underscores
+# Test methods are named Subject_Should_Outcome (see architecture.md, Tests), so the underscores are intended.
+dotnet_diagnostic.CA1707.severity = none

@@ -9,9 +9,9 @@ namespace FantasyVolleyballLeague.DataApi.Features.Leagues.GetLeagues
 {
     internal sealed class GetLeaguesQueryHandler : IQueryHandler<GetLeaguesQuery, PagedResponse<GetLeaguesResponse>>
     {
-        private readonly FantasyVolleyballLeagueDbContext _dbContext;
+        private readonly IDbContext _dbContext;
 
-        public GetLeaguesQueryHandler(FantasyVolleyballLeagueDbContext dbContext)
+        public GetLeaguesQueryHandler(IDbContext dbContext)
         {
             _dbContext = dbContext;
         }

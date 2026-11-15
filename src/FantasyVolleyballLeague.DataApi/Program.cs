@@ -21,6 +21,10 @@ builder.AddServiceDefaults();
 builder.Services.AddEndpoints();
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
+// Throw on a bad request in every environment (the default is Development only), so that GlobalExceptionHandler
+// answers an unparseable parameter the same way everywhere.
+builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadRequest = true);
 builder.Services.AddProblemDetails(options =>
 {
     options.CustomizeProblemDetails = ctx =>
