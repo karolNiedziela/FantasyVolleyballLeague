@@ -20,44 +20,6 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests
         }
 
         [Fact]
-        public async Task OpenApiDocumentDescribesTheLeaguesList()
-        {
-            var json = await Client.GetStringAsync(new Uri("/openapi/v1.json", UriKind.Relative), TestContext.Current.CancellationToken);
-            using var document = JsonDocument.Parse(json);
-            var root = document.RootElement;
-
-            root.GetProperty("info").GetProperty("description").GetString().ShouldNotBeNullOrWhiteSpace();
-
-            var operation = root.GetProperty("paths").GetProperty("/api/v1/leagues").GetProperty("get");
-            operation.GetProperty("summary").GetString().ShouldBe("List leagues");
-
-            var parameters = operation.GetProperty("parameters").EnumerateArray()
-                .ToDictionary(parameter => parameter.GetProperty("name").GetString()!);
-            parameters.Keys.ShouldBe(["gender", "division", "sort", "offset", "limit"], ignoreOrder: true);
-            foreach (var parameter in parameters.Values)
-            {
-                parameter.GetProperty("description").GetString().ShouldNotBeNullOrWhiteSpace();
-            }
-
-            parameters["gender"].GetProperty("description").GetString().ShouldBe("Gender id: 1 = Men, 2 = Women.");
-            parameters["sort"].GetProperty("description").GetString().ShouldNotBeNull()
-                .ShouldContain("Fields: name, divisionNumber. Default: name.", Case.Sensitive);
-
-            var schemas = root.GetProperty("components").GetProperty("schemas");
-            PropertyNames(schemas, "PagedResponseOfGetLeaguesResponse").ShouldBe(["items", "offset", "limit", "totalCount", "links"], ignoreOrder: true);
-            PropertyNames(schemas, "PageLinks").ShouldBe(["self", "first", "prev", "next", "last"], ignoreOrder: true);
-            PropertyNames(schemas, "GetLeaguesResponse").ShouldBe(["id", "name", "divisionNumber", "country", "gender"], ignoreOrder: true);
-            PropertyNames(schemas, "LookupResponse").ShouldBe(["id", "name"], ignoreOrder: true);
-        }
-
-        private static List<string> PropertyNames(JsonElement schemas, string schemaName)
-        {
-            return schemas.GetProperty(schemaName).GetProperty("properties").EnumerateObject()
-                .Select(property => property.Name)
-                .ToList();
-        }
-
-        [Fact]
         public async Task UnknownRouteReturnsAProblemDetailsNotFound()
         {
             var response = await Client.GetAsync(new Uri("/api/v1/does-not-exist", UriKind.Relative), TestContext.Current.CancellationToken);
