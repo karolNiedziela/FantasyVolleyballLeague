@@ -53,18 +53,6 @@ Known pitfalls:
 - Name order differs between sources. Rosters and the MVP use "First Last", widget stats use "Last First". Compare names as an order-, case- and diacritics-insensitive token set.
 - Dates on the page are Polish local time (`dd.MM.yyyy, HH:mm`) and are stored as UTC.
 
-### Solution map
-
-| Project | Role |
-|---|---|
-| `FantasyVolleyballLeague.VolleyballData` | The volleyball **data model**: the domain (`Domain/`), the EF Core `FantasyVolleyballLeagueDbContext` and the migrations (Postgres) in `Database/`. Shared by the DataApi and the Importer (`InternalsVisibleTo`). |
-| `FantasyVolleyballLeague.DataApi` | Public read-only ASP.NET Core minimal API for third parties (vertical slices, URL versioning, no endpoints yet). Applies migrations on startup in Development. |
-| `FantasyVolleyballLeague.Scraper` | Playwright + HtmlAgilityPack **scraper** CLI. Source-independent processors (`DataProcessors/`), shared raw models (`Models/`) and per-source scrapers (`Sources/`). Writes raw JSON to `data/raw`. |
-| `FantasyVolleyballLeague.Importer` | **Importer** console app. Reads `data/raw`, upserts into Postgres using the VolleyballData DbContext (`InternalsVisibleTo`). |
-| `FantasyVolleyballLeague.AppHost` | Aspire: Postgres container, DataApi (healthy once migrations are applied), and explicit-start resources started from the dashboard: `scraper-matches` (current season matches), `scraper-rosters` (current season rosters) and `importer` (waits for the DataApi). Historical backfills run from the Scraper CLI. |
-| `FantasyVolleyballLeague.ServiceDefaults` | Aspire service defaults (OpenTelemetry, health checks). |
-| `FantasyVolleyballLeague.Contracts` | Constants shared by the AppHost, the DataApi, the Importer and the integration tests (`DatabaseResource`: database name and the pinned Postgres image). No packages. |
-
 ### Data pipeline
 
 ```
