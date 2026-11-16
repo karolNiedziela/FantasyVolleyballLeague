@@ -1,3 +1,39 @@
+## System overview
+
+```
+League websites ──(Scraper)──► data/raw/*.json ──(Importer)──► Postgres ◄──(EF Core)── DataApi ──► API clients
+                                                                  ▲
+                               AppHost (Aspire) starts Postgres and the DataApi; Scraper and Importer on demand
+```
+
+The Scraper and the Importer share nothing but the raw JSON files, and only the Importer and the DataApi know the database.
+
+### Solution map
+
+| Project | Role |
+|---|---|
+| `FantasyVolleyballLeague.VolleyballData` | The volleyball **data model**: the domain (`Domain/`), the EF Core `FantasyVolleyballLeagueDbContext` and the migrations (Postgres) in `Database/`. Shared by the DataApi and the Importer (`InternalsVisibleTo`). |
+| `FantasyVolleyballLeague.DataApi` | Public read-only ASP.NET Core minimal API for third parties (vertical slices, URL versioning). Applies migrations on startup in Development. |
+| `FantasyVolleyballLeague.Scraper` | Playwright + HtmlAgilityPack **scraper** CLI. Source-independent processors (`DataProcessors/`), shared raw models (`Models/`) and per-source scrapers (`Sources/`). Writes raw JSON to `data/raw`. |
+| `FantasyVolleyballLeague.Importer` | **Importer** console app. Reads `data/raw`, upserts into Postgres using the VolleyballData DbContext (`InternalsVisibleTo`). |
+| `FantasyVolleyballLeague.AppHost` | Aspire: Postgres container, DataApi (healthy once migrations are applied), and explicit-start resources started from the dashboard: `scraper-matches` (current season matches), `scraper-rosters` (current season rosters) and `importer` (waits for the DataApi). Historical backfills run from the Scraper CLI. |
+| `FantasyVolleyballLeague.ServiceDefaults` | Aspire service defaults (OpenTelemetry, health checks). |
+| `FantasyVolleyballLeague.Contracts` | Constants shared by the AppHost, the DataApi, the Importer and the integration tests (`DatabaseResource`: database name and the pinned Postgres image). No packages. |
+
+Project references:
+- `DataApi` → `VolleyballData`, `Contracts`, `ServiceDefaults`.
+- `Importer` → `VolleyballData`, `Contracts`.
+- `AppHost` → `DataApi`, `Scraper`, `Importer`, `Contracts`.
+- `Scraper` references no other project.
+- `VolleyballData` references no web project.
+
+### Importer layout
+
+`ImportRunner` runs the `IImportStep`s ordered by `Order` (`RostersImportStep`, then `MatchesImportStep`) and writes an
+`ImportReport` (unresolved players, file errors, warnings) next to the data. `Records/*File` are the DTOs that mirror the
+raw JSON, `Import/` holds the pure helpers (`RawDataReader`, `RosterMatching`, `PlayerNameKey`, `CareerMembership`,
+`SeasonNameIndex`, `StatisticsParsing`) that `Importer.Tests` cover, and `Steps/` holds the per-match context.
+
 ## Backend
 
 ### Project structure
@@ -38,7 +74,8 @@ Each feature owns everything it needs. Organise by feature, not by technical lay
     ├── <UseCaseName>Response.cs       # or <UseCaseName>Request.cs
     └── <UseCaseName>Endpoint.cs
 
-- One use case = one folder. Do not merge multiple use cases into one file.
+- One use case = one folder. Do not merge multiple use cases into one file. Each slice has a `<UseCaseName>.http` file
+  next to it for manual requests.
 - Each use case has its own `IEndpoint` class, not one class per resource. What the use cases of one feature share
   (route prefix, OpenAPI tag) lives in `Features/<Feature>/<Feature>Routes.cs`, for example `LeaguesRoutes`. Policies
   for the whole API (authorization, rate limiting) go on the `v1` group in `MapEndpoints`, not on each endpoint.
@@ -63,23 +100,15 @@ Validation of `sort`, `offset` and `limit` runs in endpoint filters that exist o
 An endpoint whose query implements `ISortableQuery<>` must call `.WithSorting<TQuery, TEntity>()`, and one whose query
 implements `IPagedQuery` must call `.WithPaging()`. Without them a bad `sort` or `limit` gives a 500 instead of a 400
 (and no upper limit on `limit`). No architecture test enforces this, so check it in every list endpoint.
+Range and allow-list checks stay in the filters. Unparseable parameters (`?offset=abc`) are handled by the framework
+and `GlobalExceptionHandler`.
 
-A parameter that cannot be parsed (`?offset=abc`) is a different case: the framework fails before the filters run.
-`RouteHandlerOptions.ThrowOnBadRequest` is on in every environment (the default is Development only), so the framework
-throws a `BadHttpRequestException` and `GlobalExceptionHandler` answers with Problem Details that keep the exception's
-status code and use its message as `detail`. Without the flag a bad parameter is a bare 400 in production, while in
-Development the exception became a 500. Range and allow-list checks (`limit`, `offset`, `sort`) stay in the filters and
-return the `errors` dictionary.
+Paging: a list endpoint returns `PagedResults.Ok(page)`, with `links` in the body and no `Link` header. This is the one
+place where this file overrides the REST skill's `{ data, pagination, links }` envelope.
 
-Paging: a list endpoint returns `PagedResults.Ok(page)`. The response body is `{ items, offset, limit, totalCount, links }`
-and `links` (`self`, `first`, `prev`, `next`, `last`, absolute URLs) is filled by `PagedOk` from the request URL, because a
-handler does not know the URL. `self` always has the effective `offset` and `limit`. `prev` and `next` are `null` on the first
-and last page. There is no `Link` header: the links are in the body (also readable from a browser without CORS setup).
-This is the one place where this file overrides the REST skill's `{ data, pagination, links }` envelope.
-
-OpenAPI: `.WithPaging()` and `.WithSorting<,>()` describe `offset`, `limit` and `sort` (the sort fields come from the
-`SortMap`). Describe other query parameters of an endpoint with `.WithParameterDescription(name, text)`. Do not use
-`[Description]` on the parameters of an `[AsParameters]` type: it throws in Microsoft.AspNetCore.OpenApi 10.0.14.
+OpenAPI: `.WithPaging()` and `.WithSorting<,>()` describe `offset`, `limit` and `sort`. Describe other query parameters
+with `.WithParameterDescription(name, text)`. Do not use `[Description]` on the parameters of an `[AsParameters]` type:
+it throws in Microsoft.AspNetCore.OpenApi 10.0.14.
 
 ### REST conventions
 
@@ -164,8 +193,8 @@ Enforced via `.editorconfig`:
 ## Tests
 
 - Test framework: **xunit v3** (`xunit.v3`) in every test project, run by Microsoft.Testing.Platform (opted in with the
-  root `global.json`). Run with `dotnet test --solution FantasyVolleyballLeague.sln` or
-  `dotnet test --project tests/<Project>`. Assertions: **Shouldly** (`actual.ShouldBe(expected)`), not xunit `Assert`.
+  root `global.json`; commands in `commands-and-tests.md`). Assertions: **Shouldly** (`actual.ShouldBe(expected)`),
+  not xunit `Assert`.
 - Shouldly is a global using in every test project.
 - Test methods are named `Subject_Should_Outcome`, for example `ChangeDateOfPayments_Should_Change_DateOfPayment` or
   `HandleAsync_Should_FilterByGender`. CA1707 (underscores) is switched off for `tests/` in `tests/.editorconfig`

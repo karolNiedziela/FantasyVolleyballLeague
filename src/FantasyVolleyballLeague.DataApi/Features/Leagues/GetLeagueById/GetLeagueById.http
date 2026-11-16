@@ -1,0 +1,13 @@
+### Get a league by id (take an id from GET /leagues). 200
+@leagueId = 00000000-0000-0000-0000-000000000000
+
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues/{{leagueId}}
+Accept: application/json
+
+### Error: no league with this id (404, Problem Details)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues/00000000-0000-0000-0000-000000000000
+Accept: application/json
+
+### Error: the id is not a GUID (404, the route does not match)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues/abc
+Accept: application/json

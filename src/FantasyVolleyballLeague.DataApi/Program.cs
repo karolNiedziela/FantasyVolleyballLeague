@@ -71,7 +71,13 @@ app.MapScalarApiReference();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
+
 app.UseHttpsRedirection();
+app.UseRouting();
 app.MapEndpoints();
 
 await app.RunAsync();

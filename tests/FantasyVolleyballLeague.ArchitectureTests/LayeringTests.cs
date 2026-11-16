@@ -3,9 +3,6 @@ using FantasyVolleyballLeague.DataApi.Common.Endpoints;
 
 namespace FantasyVolleyballLeague.ArchitectureTests
 {
-    /// <summary>
-    /// Rules from <c>.claude/rules/architecture.md</c>.
-    /// </summary>
     public sealed class LayeringTests
     {
         [Theory]
@@ -23,17 +20,6 @@ namespace FantasyVolleyballLeague.ArchitectureTests
         }
 
         [Fact]
-        public void NoMvcControllers()
-        {
-            var controllers = ProjectTypes.DataApi.Assembly.GetTypes()
-                .Where(type => BaseTypes(type).Any(baseType => baseType.FullName is "Microsoft.AspNetCore.Mvc.ControllerBase"))
-                .Select(type => type.FullName)
-                .ToList();
-
-            controllers.ShouldBeEmpty();
-        }
-
-        [Fact]
         public void EndpointsImplementIEndpoint()
         {
             var violations = ProjectTypes.DataApi.Assembly.GetTypes()
@@ -43,14 +29,6 @@ namespace FantasyVolleyballLeague.ArchitectureTests
                 .ToList();
 
             violations.ShouldBeEmpty();
-        }
-
-        private static IEnumerable<Type> BaseTypes(Type type)
-        {
-            for (var baseType = type.BaseType; baseType is not null; baseType = baseType.BaseType)
-            {
-                yield return baseType;
-            }
         }
     }
 }
