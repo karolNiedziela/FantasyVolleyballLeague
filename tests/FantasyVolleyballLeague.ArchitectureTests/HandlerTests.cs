@@ -3,9 +3,6 @@ using FantasyVolleyballLeague.DataApi.Common.Handlers;
 
 namespace FantasyVolleyballLeague.ArchitectureTests
 {
-    /// <summary>
-    /// Handler rules from <c>.claude/rules/architecture.md</c> (vertical slices).
-    /// </summary>
     public sealed class HandlerTests
     {
         [Fact]

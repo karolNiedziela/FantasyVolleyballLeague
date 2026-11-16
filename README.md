@@ -19,30 +19,11 @@ the Polish men's leagues (TAURON Liga, formerly PlusLiga, from 2000/01 and TAURO
 - Score points based on players' real match performance
 - Leaderboards, transfers and lineups
 
-## 🏗️ Architecture
+## ⚙️ How it works
 
-```mermaid
-flowchart LR
-    site[League websites<br/>tauronliga.pl, tauron1liga.pl] -->|Scraper<br/>Playwright| raw[(data/raw<br/>JSON files)]
-    raw -->|Importer| db[(PostgreSQL)]
-    api[Api<br/>domain + EF Core] --> db
-    apphost[Aspire AppHost] -.orchestrates.-> api
-    apphost -.-> db
-```
-
-Scraped data is stored as self-describing JSON files first. They are the source of truth: the database can be
-rebuilt from them at any time without scraping the websites again.
-
-| Project | Role |
-|---|---|
-| [`src/FantasyVolleyballLeague.Scraper`](src/FantasyVolleyballLeague.Scraper/README.md) | CLI that scrapes league websites into `data/raw`. |
-| [`src/FantasyVolleyballLeague.Importer`](src/FantasyVolleyballLeague.Importer/README.md) | Console app that loads `data/raw` into PostgreSQL (idempotent). |
-| `src/FantasyVolleyballLeague.VolleyballData` | Volleyball data model: domain, EF Core `DbContext` and migrations. |
-| `src/FantasyVolleyballLeague.DataApi` | Public read-only ASP.NET Core minimal API (vertical slices, versioned). |
-| `FantasyVolleyballLeague.AppHost` | .NET Aspire: PostgreSQL container, DataApi, and the Scraper and Importer as resources started on demand. |
-| `FantasyVolleyballLeague.ServiceDefaults` | Shared Aspire defaults (OpenTelemetry, health checks). |
-| `src/FantasyVolleyballLeague.Contracts` | Constants shared by the AppHost, the apps and the integration tests (database name, pinned Postgres image). |
-| `tests/` | Scraper parser tests (offline, on saved HTML pages), Importer tests and architecture tests. |
+The data is collected from the official league websites, stored as raw files and loaded into a database. A public
+read-only API serves it to third parties. The database can be rebuilt from the raw files at any time, without visiting
+the websites again.
 
 ## 🚀 Getting started
 
@@ -69,15 +50,3 @@ For a quick try, scrape only the current season: `--job Matches --current true`.
 `scraper-matches`, `scraper-rosters` and `importer` from the Aspire dashboard. See the
 [Scraper](src/FantasyVolleyballLeague.Scraper/README.md) and
 [Importer](src/FantasyVolleyballLeague.Importer/README.md) documentation for all options.
-
-## 🧪 Tests
-
-```powershell
-dotnet test
-```
-
-## 📐 Conventions
-
-Architecture and code style rules live in [`.claude/rules/architecture.md`](.claude/rules/architecture.md), and
-the project context in [`.claude/rules/project-overview.md`](.claude/rules/project-overview.md). Package versions
-are managed centrally in `Directory.Packages.props`; analyzer warnings are build errors.

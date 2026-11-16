@@ -1,6 +1,7 @@
 ---
 name: scraper-sources
 description: Workflows for the FantasyVolleyballLeague Scraper - fixing a parser after a league website changed, adding a new league or source (another country or website), and checking the quality of scraped data in data/raw. Use when scraped data is wrong or missing, a scrape fails, a new league or source is requested, or the user asks to verify scraped data.
+allowed-tools: Read, Grep, Glob, Bash(dotnet build:*), Bash(dotnet test:*), PowerShell(dotnet build:*), PowerShell(dotnet test:*)
 ---
 
 # Scraper sources

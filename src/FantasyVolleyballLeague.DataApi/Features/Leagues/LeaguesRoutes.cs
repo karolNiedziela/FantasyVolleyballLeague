@@ -4,6 +4,8 @@ namespace FantasyVolleyballLeague.DataApi.Features.Leagues
     {
         public const string Resource = "/leagues";
 
+        public const string ResourceById = Resource + "/{id:guid}";
+
         public const string Tag = "Leagues";
     }
 }
