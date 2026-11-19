@@ -8,7 +8,7 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Leagues.GetL
 {
     public sealed class GetLeaguesQueryHandlerTests : IntegrationTestBase
     {
-        private const int UnknownCountryId = 99;
+        private const string UnknownCode = "xx";
 
         public GetLeaguesQueryHandlerTests(DataApiFactory factory)
             : base(factory)
@@ -68,7 +68,7 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Leagues.GetL
                 League("Men's league", 1, LeagueGender.Men),
                 League("Women's league", 1, LeagueGender.Women));
 
-            var page = await Handle(new GetLeaguesQuery(Gender: LeagueGender.Women.Id));
+            var page = await Handle(new GetLeaguesQuery(Gender: "women"));
 
             page.Items.Select(league => league.Name).ShouldBe(["Women's league"]);
             page.TotalCount.ShouldBe(1);
@@ -94,17 +94,28 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Leagues.GetL
                 League("Men's league", 1, LeagueGender.Men),
                 League("Women's league", 1, LeagueGender.Women));
 
-            var page = await Handle(new GetLeaguesQuery(Country: LeagueCountry.Poland.Id, Sort: "name"));
+            var page = await Handle(new GetLeaguesQuery(Country: "pl", Sort: "name"));
 
             page.Items.Select(league => league.Name).ShouldBe(["Men's league", "Women's league"]);
         }
 
         [Fact]
-        public async Task HandleAsync_Should_ReturnAnEmptyPage_When_TheCountryIsUnknown()
+        public async Task HandleAsync_Should_ReturnAnEmptyPage_When_TheCountryCodeIsUnknown()
         {
             await SeedAsync(League("Men's league", 1, LeagueGender.Men));
 
-            var page = await Handle(new GetLeaguesQuery(Country: UnknownCountryId));
+            var page = await Handle(new GetLeaguesQuery(Country: UnknownCode));
+
+            page.Items.ShouldBeEmpty();
+            page.TotalCount.ShouldBe(0);
+        }
+
+        [Fact]
+        public async Task HandleAsync_Should_ReturnAnEmptyPage_When_TheGenderCodeIsUnknown()
+        {
+            await SeedAsync(League("Men's league", 1, LeagueGender.Men));
+
+            var page = await Handle(new GetLeaguesQuery(Gender: UnknownCode));
 
             page.Items.ShouldBeEmpty();
             page.TotalCount.ShouldBe(0);
@@ -119,7 +130,7 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Leagues.GetL
                 League("Women's top", 1, LeagueGender.Women),
                 League("Women's second", 2, LeagueGender.Women));
 
-            var page = await Handle(new GetLeaguesQuery(Gender: LeagueGender.Women.Id, Division: 2));
+            var page = await Handle(new GetLeaguesQuery(Gender: "women", Division: 2));
 
             page.Items.Select(league => league.Name).ShouldBe(["Women's second"]);
         }
@@ -142,14 +153,14 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Leagues.GetL
         {
             await SeedAsync(League("Men's league", 1, LeagueGender.Men));
 
-            var page = await Handle(new GetLeaguesQuery(Gender: LeagueGender.Women.Id));
+            var page = await Handle(new GetLeaguesQuery(Gender: "women"));
 
             page.Items.ShouldBeEmpty();
             page.TotalCount.ShouldBe(0);
         }
 
         [Fact]
-        public async Task HandleAsync_Should_ReturnCountryAndGenderAsIdAndName()
+        public async Task HandleAsync_Should_ReturnCountryAndGenderAsCodes()
         {
             await SeedAsync(League("TAURON Liga", 1, LeagueGender.Men));
 
@@ -157,10 +168,8 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Leagues.GetL
 
             league.Name.ShouldBe("TAURON Liga");
             league.DivisionNumber.ShouldBe((short)1);
-            league.Country.Id.ShouldBe(LeagueCountry.Poland.Id);
-            league.Country.Name.ShouldBe(LeagueCountry.Poland.Name);
-            league.Gender.Id.ShouldBe(LeagueGender.Men.Id);
-            league.Gender.Name.ShouldBe(LeagueGender.Men.Name);
+            league.Country.ShouldBe("pl");
+            league.Gender.ShouldBe("men");
         }
 
         private static League League(string name, short divisionNumber, LeagueGender gender)

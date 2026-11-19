@@ -1,5 +1,4 @@
-﻿using FantasyVolleyballLeague.DataApi.Common.API;
-using FantasyVolleyballLeague.DataApi.Common.API.Summaries;
+﻿using FantasyVolleyballLeague.DataApi.Common.API.Summaries;
 
 namespace FantasyVolleyballLeague.DataApi.Features.Leagues.GetLeagueById
 {
@@ -11,9 +10,9 @@ namespace FantasyVolleyballLeague.DataApi.Features.Leagues.GetLeagueById
 
         public short DivisionNumber { get; set; }
 
-        public LookupResponse Country { get; set; } = new();
+        public string Country { get; set; } = string.Empty;
 
-        public LookupResponse Gender { get; set; } = new();
+        public string Gender { get; set; } = string.Empty;
 
         public SeasonSummaryResponse? CurrentSeason { get; set; }
     }

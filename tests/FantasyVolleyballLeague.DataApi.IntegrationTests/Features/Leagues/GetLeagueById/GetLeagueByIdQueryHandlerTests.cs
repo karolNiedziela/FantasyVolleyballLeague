@@ -35,7 +35,7 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Leagues.GetL
         }
 
         [Fact]
-        public async Task HandleAsync_Should_ReturnDivisionCountryAndGenderAsIdAndName()
+        public async Task HandleAsync_Should_ReturnDivisionAndCountryAndGenderAsCodes()
         {
             var wanted = League("TAURON Liga Kobiet", 1, LeagueGender.Women);
             await SeedAsync(wanted);
@@ -44,10 +44,8 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Leagues.GetL
 
             var league = result.ShouldNotBeNull();
             league.DivisionNumber.ShouldBe((short)1);
-            league.Country.Id.ShouldBe(LeagueCountry.Poland.Id);
-            league.Country.Name.ShouldBe(LeagueCountry.Poland.Name);
-            league.Gender.Id.ShouldBe(LeagueGender.Women.Id);
-            league.Gender.Name.ShouldBe(LeagueGender.Women.Name);
+            league.Country.ShouldBe("pl");
+            league.Gender.ShouldBe("women");
         }
 
         [Fact]

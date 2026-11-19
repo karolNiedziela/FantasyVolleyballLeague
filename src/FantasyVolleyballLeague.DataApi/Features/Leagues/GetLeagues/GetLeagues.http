@@ -18,24 +18,28 @@ Accept: application/json
 GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues?sort=divisionNumber,-name
 Accept: application/json
 
-### Only men's leagues (gender 1 = Men, 2 = Women)
-GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues?gender=1
+### Only men's leagues (gender: men, women)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues?gender=men
 Accept: application/json
 
 ### Women's top division
-GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues?gender=2&division=1
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues?gender=women&division=1
 Accept: application/json
 
-### Leagues of one country (1 = Poland)
-GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues?country=1
+### Leagues of one country (ISO 3166-1 alpha-2 code in lowercase)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues?country=pl
 Accept: application/json
 
 ### Filters, sort and paging together
-GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues?gender=1&sort=-divisionNumber&offset=0&limit=10
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues?gender=men&sort=-divisionNumber&offset=0&limit=10
 Accept: application/json
 
 ### Offset beyond the end: 200 with empty items, not an error
 GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues?offset=1000
+Accept: application/json
+
+### Error: unknown gender code, codes are case-sensitive (400, errors.gender)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues?gender=Women
 Accept: application/json
 
 ### Error: unknown sort field (400, errors.sort)

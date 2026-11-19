@@ -111,6 +111,14 @@ implements `IPagedQuery` must call `.WithPaging()`. Without them a bad `sort` or
 Range and allow-list checks stay in the filters. Unparseable parameters (`?offset=abc`) are handled by the framework
 and `GlobalExceptionHandler`.
 
+Lookups (gender, country, position, match status, statistics level) are exposed by their `Code`: a stable `snake_case`
+value (`women`, `outside_hitter`, `lineup_only`; countries use lowercase ISO 3166-1 alpha-2, `pl`), never by id or
+`Name`. Responses carry the plain code (`"gender": "women"`); labels and translations belong to the clients. A lookup
+filter is a `string?` query parameter registered with `.WithCodeFilter(parameter, description, codes)`, which answers
+an unknown or wrongly cased code with 400 and lists the codes as an OpenAPI `enum`. The handler maps the code to the id
+with `FromCode` and filters by the foreign key. Codes are a public contract: add new ones, never rename or remove one
+(`LookupCodeTests` pins them). `Name` stays for the Importer, which matches raw JSON values by it.
+
 Paging: a list endpoint returns `PagedResults.Ok(page)`, with `links` in the body and no `Link` header. This is the one
 place where this file overrides the REST skill's `{ data, pagination, links }` envelope.
 
