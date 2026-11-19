@@ -23,11 +23,26 @@ namespace FantasyVolleyballLeague.Scraper.Tests.Sources.Poland.Pls
         }
 
         [Fact]
-        public void IsRetryableCoversPlaywrightTimeouts()
+        public void IsRetryable_Should_ReturnTrue_ForATimeout()
         {
             PlsWidgetLoader.IsRetryable(new TimeoutException("Timeout 15000ms exceeded.")).ShouldBeTrue();
+        }
+
+        [Fact]
+        public void IsRetryable_Should_ReturnTrue_ForAPlaywrightError()
+        {
             PlsWidgetLoader.IsRetryable(new PlaywrightException("Page crashed")).ShouldBeTrue();
+        }
+
+        [Fact]
+        public void IsRetryable_Should_ReturnTrue_WhenTheSourceBlockedTheRequest()
+        {
             PlsWidgetLoader.IsRetryable(new SourceBlockedException("blocked")).ShouldBeTrue();
+        }
+
+        [Fact]
+        public void IsRetryable_Should_ReturnFalse_ForOtherExceptions()
+        {
             PlsWidgetLoader.IsRetryable(new FormatException()).ShouldBeFalse();
         }
     }
