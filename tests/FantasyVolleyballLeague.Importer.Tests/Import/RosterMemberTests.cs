@@ -6,6 +6,7 @@ namespace FantasyVolleyballLeague.Importer.Tests.Import
     {
         private static readonly DateOnly From = new(2019, 10, 25);
         private static readonly DateOnly To = new(2020, 1, 30);
+        private static readonly Guid PlayerId = new("00000000-0000-0000-0000-000000000001");
 
         [Theory]
         [InlineData(2019, 10, 25)]
@@ -32,17 +33,25 @@ namespace FantasyVolleyballLeague.Importer.Tests.Import
             Member(From, To).CoversDate(new DateOnly(year, month, day)).ShouldBeFalse();
         }
 
-        [Fact]
-        public void CoversDateWithUnknownDatesCoversEverything()
+        public static TheoryData<DateOnly?, DateOnly?, DateOnly, bool> UnknownDateCases { get; } = new()
         {
-            Member(null, null).CoversDate(new DateOnly(2000, 1, 1)).ShouldBeTrue();
-            Member(From, null).CoversDate(new DateOnly(2030, 1, 1)).ShouldBeTrue();
-            Member(null, To).CoversDate(new DateOnly(1999, 1, 1)).ShouldBeTrue();
+            { null, null, new DateOnly(2000, 1, 1), true },
+            { From, null, new DateOnly(2030, 1, 1), true },
+            { null, To, new DateOnly(1999, 1, 1), true },
+            { From, null, new DateOnly(2019, 10, 23), false },
+            { null, To, new DateOnly(2020, 2, 1), false },
+        };
+
+        [Theory]
+        [MemberData(nameof(UnknownDateCases))]
+        public void CoversDate_Should_TreatAnUnknownBoundAsOpen_And_StillApplyTheKnownOne(DateOnly? from, DateOnly? to, DateOnly date, bool expected)
+        {
+            Member(from, to).CoversDate(date).ShouldBe(expected);
         }
 
         private static RosterMember Member(DateOnly? from, DateOnly? to)
         {
-            return new RosterMember(Guid.CreateVersion7(), 10, "FILIP MICHAL", from, to);
+            return new RosterMember(PlayerId, 10, "FILIP MICHAL", from, to);
         }
     }
 }
