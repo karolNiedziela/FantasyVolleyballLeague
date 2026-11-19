@@ -26,6 +26,10 @@ Accept: application/json
 GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues?gender=2&division=1
 Accept: application/json
 
+### Leagues of one country (1 = Poland)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues?country=1
+Accept: application/json
+
 ### Filters, sort and paging together
 GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues?gender=1&sort=-divisionNumber&offset=0&limit=10
 Accept: application/json

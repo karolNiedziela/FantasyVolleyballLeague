@@ -30,6 +30,11 @@ namespace FantasyVolleyballLeague.DataApi.Features.Leagues.GetLeagues
                 leagues = leagues.Where(x => x.DivisionNumber == query.Division.Value);
             }
 
+            if (query.Country.HasValue)
+            {
+                leagues = leagues.Where(x => x.CountryId == query.Country.Value);
+            }
+
             return await leagues
                 .ApplySort(query)
                 .Select(x => new GetLeaguesResponse

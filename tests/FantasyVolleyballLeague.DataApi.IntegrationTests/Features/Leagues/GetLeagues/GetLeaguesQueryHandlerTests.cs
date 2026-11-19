@@ -8,6 +8,8 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Leagues.GetL
 {
     public sealed class GetLeaguesQueryHandlerTests : IntegrationTestBase
     {
+        private const int UnknownCountryId = 99;
+
         public GetLeaguesQueryHandlerTests(DataApiFactory factory)
             : base(factory)
         {
@@ -83,6 +85,29 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Leagues.GetL
             var page = await Handle(new GetLeaguesQuery(Division: 2, Sort: "name"));
 
             page.Items.Select(league => league.Name).ShouldBe(["Second league", "Women's second league"]);
+        }
+
+        [Fact]
+        public async Task HandleAsync_Should_FilterByCountry()
+        {
+            await SeedAsync(
+                League("Men's league", 1, LeagueGender.Men),
+                League("Women's league", 1, LeagueGender.Women));
+
+            var page = await Handle(new GetLeaguesQuery(Country: LeagueCountry.Poland.Id, Sort: "name"));
+
+            page.Items.Select(league => league.Name).ShouldBe(["Men's league", "Women's league"]);
+        }
+
+        [Fact]
+        public async Task HandleAsync_Should_ReturnAnEmptyPage_When_TheCountryIsUnknown()
+        {
+            await SeedAsync(League("Men's league", 1, LeagueGender.Men));
+
+            var page = await Handle(new GetLeaguesQuery(Country: UnknownCountryId));
+
+            page.Items.ShouldBeEmpty();
+            page.TotalCount.ShouldBe(0);
         }
 
         [Fact]

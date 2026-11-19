@@ -8,6 +8,7 @@ namespace FantasyVolleyballLeague.DataApi.Features.Leagues.GetLeagues
     internal sealed record GetLeaguesQuery(
         [FromQuery(Name = LeaguesQueryParameters.Gender)] int? Gender = null,
         [FromQuery(Name = LeaguesQueryParameters.Division)] int? Division = null,
+        [FromQuery(Name = LeaguesQueryParameters.Country)] int? Country = null,
         [FromQuery(Name = SortingQueryParameters.Sort)] string? Sort = null,
         [FromQuery(Name = PagingQueryParameters.Offset)] int Offset = PagingDefaults.DefaultOffset,
         [FromQuery(Name = PagingQueryParameters.Limit)] int Limit = PagingDefaults.DefaultLimit) : ISortableQuery<League>, IPagedQuery

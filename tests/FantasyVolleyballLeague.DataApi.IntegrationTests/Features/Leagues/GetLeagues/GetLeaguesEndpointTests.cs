@@ -122,6 +122,17 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Leagues.GetL
             page.Items.Select(league => league.Name).ShouldBe(["Women's second"]);
         }
 
+        // Poland is the only country in the database, so an unknown id is the only way to see the filter applied.
+        [Fact]
+        public async Task GetLeagues_Should_ApplyTheCountryFilterFromTheQueryString()
+        {
+            await SeedAsync(League("Men's top", 1, LeagueGender.Men));
+
+            var page = await ReadPage(await Get($"{Leagues}?country=99"));
+
+            page.Items.ShouldBeEmpty();
+        }
+
         [Fact]
         public async Task GetLeagues_Should_SortByTheFieldNameFromTheQueryString()
         {

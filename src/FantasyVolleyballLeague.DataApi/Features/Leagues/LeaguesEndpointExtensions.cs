@@ -16,5 +16,12 @@ namespace FantasyVolleyballLeague.DataApi.Features.Leagues
         {
             return builder.WithParameterDescription(LeaguesQueryParameters.Division, "Division number, 1 is the top division.");
         }
+
+        public static RouteHandlerBuilder WithCountryFilter(this RouteHandlerBuilder builder)
+        {
+            var countries = string.Join(", ", LeagueCountry.All.Select(country => $"{country.Id} = {country.Name}"));
+
+            return builder.WithParameterDescription(LeaguesQueryParameters.Country, $"Country id: {countries}.");
+        }
     }
 }
