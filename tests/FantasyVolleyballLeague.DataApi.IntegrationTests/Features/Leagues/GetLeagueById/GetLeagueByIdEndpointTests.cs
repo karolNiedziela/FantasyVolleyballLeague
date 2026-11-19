@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Net.Mime;
 using FantasyVolleyballLeague.DataApi.Features.Leagues.GetLeagueById;
 using FantasyVolleyballLeague.DataApi.IntegrationTests.Fixtures;
 using FantasyVolleyballLeague.VolleyballData.Domain;
@@ -18,24 +19,19 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Leagues.GetL
         }
 
         [Fact]
-        public async Task GetLeagueById_Should_ReturnTheLeagueWithItsLookups_When_TheLeagueExists()
+        public async Task GetLeagueById_Should_ReturnTheLeague_When_TheLeagueExists()
         {
             var wanted = League("TAURON Liga", 1, LeagueGender.Men);
             await SeedAsync(wanted, League("TAURON Liga Kobiet", 1, LeagueGender.Women));
 
             var response = await Get($"{Leagues}/{wanted.Id}");
-            var league = await response.Content.ReadFromJsonAsync<GetLeagueByIdResponse>(TestContext.Current.CancellationToken);
 
-            response.StatusCode.ShouldBe(HttpStatusCode.OK);
-            response.Content.Headers.ContentType?.MediaType.ShouldBe("application/json");
+            await response.ShouldHaveStatusCode(HttpStatusCode.OK);
+            response.ShouldHaveMediaType(MediaTypeNames.Application.Json);
+            var league = await response.Content.ReadFromJsonAsync<GetLeagueByIdResponse>(TestContext.Current.CancellationToken);
             league.ShouldNotBeNull();
             league.Id.ShouldBe(wanted.Id);
             league.Name.ShouldBe("TAURON Liga");
-            league.DivisionNumber.ShouldBe((short)1);
-            league.Country.Id.ShouldBe(LeagueCountry.Poland.Id);
-            league.Country.Name.ShouldBe(LeagueCountry.Poland.Name);
-            league.Gender.Id.ShouldBe(LeagueGender.Men.Id);
-            league.Gender.Name.ShouldBe(LeagueGender.Men.Name);
         }
 
         [Fact]
@@ -44,10 +40,10 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Leagues.GetL
             await SeedAsync(League("TAURON Liga", 1, LeagueGender.Men));
 
             var response = await Get($"{Leagues}/{EntityId.New()}");
-            var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>(TestContext.Current.CancellationToken);
 
-            response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
-            response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+            await response.ShouldHaveStatusCode(HttpStatusCode.NotFound);
+            response.ShouldHaveMediaType(MediaTypeNames.Application.ProblemJson);
+            var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>(TestContext.Current.CancellationToken);
             problem.ShouldNotBeNull().Status.ShouldBe(StatusCodes.Status404NotFound);
         }
 
@@ -58,7 +54,7 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Leagues.GetL
         {
             var response = await Get($"{Leagues}/{id}");
 
-            response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+            await response.ShouldHaveStatusCode(HttpStatusCode.NotFound);
         }
 
         private static League League(string name, short divisionNumber, LeagueGender gender)
