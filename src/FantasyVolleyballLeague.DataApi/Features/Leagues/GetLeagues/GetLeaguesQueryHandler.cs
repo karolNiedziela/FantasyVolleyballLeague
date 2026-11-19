@@ -1,5 +1,4 @@
-﻿using FantasyVolleyballLeague.DataApi.Common.API;
-using FantasyVolleyballLeague.DataApi.Common.API.Paging;
+﻿using FantasyVolleyballLeague.DataApi.Common.API.Paging;
 using FantasyVolleyballLeague.DataApi.Common.API.Sorting;
 using FantasyVolleyballLeague.DataApi.Common.Handlers;
 using FantasyVolleyballLeague.VolleyballData.Database;
@@ -20,14 +19,21 @@ namespace FantasyVolleyballLeague.DataApi.Features.Leagues.GetLeagues
         {
             var leagues = _dbContext.Set<League>().AsQueryable(); 
 
-            if (query.Gender.HasValue)
+            if (query.Gender is not null)
             {
-                leagues = leagues.Where(x => x.GenderId == query.Gender.Value);
+                var genderId = LeagueGender.FromCode(query.Gender)?.Id;
+                leagues = leagues.Where(x => x.GenderId == genderId);
             }
 
             if (query.Division.HasValue)
             {
                 leagues = leagues.Where(x => x.DivisionNumber == query.Division.Value);
+            }
+
+            if (query.Country is not null)
+            {
+                var countryId = LeagueCountry.FromCode(query.Country)?.Id;
+                leagues = leagues.Where(x => x.CountryId == countryId);
             }
 
             return await leagues
@@ -37,8 +43,8 @@ namespace FantasyVolleyballLeague.DataApi.Features.Leagues.GetLeagues
                     Id = x.Id,
                     Name = x.Name,
                     DivisionNumber = x.DivisionNumber,
-                    Country = new LookupResponse { Id = x.Country.Id, Name = x.Country.Name },
-                    Gender = new LookupResponse { Id = x.Gender.Id, Name = x.Gender.Name }
+                    Country = x.Country.Code,
+                    Gender = x.Gender.Code
                 })
                 .ToPagedResponseAsync(query.Offset, query.Limit, cancellationToken);
         }

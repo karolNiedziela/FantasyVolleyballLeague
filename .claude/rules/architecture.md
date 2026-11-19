@@ -80,6 +80,14 @@ Each feature owns everything it needs. Organise by feature, not by technical lay
   (route prefix, OpenAPI tag) lives in `Features/<Feature>/<Feature>Routes.cs`, for example `LeaguesRoutes`. Policies
   for the whole API (authorization, rate limiting) go on the `v1` group in `MapEndpoints`, not on each endpoint.
 - Handlers must not call other handlers.
+- Nested routes are navigation aliases of a top-level list, at most one level deep (`/leagues/{id}/seasons` aliases
+  `/seasons?leagueId=`). An alias is its own use case in the feature of the returned resource
+  (`Features/Seasons/GetLeagueSeasons/`), returns the same DTO with the same sorting, paging and filters, and returns
+  404 when the parent does not exist (the top-level filter returns an empty list). The list and its aliases share the
+  projection and filters through `IQueryable` extensions of the feature, not through each other's handlers.
+- Detail responses carry the summaries of their parents and the navigation the client cannot compute
+  (`currentSeason`, `previousSeason`/`nextSeason`, `previousRound`/`nextRound`) as typed fields. No `links` to
+  sub-collections: `links` exist only in the paging envelope.
 - Features read from the DbContext directly (through `IDbContext`) — no generic repository pattern.
 
 ### Endpoints
@@ -102,6 +110,14 @@ implements `IPagedQuery` must call `.WithPaging()`. Without them a bad `sort` or
 (and no upper limit on `limit`). No architecture test enforces this, so check it in every list endpoint.
 Range and allow-list checks stay in the filters. Unparseable parameters (`?offset=abc`) are handled by the framework
 and `GlobalExceptionHandler`.
+
+Lookups (gender, country, position, match status, statistics level) are exposed by their `Code`: a stable `snake_case`
+value (`women`, `outside_hitter`, `lineup_only`; countries use lowercase ISO 3166-1 alpha-2, `pl`), never by id or
+`Name`. Responses carry the plain code (`"gender": "women"`); labels and translations belong to the clients. A lookup
+filter is a `string?` query parameter registered with `.WithCodeFilter(parameter, description, codes)`, which answers
+an unknown or wrongly cased code with 400 and lists the codes as an OpenAPI `enum`. The handler maps the code to the id
+with `FromCode` and filters by the foreign key. Codes are a public contract: add new ones, never rename or remove one
+(`LookupCodeTests` pins them). `Name` stays for the Importer, which matches raw JSON values by it.
 
 Paging: a list endpoint returns `PagedResults.Ok(page)`, with `links` in the body and no `Link` header. This is the one
 place where this file overrides the REST skill's `{ data, pagination, links }` envelope.

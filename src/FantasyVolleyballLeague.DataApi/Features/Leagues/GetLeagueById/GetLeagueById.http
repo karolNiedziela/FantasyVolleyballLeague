@@ -1,4 +1,4 @@
-### Get a league by id (take an id from GET /leagues). 200
+### Get a league by id (take an id from GET /leagues). 200, currentSeason is the latest season (null without seasons)
 @leagueId = 00000000-0000-0000-0000-000000000000
 
 GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues/{{leagueId}}

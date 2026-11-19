@@ -13,6 +13,13 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.EntityTypeConfiguratio
             builder.Property(x => x.Id)
                 .ValueGeneratedNever();
 
+            builder.Property(x => x.Code)
+                .HasMaxLength(30)
+                .IsRequired();
+
+            builder.HasIndex(x => x.Code)
+                .IsUnique();
+
             builder.Property(x => x.Name)
                 .HasMaxLength(50)
                 .IsRequired();
