@@ -52,8 +52,8 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Leagues.GetL
             PropertyNames(root["links"]!.AsObject()).ShouldBe(["self", "first", "prev", "next", "last"], ignoreOrder: true);
             var league = root["items"]!.AsArray().ShouldHaveSingleItem().ShouldNotBeNull().AsObject();
             PropertyNames(league).ShouldBe(["id", "name", "divisionNumber", "country", "gender"], ignoreOrder: true);
-            PropertyNames(league["country"]!.AsObject()).ShouldBe(["id", "name"], ignoreOrder: true);
-            PropertyNames(league["gender"]!.AsObject()).ShouldBe(["id", "name"], ignoreOrder: true);
+            league["country"]!.GetValue<string>().ShouldBe("pl");
+            league["gender"]!.GetValue<string>().ShouldBe("men");
             Guid.TryParse(league["id"]!.GetValue<string>(), out _).ShouldBeTrue();
             league["divisionNumber"]!.GetValueKind().ShouldBe(JsonValueKind.Number);
         }
@@ -109,7 +109,7 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Leagues.GetL
         }
 
         [Fact]
-        public async Task GetLeagues_Should_ApplyTheGenderAndDivisionFiltersFromTheQueryString()
+        public async Task GetLeagues_Should_ApplyTheFiltersFromTheQueryString()
         {
             await SeedAsync(
                 League("Men's top", 1, LeagueGender.Men),
@@ -117,20 +117,23 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Leagues.GetL
                 League("Women's top", 1, LeagueGender.Women),
                 League("Women's second", 2, LeagueGender.Women));
 
-            var page = await ReadPage(await Get($"{Leagues}?gender={LeagueGender.Women.Id}&division=2"));
+            var page = await ReadPage(await Get($"{Leagues}?gender=women&division=2&country=pl"));
 
             page.Items.Select(league => league.Name).ShouldBe(["Women's second"]);
         }
 
-        // Poland is the only country in the database, so an unknown id is the only way to see the filter applied.
-        [Fact]
-        public async Task GetLeagues_Should_ApplyTheCountryFilterFromTheQueryString()
+        [Theory]
+        [InlineData("gender", "female")]
+        [InlineData("gender", "Women")]
+        [InlineData("country", "xx")]
+        [InlineData("country", "1")]
+        public async Task GetLeagues_Should_ReturnBadRequest_When_ALookupCodeIsUnknown(string parameter, string value)
         {
-            await SeedAsync(League("Men's top", 1, LeagueGender.Men));
+            var response = await Get($"{Leagues}?{parameter}={value}");
+            var problem = await ReadProblem(response);
 
-            var page = await ReadPage(await Get($"{Leagues}?country=99"));
-
-            page.Items.ShouldBeEmpty();
+            problem.Errors.Keys.ShouldBe([parameter]);
+            problem.Errors[parameter].ShouldHaveSingleItem().ShouldContain($"'{value}'");
         }
 
         [Fact]
@@ -168,7 +171,6 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Leagues.GetL
         [InlineData("limit=abc")]
         [InlineData("offset=abc")]
         [InlineData("offset=")]
-        [InlineData("gender=abc")]
         [InlineData("division=x")]
         public async Task GetLeagues_Should_ReturnBadRequest_When_AParameterCannotBeParsed(string query)
         {

@@ -18,7 +18,7 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.13")
+                .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -65,6 +65,11 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("character varying(2)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -72,12 +77,16 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Code")
+                        .IsUnique();
+
                     b.ToTable("LeagueCountry");
 
                     b.HasData(
                         new
                         {
                             Id = 1,
+                            Code = "pl",
                             Name = "Poland"
                         });
                 });
@@ -87,6 +96,11 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
                     b.Property<int>("Id")
                         .HasColumnType("integer");
 
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -94,17 +108,22 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Code")
+                        .IsUnique();
+
                     b.ToTable("LeagueGender");
 
                     b.HasData(
                         new
                         {
                             Id = 1,
+                            Code = "men",
                             Name = "Men"
                         },
                         new
                         {
                             Id = 2,
+                            Code = "women",
                             Name = "Women"
                         });
                 });
@@ -217,6 +236,11 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
                     b.Property<int>("Id")
                         .HasColumnType("integer");
 
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -224,17 +248,22 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Code")
+                        .IsUnique();
+
                     b.ToTable("MatchStatus");
 
                     b.HasData(
                         new
                         {
                             Id = 1,
+                            Code = "scheduled",
                             Name = "Scheduled"
                         },
                         new
                         {
                             Id = 2,
+                            Code = "finished",
                             Name = "Finished"
                         });
                 });
@@ -390,12 +419,20 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
                         .HasMaxLength(3)
                         .HasColumnType("character varying(3)");
 
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
 
                     b.ToTable("PlayerPosition");
 
@@ -404,30 +441,35 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
                         {
                             Id = 1,
                             Abbreviation = "OH",
+                            Code = "outside_hitter",
                             Name = "Outside Hitter"
                         },
                         new
                         {
                             Id = 3,
                             Abbreviation = "MB",
+                            Code = "middle_blocker",
                             Name = "Middle Blocker"
                         },
                         new
                         {
                             Id = 2,
                             Abbreviation = "OPP",
+                            Code = "opposite_hitter",
                             Name = "Opposite Hitter"
                         },
                         new
                         {
                             Id = 4,
                             Abbreviation = "S",
+                            Code = "setter",
                             Name = "Setter"
                         },
                         new
                         {
                             Id = 5,
                             Abbreviation = "L",
+                            Code = "libero",
                             Name = "Libero"
                         });
                 });
@@ -597,6 +639,11 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
                     b.Property<int>("Id")
                         .HasColumnType("integer");
 
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -604,22 +651,28 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Code")
+                        .IsUnique();
+
                     b.ToTable("StatisticsLevel");
 
                     b.HasData(
                         new
                         {
                             Id = 1,
+                            Code = "none",
                             Name = "None"
                         },
                         new
                         {
                             Id = 2,
+                            Code = "lineup_only",
                             Name = "LineupOnly"
                         },
                         new
                         {
                             Id = 3,
+                            Code = "full",
                             Name = "Full"
                         });
                 });
