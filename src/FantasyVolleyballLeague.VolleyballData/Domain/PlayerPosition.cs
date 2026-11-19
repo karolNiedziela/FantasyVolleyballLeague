@@ -1,12 +1,14 @@
+using FantasyVolleyballLeague.Contracts;
+
 namespace FantasyVolleyballLeague.VolleyballData.Domain
 {
     internal sealed class PlayerPosition
     {
-        public static readonly PlayerPosition OutsideHitter = new(1, "Outside Hitter", "OH");
-        public static readonly PlayerPosition OppositeHitter = new(2, "Opposite Hitter", "OPP");
-        public static readonly PlayerPosition MiddleBlocker = new(3, "Middle Blocker", "MB");
-        public static readonly PlayerPosition Setter = new(4, "Setter", "S");
-        public static readonly PlayerPosition Libero = new(5, "Libero", "L");
+        public static readonly PlayerPosition OutsideHitter = new(1, PositionNames.OutsideHitter, "OH");
+        public static readonly PlayerPosition OppositeHitter = new(2, PositionNames.OppositeHitter, "OPP");
+        public static readonly PlayerPosition MiddleBlocker = new(3, PositionNames.MiddleBlocker, "MB");
+        public static readonly PlayerPosition Setter = new(4, PositionNames.Setter, "S");
+        public static readonly PlayerPosition Libero = new(5, PositionNames.Libero, "L");
 
         public int Id { get; private set; }
 
