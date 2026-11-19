@@ -1,11 +1,11 @@
 using FantasyVolleyballLeague.DataApi.Common.API.Sorting;
-using FantasyVolleyballLeague.VolleyballData.Domain;
+using FantasyVolleyballLeague.DataApi.UnitTests.Fixtures;
 
 namespace FantasyVolleyballLeague.DataApi.UnitTests.Common.API.Sorting
 {
     public sealed class SortMapTests
     {
-        private static readonly SortMap<Item> Map = new SortMap<Item>()
+        private static readonly SortMap<SortItem> Map = new SortMap<SortItem>()
             .Add("name", item => item.Name)
             .Add("rank", item => item.Rank)
             .WithDefault("name");
@@ -49,10 +49,14 @@ namespace FantasyVolleyballLeague.DataApi.UnitTests.Common.API.Sorting
         [Fact]
         public void ApplyBreaksTiesById()
         {
-            var result = Sorted("name").ToList();
+            var first = new SortItem("b", 1);
+            var second = new SortItem("b", 2);
+            var (lower, higher) = first.Id < second.Id ? (first, second) : (second, first);
+            var items = new List<SortItem> { higher, lower };
 
-            var tied = result.Where(item => item.Name == "b").Select(item => item.Id).ToList();
-            tied.ShouldBe(tied.OrderBy(id => id).ToList());
+            var result = Map.Parse("name").Apply(items.AsQueryable()).Select(item => item.Id).ToList();
+
+            result.ShouldBe([lower.Id, higher.Id]);
         }
 
         [Fact]
@@ -65,12 +69,15 @@ namespace FantasyVolleyballLeague.DataApi.UnitTests.Common.API.Sorting
         }
 
         [Theory]
-        [InlineData("name,,rank")]
-        [InlineData("-")]
-        [InlineData("name,-name")]
-        public void ParseReportsEmptyAndDuplicateFields(string sort)
+        [InlineData("name,,rank", "must not be empty")]
+        [InlineData("-", "must not be empty")]
+        [InlineData("name,-name", "listed more than once")]
+        public void Parse_Should_ReportAnEmptyOrDuplicateField(string sort, string expectedMessage)
         {
-            Map.Parse(sort).IsValid.ShouldBeFalse();
+            var result = Map.Parse(sort);
+
+            result.IsValid.ShouldBeFalse();
+            result.Errors["sort"].ShouldHaveSingleItem().ShouldContain(expectedMessage);
         }
 
         [Fact]
@@ -90,7 +97,7 @@ namespace FantasyVolleyballLeague.DataApi.UnitTests.Common.API.Sorting
         [InlineData("name,-NAME", "listed more than once")]
         public void WithDefaultRejectsADefaultThatParseWouldReject(string sort, string expectedMessage)
         {
-            var map = new SortMap<Item>()
+            var map = new SortMap<SortItem>()
                 .Add("name", item => item.Name)
                 .Add("rank", item => item.Rank);
 
@@ -102,7 +109,7 @@ namespace FantasyVolleyballLeague.DataApi.UnitTests.Common.API.Sorting
         [Fact]
         public void WithDefaultAcceptsDescendingAndSecondaryFields()
         {
-            var map = new SortMap<Item>()
+            var map = new SortMap<SortItem>()
                 .Add("name", item => item.Name)
                 .Add("rank", item => item.Rank)
                 .WithDefault("-name,rank");
@@ -112,7 +119,7 @@ namespace FantasyVolleyballLeague.DataApi.UnitTests.Common.API.Sorting
             result.Select(item => (item.Name, item.Rank)).ShouldBe([("c", 1), ("b", 2), ("b", 9), ("a", 5)]);
         }
 
-        private static IQueryable<Item> Sorted(string? sort)
+        private static IQueryable<SortItem> Sorted(string? sort)
         {
             var parsed = Map.Parse(sort);
             parsed.IsValid.ShouldBeTrue();
@@ -120,33 +127,21 @@ namespace FantasyVolleyballLeague.DataApi.UnitTests.Common.API.Sorting
             return parsed.Apply(Items().AsQueryable());
         }
 
-        private static List<string> Names(IQueryable<Item> query)
+        private static List<string> Names(IQueryable<SortItem> query)
         {
             return query.Select(item => item.Name).ToList();
         }
 
-        private static List<Item> Items()
+        private static List<SortItem> Items()
         {
             return
             [
-                new Item("b", 9),
-                new Item("c", 1),
-                new Item("a", 5),
-                new Item("b", 2),
+                new SortItem("b", 9),
+                new SortItem("c", 1),
+                new SortItem("a", 5),
+                new SortItem("b", 2),
             ];
         }
 
-        private sealed class Item : Entity
-        {
-            public Item(string name, int rank)
-            {
-                Name = name;
-                Rank = rank;
-            }
-
-            public string Name { get; }
-
-            public int Rank { get; }
-        }
     }
 }

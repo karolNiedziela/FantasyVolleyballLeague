@@ -47,7 +47,7 @@ namespace FantasyVolleyballLeague.DataApi.UnitTests.Common.API.Paging
         {
             var result = await Invoke(new PageQuery(-1, 0));
 
-            ErrorsOf(result).Keys.OrderBy(key => key).ShouldBe(["limit", "offset"]);
+            ErrorsOf(result).Keys.ShouldBe(["limit", "offset"], ignoreOrder: true);
         }
 
         [Fact]
