@@ -5,5 +5,7 @@ namespace FantasyVolleyballLeague.DataApi.Features.Leagues
         public const string Gender = "gender";
 
         public const string Division = "division";
+
+        public const string Country = "country";
     }
 }

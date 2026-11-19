@@ -35,7 +35,7 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Leagues.GetL
         }
 
         [Fact]
-        public async Task HandleAsync_Should_ReturnDivisionCountryAndGenderAsIdAndName()
+        public async Task HandleAsync_Should_ReturnDivisionAndCountryAndGenderAsCodes()
         {
             var wanted = League("TAURON Liga Kobiet", 1, LeagueGender.Women);
             await SeedAsync(wanted);
@@ -44,10 +44,46 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Leagues.GetL
 
             var league = result.ShouldNotBeNull();
             league.DivisionNumber.ShouldBe((short)1);
-            league.Country.Id.ShouldBe(LeagueCountry.Poland.Id);
-            league.Country.Name.ShouldBe(LeagueCountry.Poland.Name);
-            league.Gender.Id.ShouldBe(LeagueGender.Women.Id);
-            league.Gender.Name.ShouldBe(LeagueGender.Women.Name);
+            league.Country.ShouldBe("pl");
+            league.Gender.ShouldBe("women");
+        }
+
+        [Fact]
+        public async Task HandleAsync_Should_ReturnTheLatestSeasonAsCurrentSeason()
+        {
+            var wanted = League("TAURON Liga", 1, LeagueGender.Men);
+            var other = League("TAURON 1. Liga", 2, LeagueGender.Men);
+            await SeedAsync(
+                wanted,
+                other,
+                Season(2024, wanted),
+                Season(2026, wanted),
+                Season(2025, wanted),
+                Season(2027, other));
+
+            var result = await Handle(new GetLeagueByIdQuery(wanted.Id));
+
+            var currentSeason = result.ShouldNotBeNull().CurrentSeason.ShouldNotBeNull();
+            currentSeason.Name.ShouldBe("2026-2027");
+            currentSeason.StartYear.ShouldBe(2026);
+            currentSeason.EndYear.ShouldBe(2027);
+        }
+
+        [Fact]
+        public async Task HandleAsync_Should_ReturnNullCurrentSeason_When_TheLeagueHasNoSeasons()
+        {
+            var wanted = League("TAURON Liga", 1, LeagueGender.Men);
+            var other = League("TAURON 1. Liga", 2, LeagueGender.Men);
+            await SeedAsync(wanted, other, Season(2026, other));
+
+            var result = await Handle(new GetLeagueByIdQuery(wanted.Id));
+
+            result.ShouldNotBeNull().CurrentSeason.ShouldBeNull();
+        }
+
+        private static Season Season(int startYear, League league)
+        {
+            return new Season(startYear, startYear + 1, league.Id, externalId: null);
         }
 
         private static League League(string name, short divisionNumber, LeagueGender gender)
