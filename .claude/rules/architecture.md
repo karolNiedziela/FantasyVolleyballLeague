@@ -80,6 +80,14 @@ Each feature owns everything it needs. Organise by feature, not by technical lay
   (route prefix, OpenAPI tag) lives in `Features/<Feature>/<Feature>Routes.cs`, for example `LeaguesRoutes`. Policies
   for the whole API (authorization, rate limiting) go on the `v1` group in `MapEndpoints`, not on each endpoint.
 - Handlers must not call other handlers.
+- Nested routes are navigation aliases of a top-level list, at most one level deep (`/leagues/{id}/seasons` aliases
+  `/seasons?leagueId=`). An alias is its own use case in the feature of the returned resource
+  (`Features/Seasons/GetLeagueSeasons/`), returns the same DTO with the same sorting, paging and filters, and returns
+  404 when the parent does not exist (the top-level filter returns an empty list). The list and its aliases share the
+  projection and filters through `IQueryable` extensions of the feature, not through each other's handlers.
+- Detail responses carry the summaries of their parents and the navigation the client cannot compute
+  (`currentSeason`, `previousSeason`/`nextSeason`, `previousRound`/`nextRound`) as typed fields. No `links` to
+  sub-collections: `links` exist only in the paging envelope.
 - Features read from the DbContext directly (through `IDbContext`) — no generic repository pattern.
 
 ### Endpoints
