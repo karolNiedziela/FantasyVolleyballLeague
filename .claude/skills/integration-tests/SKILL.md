@@ -1,6 +1,6 @@
 ---
 name: integration-tests
-description: Writing, fixing and reviewing .NET integration tests with xUnit, Shouldly, WebApplicationFactory and Testcontainers. Use when the user asks to add, change or review tests that need a real database, the ASP.NET Core HTTP pipeline or containers. Not for unit tests.
+description: Writing, fixing and reviewing .NET integration tests with xUnit, Shouldly, WebApplicationFactory and Testcontainers. Use when the user asks to add, change or review tests that need a real database, the ASP.NET Core HTTP pipeline or containers, or to change production code that already has integration tests. Not for unit tests.
 model: sonnet
 allowed-tools: Read, Grep, Glob, Bash(dotnet test:*), Bash(dotnet build:*), Bash(docker info:*), Bash(docker ps:*), PowerShell(dotnet test:*), PowerShell(dotnet build:*), PowerShell(docker info:*), PowerShell(docker ps:*)
 ---
@@ -16,7 +16,7 @@ pipeline. If it would fail only because a rule in plain C# broke, it belongs in 
 
 ## Workflow
 
-Pick the path that matches the request: write, fix or review.
+Pick the path that matches the request: write, fix, change the implementation or review.
 
 **Running tests:** use the command the project documents (README, `CLAUDE.md`, build scripts). Otherwise run
 `dotnet test <test project path>`; on .NET 10 with Microsoft.Testing.Platform the form is
@@ -50,6 +50,35 @@ database. Integration tests live in their own project (e.g. `App.IntegrationTest
    rows, background work that is not awaited (hosted services, outbox, message consumers) and time. Never fix it
    with a fixed delay or a retry; wait for an observable condition with a timeout.
 5. Run the whole test project and confirm it is green.
+
+### Change the implementation of covered code
+
+Use when production code with existing behaviour changes (refactoring, a new feature in an existing endpoint or
+query, a bug fix). The tests that passed before the change are the safety net: a test that fails after it is a
+regression until shown otherwise, not an outdated test. This is the same path as in the `unit-tests` skill, with
+the additions below for infrastructure.
+
+1. Before the change, check that Docker is running (`docker info`), then run the integration tests of the affected
+   area and note the result. If Docker is not available, say that the baseline could not be checked and ask before
+   changing code without it; never skip this step silently. If anything is already red, stop and report it; tell an
+   infrastructure failure from an assertion failure first.
+2. Before the change, check that the tests cover the current behaviour of what you are about to change: the HTTP
+   contract the client sees (status codes, Problem Details, JSON shape) and the stored state. For each gap, plan a
+   characterization test at the level section 2 gives: it describes what the code does now, not what it should do.
+   Show the gaps and the planned tests and wait for approval, then write them and run them on the old code until
+   green. Cover only the behaviour the change touches. If the current behaviour looks like a bug, do not lock it in
+   silently: report it and ask.
+3. Make the change, then run the same tests with Docker running, first the area, then the whole test project. They
+   must pass without being edited.
+4. If a test fails, assume a regression and fix the code first. Change an existing test only when:
+   - the behaviour change is intended (the user asked for it), or
+   - the test was bound to the implementation (e.g. it compared the full `detail` sentence, read state through the
+     application's own `DbContext`, or replaced one of our own services, sections 3 and 7); rewrite it to assert the
+     contract instead.
+
+   Report every existing test you changed: which test, what changed and why.
+5. Add tests for the new behaviour separately (a new field in the response, the effect of a new dependency), following
+   steps 2-5 of "Write new tests".
 
 ### Review existing tests
 
@@ -296,6 +325,8 @@ services.AddAuthentication(TestAuthHandler.SchemeName)
 - [ ] `TestContext.Current.CancellationToken` is passed to every call that takes a token.
 - [ ] Arrange-Act-Assert, names and Shouldly follow the `unit-tests` skill.
 - [ ] Docker is running and the test project is green with no analyzer warnings.
+- [ ] After an implementation change: the baseline was green with Docker running, existing tests pass unedited, and
+      every edited existing test is reported with a reason.
 
 ## 9. Reviewing tests: anti-patterns to flag
 
