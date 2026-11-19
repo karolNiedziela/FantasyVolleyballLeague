@@ -7,6 +7,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\FantasyVolleyballLeague.Contracts\FantasyVolleyballLeague.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <InternalsVisibleTo Include="FantasyVolleyballLeague.DataApi" />
     <InternalsVisibleTo Include="FantasyVolleyballLeague.Importer" />
     <InternalsVisibleTo Include="FantasyVolleyballLeague.ArchitectureTests" />

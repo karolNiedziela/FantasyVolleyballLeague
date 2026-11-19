@@ -1,18 +1,20 @@
+using FantasyVolleyballLeague.Contracts;
+
 namespace FantasyVolleyballLeague.Scraper.Sources.Poland.Pls.Rosters
 {
     internal static class PlsPositionMapper
     {
         private static readonly Dictionary<string, string> PolishToEnglish = new(StringComparer.OrdinalIgnoreCase)
         {
-            ["Przyjmujący"] = "Outside Hitter",
-            ["Przyjmująca"] = "Outside Hitter",
-            ["Atakujący"] = "Opposite Hitter",
-            ["Atakująca"] = "Opposite Hitter",
-            ["Środkowy"] = "Middle Blocker",
-            ["Środkowa"] = "Middle Blocker",
-            ["Rozgrywający"] = "Setter",
-            ["Rozgrywająca"] = "Setter",
-            ["Libero"] = "Libero",
+            ["Przyjmujący"] = PositionNames.OutsideHitter,
+            ["Przyjmująca"] = PositionNames.OutsideHitter,
+            ["Atakujący"] = PositionNames.OppositeHitter,
+            ["Atakująca"] = PositionNames.OppositeHitter,
+            ["Środkowy"] = PositionNames.MiddleBlocker,
+            ["Środkowa"] = PositionNames.MiddleBlocker,
+            ["Rozgrywający"] = PositionNames.Setter,
+            ["Rozgrywająca"] = PositionNames.Setter,
+            ["Libero"] = PositionNames.Libero,
         };
 
         public static string Map(string polishPosition)

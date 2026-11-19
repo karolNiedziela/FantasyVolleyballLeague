@@ -35,7 +35,7 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Fixtures
             await _postgresContainer.DisposeAsync();
         }
 
-        internal async Task ResetDatabaseAsync()
+        internal async Task ResetDatabaseAsync(CancellationToken cancellationToken)
         {
             if (_respawner is null)
             {
@@ -43,7 +43,7 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Fixtures
             }
 
             await using var connection = new NpgsqlConnection(_postgresContainer.GetConnectionString());
-            await connection.OpenAsync();
+            await connection.OpenAsync(cancellationToken);
             await _respawner.ResetAsync(connection);
         }
 

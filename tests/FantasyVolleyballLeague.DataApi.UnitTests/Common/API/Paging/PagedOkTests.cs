@@ -111,7 +111,7 @@ namespace FantasyVolleyballLeague.DataApi.UnitTests.Common.API.Paging
         private static async Task<JsonElement> ReadBody(HttpResponse response)
         {
             response.Body.Position = 0;
-            using var document = await JsonDocument.ParseAsync(response.Body);
+            using var document = await JsonDocument.ParseAsync(response.Body, cancellationToken: TestContext.Current.CancellationToken);
 
             return document.RootElement.Clone();
         }

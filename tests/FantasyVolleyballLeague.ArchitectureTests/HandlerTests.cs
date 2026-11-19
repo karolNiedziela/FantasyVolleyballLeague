@@ -1,77 +1,69 @@
-using FantasyVolleyballLeague.ArchitectureTests.Fixtures;
+using ArchUnitNET.Domain;
+using ArchUnitNET.Domain.Dependencies;
+using ArchUnitNET.xUnitV3;
 using FantasyVolleyballLeague.DataApi.Common.Handlers;
+using FantasyVolleyballLeague.VolleyballData.Database;
+using static ArchUnitNET.Fluent.ArchRuleDefinition;
+using static FantasyVolleyballLeague.ArchitectureTests.Fixtures.ArchitectureFixture;
 
 namespace FantasyVolleyballLeague.ArchitectureTests
 {
     public sealed class HandlerTests
     {
-        [Fact]
-        public void HandlersAreSealed()
-        {
-            var violations = HandlerImplementations()
-                .Where(type => !type.IsSealed)
-                .Select(type => type.FullName)
-                .ToList();
-
-            violations.ShouldBeEmpty();
-        }
+        private static readonly string QueryHandlerInterfaceName = typeof(IQueryHandler<,>).FullName!.Split('`')[0];
 
         [Fact]
-        public void HandlersAreNamedHandler()
+        public void Handlers_Should_BeSealed()
         {
-            var violations = HandlerImplementations()
-                .Where(type => !type.Name.EndsWith("Handler", StringComparison.Ordinal))
-                .Select(type => type.FullName)
-                .ToList();
-
-            violations.ShouldBeEmpty();
+            Classes().That().Are(Handlers)
+                .Should().BeSealed()
+                .Check(Model);
         }
 
         [Fact]
-        public void HandlersLiveInFeatures()
+        public void Handlers_Should_BeNamedHandler()
         {
-            var featureTypes = ProjectTypes.DataApi.InNamespace("Features").ToHashSet();
-
-            var violations = HandlerImplementations()
-                .Where(type => !featureTypes.Contains(type))
-                .Select(type => type.FullName)
-                .ToList();
-
-            violations.ShouldBeEmpty();
+            Classes().That().Are(Handlers)
+                .Should().HaveNameEndingWith("Handler")
+                .Check(Model);
         }
 
         [Fact]
-        public void HandlersDoNotDependOnOtherHandlers()
+        public void Handlers_Should_LiveInFeatures()
         {
-            var violations = HandlerImplementations()
-                .SelectMany(type => type.GetConstructors()
-                    .SelectMany(constructor => constructor.GetParameters())
-                    .Where(parameter => IsHandlerType(parameter.ParameterType))
-                    .Select(parameter => $"{type.Name} -> {parameter.ParameterType.Name}"))
-                .ToList();
-
-            violations.ShouldBeEmpty();
+            Classes().That().Are(Handlers)
+                .Should().ResideInNamespaceMatching(FeaturesNamespace)
+                .Check(Model);
         }
 
-        private static IEnumerable<Type> HandlerImplementations()
+        [Fact]
+        public void Handlers_Should_NotDependOnOtherHandlers()
         {
-            return ProjectTypes.DataApi.Assembly.GetTypes()
-                .Where(type => type is { IsClass: true, IsAbstract: false } && ImplementsQueryHandler(type));
+            Classes().That().Are(Handlers)
+                .Should().FollowCustomCondition(
+                    handler => !DependsOnAnotherHandler(handler),
+                    "not depend on another handler",
+                    "depends on another handler")
+                .Check(Model);
         }
 
-        private static bool IsHandlerType(Type type)
+        [Fact]
+        public void Handlers_Should_ReadTheDatabaseThroughIDbContext()
         {
-            return IsQueryHandlerInterface(type) || (type.IsClass && ImplementsQueryHandler(type));
+            Classes().That().Are(Handlers)
+                .Should().NotDependOnAny(typeof(FantasyVolleyballLeagueDbContext))
+                .Check(Model);
         }
 
-        private static bool ImplementsQueryHandler(Type type)
+        private static bool DependsOnAnotherHandler(Class handler)
         {
-            return type.GetInterfaces().Any(IsQueryHandlerInterface);
-        }
+            var handlers = Handlers.GetObjects(Model).ToList();
 
-        private static bool IsQueryHandlerInterface(Type type)
-        {
-            return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IQueryHandler<,>);
+            return handler.Dependencies
+                .Where(dependency => dependency is not ImplementsInterfaceDependency)
+                .Select(dependency => dependency.Target)
+                .Any(target => (target != handler && handlers.Contains(target))
+                    || target.FullName.StartsWith(QueryHandlerInterfaceName, StringComparison.Ordinal));
         }
     }
 }

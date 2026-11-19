@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Mime;
 using System.Text.Json;
 using FantasyVolleyballLeague.DataApi.IntegrationTests.Fixtures;
 
@@ -16,7 +17,7 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests
         {
             var response = await Client.GetAsync(new Uri("/openapi/v1.json", UriKind.Relative), TestContext.Current.CancellationToken);
 
-            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            await response.ShouldHaveStatusCode(HttpStatusCode.OK);
         }
 
         [Fact]
@@ -24,8 +25,8 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests
         {
             var response = await Client.GetAsync(new Uri("/api/v1/does-not-exist", UriKind.Relative), TestContext.Current.CancellationToken);
 
-            response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
-            response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+            await response.ShouldHaveStatusCode(HttpStatusCode.NotFound);
+            response.ShouldHaveMediaType(MediaTypeNames.Application.ProblemJson);
         }
     }
 }

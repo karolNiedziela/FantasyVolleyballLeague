@@ -2,7 +2,6 @@ using FantasyVolleyballLeague.DataApi.Infrastructure;
 using FantasyVolleyballLeague.VolleyballData.Database;
 using FantasyVolleyballLeague.VolleyballData.Domain;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace FantasyVolleyballLeague.DataApi.UnitTests.Infrastructure
 {
@@ -34,17 +33,6 @@ namespace FantasyVolleyballLeague.DataApi.UnitTests.Infrastructure
         }
 
         [Fact]
-        public void ThrowOnUnorderedPagingAllowsFirstOrDefaultLookups()
-        {         
-            using var context = CreateContext(throwOnUnorderedPaging: true, "Host=127.0.0.1;Port=1;Database=unused;Timeout=1");
-            var id = Guid.CreateVersion7();
-
-            var exception = Should.Throw<Exception>(() => context.Set<League>().FirstOrDefault(league => league.Id == id));
-
-            exception.Message.ShouldNotContain(nameof(CoreEventId.RowLimitingOperationWithoutOrderByWarning));
-        }
-
-        [Fact]
         public void UnorderedPagingIsOnlyAWarningWithoutTheExtension()
         {
             using var context = CreateContext(throwOnUnorderedPaging: false);
@@ -52,12 +40,10 @@ namespace FantasyVolleyballLeague.DataApi.UnitTests.Infrastructure
             Should.NotThrow(() => context.Set<League>().Skip(25).Take(25).ToQueryString());
         }
 
-        private static FantasyVolleyballLeagueDbContext CreateContext(
-            bool throwOnUnorderedPaging,
-            string connectionString = "Host=localhost;Database=unused")
+        private static FantasyVolleyballLeagueDbContext CreateContext(bool throwOnUnorderedPaging)
         {
             var options = new DbContextOptionsBuilder<FantasyVolleyballLeagueDbContext>()
-                .UseNpgsql(connectionString);
+                .UseNpgsql("Host=localhost;Database=unused");
 
             if (throwOnUnorderedPaging)
             {

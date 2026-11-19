@@ -18,7 +18,7 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Fixtures
 
         public async ValueTask InitializeAsync()
         {
-            await _factory.ResetDatabaseAsync();
+            await _factory.ResetDatabaseAsync(TestContext.Current.CancellationToken);
         }
 
         public ValueTask DisposeAsync()
@@ -52,11 +52,6 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Fixtures
             var dbContext = scope.ServiceProvider.GetRequiredService<FantasyVolleyballLeagueDbContext>();
 
             return await action(dbContext);
-        }
-
-        private protected Task ResetDatabaseAsync()
-        {
-            return _factory.ResetDatabaseAsync();
         }
     }
 }

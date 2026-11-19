@@ -1,6 +1,6 @@
 ---
 name: unit-tests
-description: Writing, fixing and reviewing .NET unit tests with xUnit, Shouldly and NSubstitute. Use when the user asks to add or change unit tests, to cover a class with tests, or to review existing unit tests. Not for integration tests (database, HTTP pipeline, containers).
+description: Writing, fixing and reviewing .NET unit tests with xUnit, Shouldly and NSubstitute. Use when the user asks to add or change unit tests, to cover a class with tests, to review existing unit tests, or to change production code that already has unit tests. Not for integration tests (database, HTTP pipeline, containers).
 model: sonnet
 allowed-tools: Read, Grep, Glob, Bash(dotnet test:*), Bash(dotnet build:*), PowerShell(dotnet test:*), PowerShell(dotnet build:*)
 ---
@@ -14,7 +14,7 @@ style of the existing tests. Use the rules below where the project says nothing.
 
 ## Workflow
 
-Pick the path that matches the request: write, fix or review.
+Pick the path that matches the request: write, fix, change the implementation or review.
 
 **Running tests:** use the command the project documents (README, `CLAUDE.md`, build scripts). Otherwise run
 `dotnet test <test project path>`; on .NET 10 with Microsoft.Testing.Platform the form is
@@ -40,6 +40,29 @@ Pick the path that matches the request: write, fix or review.
 4. For a flaky test, look first for time, randomness, culture, shared state or test ordering (sections 5 and 9).
    Never fix it with a delay or a retry.
 5. Run the whole test project and confirm it is green.
+
+### Change the implementation of covered code
+
+Use when production code with existing behaviour changes (refactoring, a new feature in an existing class, a bug
+fix). The tests that passed before the change are the safety net: a test that fails after it is a regression until
+shown otherwise, not an outdated test.
+
+1. Before the change, run the tests of the affected area and note the result. If anything is already red, stop and
+   report it; do not mix existing failures with the change.
+2. Before the change, check that the tests cover the current behaviour of what you are about to change. For each gap,
+   plan a characterization test: it describes what the code does now, not what it should do. Show the gaps and the
+   planned tests and wait for approval, then write them and run them on the old code until green. Cover only the
+   behaviour the change touches. If the current behaviour looks like a bug, do not lock it in silently: report it
+   and ask.
+3. Make the change, then run the same tests. They must pass without being edited.
+4. If a test fails, assume a regression and fix the code first. Change an existing test only when:
+   - the behaviour change is intended (the user asked for it), or
+   - the test was bound to the implementation (e.g. `Received` on an internal step, section 7); rewrite it to assert
+     the outcome instead.
+
+   Report every existing test you changed: which test, what changed and why.
+5. Add tests for the new behaviour separately (a new field, the effect of a new dependency), following steps 2-4 of
+   "Write new tests".
 
 ### Review existing tests
 
@@ -214,7 +237,9 @@ await emailSender.Received(1).SendAsync(Arg.Any<string>(), Arg.Any<CancellationT
 - [ ] Substitutes only for boundaries; outcome asserted, not interactions (unless the interaction is the behaviour).
 - [ ] No time, randomness, culture or shared static state leaks into the result.
 - [ ] Comments only where something is non-obvious.
-- [ ] `dotnet test` passes with no analyzer warnings; a test written for a bug fails before the fix.
+- [ ] The tests pass with no analyzer warnings; a test written for a bug fails before the fix.
+- [ ] After an implementation change: the baseline was green, existing tests pass unedited, and every edited
+      existing test is reported with a reason.
 
 ## 12. Reviewing tests: anti-patterns to flag
 

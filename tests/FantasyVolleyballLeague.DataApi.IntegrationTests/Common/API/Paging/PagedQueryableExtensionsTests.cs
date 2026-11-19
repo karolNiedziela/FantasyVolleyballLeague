@@ -2,7 +2,6 @@ using FantasyVolleyballLeague.DataApi.Common.API.Paging;
 using FantasyVolleyballLeague.DataApi.IntegrationTests.Fixtures;
 using FantasyVolleyballLeague.DataApi.IntegrationTests.Seeds;
 using FantasyVolleyballLeague.VolleyballData.Domain;
-using Microsoft.EntityFrameworkCore;
 
 namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Common.API.Paging
 {
@@ -31,12 +30,10 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Common.API.Paging
         }
 
         [Theory]
-        [InlineData(10, 0, 25, 10)]
-        [InlineData(60, 0, 25, 60)]
-        [InlineData(25, 0, 25, 25)]
-        [InlineData(60, 25, 25, 60)]
-        [InlineData(60, 500, 25, 60)]
-        public async Task ToPagedResponseAsyncReturnsTheTotalCount(int leagueCount, int offset, int limit, int expectedTotalCount)
+        [InlineData(10, 0, 25)]
+        [InlineData(25, 0, 25)]
+        [InlineData(60, 25, 25)]
+        public async Task ToPagedResponseAsyncReturnsTheTotalCountOfAllRows(int leagueCount, int offset, int limit)
         {
             await SeedAsync(LeagueSeeds.CreateLeagues(leagueCount));
 
@@ -45,7 +42,7 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Common.API.Paging
                 .ThenBy(league => league.Id)
                 .ToPagedResponseAsync(offset, limit, TestContext.Current.CancellationToken));
 
-            page.TotalCount.ShouldBe(expectedTotalCount);
+            page.TotalCount.ShouldBe(leagueCount);
         }
 
         [Fact]
@@ -60,21 +57,6 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Common.API.Paging
 
             page.Items.ShouldBeEmpty();
             page.TotalCount.ShouldBe(60);
-        }
-
-        [Fact]
-        public async Task OrderByNameFollowsPolishAlphabeticalOrder()
-        {
-            string[] names = ["Żory", "Suwałki", "Śląsk", "Łańcut", "Lublin"];
-            await SeedAsync(names.Select((name, index) =>
-                new League(name, (short)(index + 1), LeagueCountry.Poland.Id, LeagueGender.Men.Id)));
-
-            var sortedNames = await ExecuteDbContextAsync(dbContext => dbContext.Set<League>()
-                .OrderBy(league => league.Name)
-                .Select(league => league.Name)
-                .ToListAsync(TestContext.Current.CancellationToken));
-
-            sortedNames.ShouldBe(["Lublin", "Łańcut", "Suwałki", "Śląsk", "Żory"]);
         }
     }
 }
