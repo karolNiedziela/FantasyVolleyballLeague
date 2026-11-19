@@ -13,10 +13,11 @@ namespace FantasyVolleyballLeague.DataApi.Features.Leagues.GetLeagues
             app.MapGet(LeaguesRoutes.Resource, GetLeagues)
                 .WithName("GetLeagues")
                 .WithSummary("List leagues")
-                .WithDescription("Returns a page of leagues, optionally filtered by gender and division and sorted by name or division number.")
+                .WithDescription("Returns a page of leagues, optionally filtered by gender, division and country and sorted by name or division number.")
                 .WithTags(LeaguesRoutes.Tag)
                 .WithGenderFilter()
                 .WithDivisionFilter()
+                .WithCountryFilter()
                 .WithSorting<GetLeaguesQuery, League>()
                 .WithPaging();
         }
