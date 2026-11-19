@@ -40,7 +40,9 @@ changes.
 PLS URL patterns (`PlsUrls`):
 - Season list: `/games.html`. The season dropdown links look like `/games/tour/{tour}/nocookies/1.html`. `tour` is the season id; 53 = 2026/27.
 - Match: `/games/action/show/id/{matchId}.html`. Match ids are global across PLS sites.
-- Team: `/teams/id/{clubId}/tour/{tour}.html`. The club id is stable across seasons. The site navigation also contains `/teams/id/` links, so selectors must be scoped to the match header.
+- Team: `/teams/id/{clubId}/tour/{tour}.html`. The club id is stable across seasons **within one site only**: each PLS site has its own club ids
+  (BBTS Bielsko-Biała is 11 on tauronliga.pl and 12 on tauron1liga.pl), and the same id means different clubs on
+  different sites. Filter rosters by club id together with the league. The site navigation also contains `/teams/id/` links, so selectors must be scoped to the match header.
 - Player: `/players/id/{playerId}/tour/{tour}.html`. The player id is stable across seasons.
 
 PLS match page eras (each has its own parser in `Scraper/Sources/Poland/Pls/Matches`; the header
