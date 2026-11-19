@@ -6,7 +6,7 @@ League websites ──(Scraper)──► data/raw/*.json ──(Importer)──�
                                AppHost (Aspire) starts Postgres and the DataApi; Scraper and Importer on demand
 ```
 
-The Scraper and the Importer share nothing but the raw JSON files, and only the Importer and the DataApi know the database.
+The Scraper and the Importer share nothing but the raw JSON files and the position names in `Contracts`, and only the Importer and the DataApi know the database.
 
 ### Solution map
 
@@ -18,21 +18,21 @@ The Scraper and the Importer share nothing but the raw JSON files, and only the 
 | `FantasyVolleyballLeague.Importer` | **Importer** console app. Reads `data/raw`, upserts into Postgres using the VolleyballData DbContext (`InternalsVisibleTo`). |
 | `FantasyVolleyballLeague.AppHost` | Aspire: Postgres container, DataApi (healthy once migrations are applied), and explicit-start resources started from the dashboard: `scraper-matches` (current season matches), `scraper-rosters` (current season rosters) and `importer` (waits for the DataApi). Historical backfills run from the Scraper CLI. |
 | `FantasyVolleyballLeague.ServiceDefaults` | Aspire service defaults (OpenTelemetry, health checks). |
-| `FantasyVolleyballLeague.Contracts` | Constants shared by the AppHost, the DataApi, the Importer and the integration tests (`DatabaseResource`: database name and the pinned Postgres image). No packages. |
+| `FantasyVolleyballLeague.Contracts` | Constants shared by the AppHost, the DataApi, the Importer, the Scraper, `VolleyballData` and the tests (`DatabaseResource`: database name and the pinned Postgres image; `PositionNames`: the position names in the raw JSON and in the database). No packages. |
 
 Project references:
 - `DataApi` → `VolleyballData`, `Contracts`, `ServiceDefaults`.
 - `Importer` → `VolleyballData`, `Contracts`.
 - `AppHost` → `DataApi`, `Scraper`, `Importer`, `Contracts`.
-- `Scraper` references no other project.
-- `VolleyballData` references no web project.
+- `Scraper` → `Contracts` (constants only); it references no other project.
+- `VolleyballData` → `Contracts`; it references no web project.
 
 ### Importer layout
 
 `ImportRunner` runs the `IImportStep`s ordered by `Order` (`RostersImportStep`, then `MatchesImportStep`) and writes an
 `ImportReport` (unresolved players, file errors, warnings) next to the data. `Records/*File` are the DTOs that mirror the
-raw JSON, `Import/` holds the pure helpers (`RawDataReader`, `RosterMatching`, `PlayerNameKey`, `CareerMembership`,
-`SeasonNameIndex`, `StatisticsParsing`) that `Importer.Tests` cover, and `Steps/` holds the per-match context.
+raw JSON, `Import/` holds the pure helpers (`RosterMatching`, `PlayerNameKey`, `CareerMembership`,
+`SeasonNameIndex`, `StatisticsParsing`) and `RawDataReader` (reads the raw JSON files; tested on read-only files in `Fixtures/RawData`) that `Importer.Tests` cover, and `Steps/` holds the per-match context.
 
 ## Backend
 
@@ -55,7 +55,7 @@ The backend is split by product area, not by technical layer. Do not add Domain/
       └── Infrastructure/  # DI wiring
 
 - `FantasyVolleyballLeague.Contracts`: a tiny library of compile-time constants shared by the AppHost, the apps and the
-  integration tests (`DatabaseResource`: database name and Postgres image). No logic and no NuGet packages, so the
+  integration tests (`DatabaseResource`: database name and Postgres image; `PositionNames`: the position names in the raw JSON and in the database). No logic and no NuGet packages, so the
   Importer and the AppHost do not pull in ASP.NET Core (the reason it is not part of `ServiceDefaults`). It is not a
   place for general shared code.
 - A future Fantasy game gets its own projects (domain and API) that reference `VolleyballData`.
