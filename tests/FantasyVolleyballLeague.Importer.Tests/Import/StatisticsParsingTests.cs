@@ -10,7 +10,8 @@ namespace FantasyVolleyballLeague.Importer.Tests.Import
         [InlineData("41,5%", 41.5)]
         [InlineData("0", 0)]
         [InlineData("-12%", -12)]
-        public void ParsePercentReadsWebsiteFormats(string value, double expected)
+        [InlineData(" 41% ", 41)]
+        public void ParsePercent_Should_ReadTheWebsiteFormats(string value, double expected)
         {
             StatisticsParsing.ParsePercent(value).ShouldBe((decimal)expected);
         }
@@ -19,7 +20,10 @@ namespace FantasyVolleyballLeague.Importer.Tests.Import
         [InlineData(null)]
         [InlineData("")]
         [InlineData("-")]
-        public void ParsePercentReturnsNullWithoutValue(string? value)
+        [InlineData("   ")]
+        [InlineData("abc")]
+        [InlineData("%")]
+        public void ParsePercent_Should_ReturnNull_When_ThereIsNoNumber(string? value)
         {
             StatisticsParsing.ParsePercent(value).ShouldBeNull();
         }
@@ -31,6 +35,16 @@ namespace FantasyVolleyballLeague.Importer.Tests.Import
 
             offset.Offset.ShouldBe(TimeSpan.Zero);
             offset.UtcDateTime.ShouldBe(new DateTime(2026, 10, 16, 15, 30, 0, DateTimeKind.Utc));
+        }
+
+        [Fact]
+        public void ToUtcOffset_Should_TruncateToWholeMicroseconds()
+        {
+            var withTwoAndAHalfMicroseconds = new DateTime(2026, 10, 16, 15, 30, 0, DateTimeKind.Utc).AddTicks(25);
+
+            var offset = StatisticsParsing.ToUtcOffset(withTwoAndAHalfMicroseconds);
+
+            offset.UtcDateTime.ShouldBe(new DateTime(2026, 10, 16, 15, 30, 0, DateTimeKind.Utc).AddTicks(20));
         }
     }
 }
