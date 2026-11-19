@@ -1,3 +1,4 @@
+using FantasyVolleyballLeague.Scraper.Models;
 using FantasyVolleyballLeague.Scraper.Sources.Poland.Pls.Matches;
 using FantasyVolleyballLeague.Scraper.Tests.Fixtures;
 
@@ -6,17 +7,27 @@ namespace FantasyVolleyballLeague.Scraper.Tests.Sources.Poland.Pls
     public sealed class PlsSeasonScheduleParserTests
     {
         [Fact]
-        public void ParseCurrentSeasonListsEveryRegularSeasonMatchWithoutTickerMatches()
+        public void Parse_Should_ListEveryRegularSeasonMatchWithoutTickerMatches()
         {
-            var schedule = PlsSeasonScheduleParser.Parse(Fixture.Load("games_tour53.html"));
+            var schedule = ParseCurrentSeason();
 
             // 14 teams, 26 rounds: 14 * 26 / 2 = 182 matches. The page also lists a few ticker matches.
             schedule.Count.ShouldBe(182);
-            foreach (var entry in schedule)
-            {
-                (entry.Phase.Name, entry.Phase.Order).ShouldBe(("Regular Season", 1));
-                entry.Stage.Name.ShouldBe(string.Empty);
-            }
+        }
+
+        [Fact]
+        public void Parse_Should_PutEveryMatchOfTheCurrentSeasonInTheRegularSeasonWithoutAStage()
+        {
+            var schedule = ParseCurrentSeason();
+
+            schedule.ShouldAllBe(entry => entry.Phase.Name == "Regular Season" && entry.Phase.Order == 1 && entry.Stage.Name == string.Empty);
+        }
+
+        [Fact]
+        public void Parse_Should_ReadTheRoundsOfTheCurrentSeason()
+        {
+            var schedule = ParseCurrentSeason();
+
             schedule.Select(entry => entry.Round.Order).Distinct().Count().ShouldBe(26);
             schedule.Any(entry => entry.Round is { Name: "Kolejka 1", Order: 1 }).ShouldBeTrue();
         }
@@ -61,6 +72,11 @@ namespace FantasyVolleyballLeague.Scraper.Tests.Sources.Poland.Pls
         public void NormalizeHeadingMatchesLegacyFolderNames(string heading, string expected)
         {
             PlsSeasonScheduleParser.NormalizeHeading(heading).ShouldBe(expected);
+        }
+
+        private static IReadOnlyList<ScheduleEntry> ParseCurrentSeason()
+        {
+            return PlsSeasonScheduleParser.Parse(Fixture.Load("games_tour53.html"));
         }
     }
 }
