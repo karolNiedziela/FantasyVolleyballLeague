@@ -209,10 +209,17 @@ Enforced via `.editorconfig`:
     - Tests derive from `IntegrationTestBase`: the database is reset with Respawn before each test (lookup tables with
       seed data are kept). Tests run sequentially, because they share the database.
 - In every test project, shared test helpers live in `Fixtures/` (e.g. `DataApiFactory`, `IntegrationTestBase`,
-  `ProjectTypes`) and test data builders in `Seeds/` (e.g. `LeagueSeeds`). Neither name exists in `src`, because the
+  `ArchitectureFixture`) and test data builders in `Seeds/` (e.g. `LeagueSeeds`). Neither name exists in `src`, because the
   other test folders mirror the `src` folders (tests of `Program.cs` sit in the project root).
     - Never use EF InMemory or SQLite: collation, `LIKE`, trigram search and null ordering differ from Postgres.
     - Per slice, mirror `Features/<Feature>/<UseCase>/` under `Features/` in the test project: handler tests
       (`new XxxHandler(dbContext)`) are the bulk, a few endpoint tests per slice cover the HTTP contract. Fake only
       external systems.
+- `ArchitectureTests` use **ArchUnitNET** (`TngTech.ArchUnitNET.xUnitV3`): the assemblies are loaded once in
+  `Fixtures/ArchitectureFixture` (`Model`), and a rule is `Types().That()...Should()...Check(Model)`. Test only rules
+  the compiler cannot enforce (inside one assembly): a rule between projects is already enforced by `ProjectReference`.
+  A rule needs positive results by default, so an empty match fails instead of passing silently
+  (`WithoutRequiringPositiveResults()` only where the match set can legitimately be empty). `ResideInNamespace` is an
+  exact match; use `ResideInNamespaceMatching` for a regex. Check that a new rule can fail by breaking it once.
+  Behaviour (for example UUID v7 ids) belongs in the unit tests, not here.
 - Expression trees cannot hold tuple literals or `is { }` patterns, so for those use `foreach` + `ShouldBe`, or `.Any(...).ShouldBeTrue()`, instead of `ShouldContain(predicate)`.

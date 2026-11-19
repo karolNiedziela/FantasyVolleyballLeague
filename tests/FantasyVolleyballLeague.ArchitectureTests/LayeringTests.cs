@@ -1,34 +1,26 @@
-using FantasyVolleyballLeague.ArchitectureTests.Fixtures;
+using ArchUnitNET.xUnitV3;
 using FantasyVolleyballLeague.DataApi.Common.Endpoints;
+using static ArchUnitNET.Fluent.ArchRuleDefinition;
+using static FantasyVolleyballLeague.ArchitectureTests.Fixtures.ArchitectureFixture;
 
 namespace FantasyVolleyballLeague.ArchitectureTests
 {
     public sealed class LayeringTests
     {
-        [Theory]
-        [InlineData("FantasyVolleyballLeague.VolleyballData.Database")]
-        [InlineData("FantasyVolleyballLeague.DataApi")]
-        public void DomainDoesNotDependOn(string forbiddenNamespace)
+        [Fact]
+        public void Domain_Should_NotDependOnDatabase()
         {
-            var violations = ProjectTypes.VolleyballData.InNamespace("Domain")
-                .SelectMany(type => ProjectTypes.SignatureDependencies(type)
-                    .Where(dependency => dependency.Namespace?.StartsWith(forbiddenNamespace, StringComparison.Ordinal) == true)
-                    .Select(dependency => $"{type.Name} -> {dependency.FullName}"))
-                .ToList();
-
-            violations.ShouldBeEmpty();
+            Types().That().Are(DomainClasses)
+                .Should().NotDependOnAnyTypesThat().ResideInNamespaceMatching(DatabaseNamespace)
+                .Check(Model);
         }
 
         [Fact]
-        public void EndpointsImplementIEndpoint()
+        public void Endpoints_Should_ImplementIEndpoint()
         {
-            var violations = ProjectTypes.DataApi.Assembly.GetTypes()
-                .Where(type => type is { IsClass: true, IsAbstract: false } && type.Name.EndsWith("Endpoint", StringComparison.Ordinal))
-                .Where(type => !typeof(IEndpoint).IsAssignableFrom(type))
-                .Select(type => type.FullName)
-                .ToList();
-
-            violations.ShouldBeEmpty();
+            Classes().That().HaveNameEndingWith("Endpoint").And().AreNotAbstract()
+                .Should().ImplementInterface(typeof(IEndpoint))
+                .Check(Model);
         }
     }
 }
