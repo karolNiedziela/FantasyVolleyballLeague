@@ -33,15 +33,14 @@ namespace FantasyVolleyballLeague.DataApi.Features.Rounds.GetRoundById
                 return null;
             }
 
-            var rounds = await LoadSeasonRoundsAsync(season.Id, cancellationToken);
+            var rounds = await _dbContext.Set<Round>()
+                .WhereSeason(season.Id)
+                .OrderByPhaseStageRound()
+                .ProjectToSummary()
+                .ToListAsync(cancellationToken);
 
             var index = rounds.FindIndex(round => round.Id == query.Id);
-            if (index < 0)
-            {
-                return null;
-            }
-
-            var current = ToSummary(rounds[index]);
+            var current = rounds[index];
 
             return new GetRoundByIdResponse
             {
@@ -51,61 +50,9 @@ namespace FantasyVolleyballLeague.DataApi.Features.Rounds.GetRoundById
                 Stage = current.Stage,
                 Phase = current.Phase,
                 Season = season,
-                PreviousRound = index > 0 ? ToSummary(rounds[index - 1]) : null,
-                NextRound = index < rounds.Count - 1 ? ToSummary(rounds[index + 1]) : null
+                PreviousRound = index > 0 ? rounds[index - 1] : null,
+                NextRound = index < rounds.Count - 1 ? rounds[index + 1] : null
             };
         }
-
-        private async Task<List<RoundRow>> LoadSeasonRoundsAsync(Guid seasonId, CancellationToken cancellationToken)
-        {
-            return await _dbContext.Set<Round>()
-                .Where(x => x.Phase.SeasonId == seasonId)
-                .OrderBy(x => x.Phase.Order)
-                .ThenBy(x => x.StageOrder)
-                .ThenBy(x => x.Order)
-                .ThenBy(x => x.Id)
-                .Select(x => new RoundRow(
-                    x.Id,
-                    x.Name,
-                    x.Order,
-                    x.Stage,
-                    x.StageOrder,
-                    x.PhaseId,
-                    x.Phase.Name,
-                    x.Phase.PhaseType.Code,
-                    x.Phase.Order))
-                .ToListAsync(cancellationToken);
-        }
-
-        private static RoundSummaryResponse ToSummary(RoundRow row)
-        {
-            return new RoundSummaryResponse
-            {
-                Id = row.Id,
-                Name = row.Name,
-                Order = row.Order,
-                Stage = string.IsNullOrEmpty(row.StageName)
-                    ? null
-                    : new StageSummaryResponse { Name = row.StageName, Order = row.StageOrder },
-                Phase = new PhaseSummaryResponse
-                {
-                    Id = row.PhaseId,
-                    Name = row.PhaseName,
-                    Type = row.PhaseType,
-                    Order = row.PhaseOrder
-                }
-            };
-        }
-
-        private sealed record RoundRow(
-            Guid Id,
-            string Name,
-            int Order,
-            string StageName,
-            int StageOrder,
-            Guid PhaseId,
-            string PhaseName,
-            string PhaseType,
-            int PhaseOrder);
     }
 }
