@@ -20,6 +20,11 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.EntityTypeConfiguratio
                 .WithMany()
                 .HasForeignKey(t => t.SeasonId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(t => t.PhaseType)
+                .WithMany()
+                .HasForeignKey(t => t.PhaseTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

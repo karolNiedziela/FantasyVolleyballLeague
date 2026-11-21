@@ -12,6 +12,7 @@ namespace FantasyVolleyballLeague.DataApi.UnitTests.Domain
             .. MatchStatus.All.Select(x => x.Code),
             .. StatisticsLevel.All.Select(x => x.Code),
             .. PlayerPosition.All.Select(x => x.Code),
+            .. PhaseType.All.Select(x => x.Code),
         ];
 
         [Fact]
@@ -49,6 +50,12 @@ namespace FantasyVolleyballLeague.DataApi.UnitTests.Domain
                 (4, "setter"),
                 (5, "libero"),
             ]);
+        }
+
+        [Fact]
+        public void PhaseType_Should_HaveTheContractCodes()
+        {
+            Codes(PhaseType.All, x => x.Id, x => x.Code).ShouldBe([(1, "regular_season"), (2, "playoff"), (3, "relegation")]);
         }
 
         [Theory]
