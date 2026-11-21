@@ -116,7 +116,7 @@ namespace FantasyVolleyballLeague.DataApi.Features.Seasons.GetSeasonById
                             Order = round.Order,
                             Stage = string.IsNullOrEmpty(round.StageName)
                                 ? null
-                                : new SeasonRoundStageResponse { Name = round.StageName, Order = round.StageOrder }
+                                : new StageSummaryResponse { Name = round.StageName, Order = round.StageOrder }
                         })
                         .ToList()
                 })

@@ -1,3 +1,5 @@
+using FantasyVolleyballLeague.DataApi.Common.API.Summaries;
+
 namespace FantasyVolleyballLeague.DataApi.Features.Seasons.GetSeasonById
 {
     internal sealed class SeasonRoundResponse
@@ -11,6 +13,6 @@ namespace FantasyVolleyballLeague.DataApi.Features.Seasons.GetSeasonById
         /// <summary>
         /// The stage of a playoff round (free text from the source); null for rounds without a stage, such as the regular season.
         /// </summary>
-        public SeasonRoundStageResponse? Stage { get; init; }
+        public StageSummaryResponse? Stage { get; init; }
     }
 }
