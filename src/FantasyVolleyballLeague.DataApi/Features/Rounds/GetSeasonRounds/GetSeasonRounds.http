@@ -1,0 +1,30 @@
+@SeasonId = 00000000-0000-0000-0000-000000000000
+@PhaseId = 00000000-0000-0000-0000-000000000000
+
+### Rounds of a season, in the season order (take the id from GET /seasons; defaults: offset 0, limit 25)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/seasons/{{SeasonId}}/rounds
+Accept: application/json
+
+### Page through the rounds
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/seasons/{{SeasonId}}/rounds?offset=0&limit=10
+Accept: application/json
+
+### Only the rounds of one phase (take the id from GET /seasons/{id})
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/seasons/{{SeasonId}}/rounds?phaseId={{PhaseId}}
+Accept: application/json
+
+### Error: the season does not exist (404, unlike GET /rounds?seasonId= which returns an empty list)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/seasons/00000000-0000-0000-0000-000000000001/rounds
+Accept: application/json
+
+### Error: the season id is not a GUID (404, the route does not match)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/seasons/not-a-guid/rounds
+Accept: application/json
+
+### Error: limit above the maximum of 100 (400, errors.limit)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/seasons/{{SeasonId}}/rounds?limit=1000
+Accept: application/json
+
+### Error: negative offset (400, errors.offset)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/seasons/{{SeasonId}}/rounds?offset=-1
+Accept: application/json

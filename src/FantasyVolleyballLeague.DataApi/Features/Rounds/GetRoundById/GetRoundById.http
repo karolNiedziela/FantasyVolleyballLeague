@@ -1,0 +1,13 @@
+@RoundId = 00000000-0000-0000-0000-000000000000
+
+### Round with its phase and season, and the previous and next round of the season (take the id from GET /seasons/{id})
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/rounds/{{RoundId}}
+Accept: application/json
+
+### Error: the round does not exist (404)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/rounds/00000000-0000-0000-0000-000000000001
+Accept: application/json
+
+### Error: the id is not a GUID (404, the route does not match)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/rounds/not-a-guid
+Accept: application/json
