@@ -1,0 +1,34 @@
+@SeasonId = 00000000-0000-0000-0000-000000000000
+@PhaseId = 00000000-0000-0000-0000-000000000000
+
+### Rounds of a season, in the season order (take the ids from GET /seasons; defaults: offset 0, limit 25)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/rounds?seasonId={{SeasonId}}
+Accept: application/json
+
+### Page through the rounds
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/rounds?seasonId={{SeasonId}}&offset=0&limit=10
+Accept: application/json
+
+### Only the rounds of one phase (take the id from GET /seasons/{id})
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/rounds?seasonId={{SeasonId}}&phaseId={{PhaseId}}
+Accept: application/json
+
+### Unknown season: 200 with empty items
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/rounds?seasonId=00000000-0000-0000-0000-000000000001
+Accept: application/json
+
+### Error: seasonId is required (400)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/rounds
+Accept: application/json
+
+### Error: seasonId is not a GUID (400)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/rounds?seasonId=not-a-guid
+Accept: application/json
+
+### Error: limit above the maximum of 100 (400, errors.limit)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/rounds?seasonId={{SeasonId}}&limit=1000
+Accept: application/json
+
+### Error: negative offset (400, errors.offset)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/rounds?seasonId={{SeasonId}}&offset=-1
+Accept: application/json
