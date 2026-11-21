@@ -6,6 +6,8 @@ namespace FantasyVolleyballLeague.DataApi.Features.Rounds
 
         public const string ResourceById = Resource + "/{id:guid}";
 
+        public const string BySeason = "/seasons/{seasonId:guid}/rounds";
+
         public const string Tag = "Rounds";
     }
 }
