@@ -282,15 +282,63 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
                     b.Property<int>("Order")
                         .HasColumnType("integer");
 
+                    b.Property<int>("PhaseTypeId")
+                        .HasColumnType("integer");
+
                     b.Property<Guid>("SeasonId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("PhaseTypeId");
+
                     b.HasIndex("SeasonId", "Name")
                         .IsUnique();
 
                     b.ToTable("Phase");
+                });
+
+            modelBuilder.Entity("FantasyVolleyballLeague.VolleyballData.Domain.PhaseType", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("PhaseType");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Code = "regular_season",
+                            Name = "Regular Season"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Code = "playoff",
+                            Name = "Playoff"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Code = "relegation",
+                            Name = "Relegation"
+                        });
                 });
 
             modelBuilder.Entity("FantasyVolleyballLeague.VolleyballData.Domain.Player", b =>
@@ -756,11 +804,19 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
 
             modelBuilder.Entity("FantasyVolleyballLeague.VolleyballData.Domain.Phase", b =>
                 {
+                    b.HasOne("FantasyVolleyballLeague.VolleyballData.Domain.PhaseType", "PhaseType")
+                        .WithMany()
+                        .HasForeignKey("PhaseTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("FantasyVolleyballLeague.VolleyballData.Domain.Season", "Season")
                         .WithMany()
                         .HasForeignKey("SeasonId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("PhaseType");
 
                     b.Navigation("Season");
                 });

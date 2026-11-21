@@ -1,0 +1,57 @@
+@LeagueId = 00000000-0000-0000-0000-000000000000
+
+### Seasons of a league (take the id from GET /leagues; defaults: newest first, offset 0, limit 25)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues/{{LeagueId}}/seasons
+Accept: application/json
+
+### Page through the list
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues/{{LeagueId}}/seasons?offset=0&limit=2
+Accept: application/json
+
+### Second page (follow links.next from the previous response)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues/{{LeagueId}}/seasons?offset=2&limit=2
+Accept: application/json
+
+### Oldest first
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues/{{LeagueId}}/seasons?sort=startYear
+Accept: application/json
+
+### One season by start year
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues/{{LeagueId}}/seasons?startYear=2024
+Accept: application/json
+
+### Only the latest season of the league
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues/{{LeagueId}}/seasons?current=true
+Accept: application/json
+
+### Filters, sort and paging together
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues/{{LeagueId}}/seasons?startYear=2024&sort=-startYear&offset=0&limit=10
+Accept: application/json
+
+### Offset beyond the end: 200 with empty items, not an error
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues/{{LeagueId}}/seasons?offset=1000
+Accept: application/json
+
+### Error: the league does not exist (404, unlike GET /seasons?leagueId= which returns an empty list)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues/00000000-0000-0000-0000-000000000001/seasons
+Accept: application/json
+
+### Error: the league id is not a GUID (404, the route does not match)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues/not-a-guid/seasons
+Accept: application/json
+
+### Error: unknown sort field (400, errors.sort)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues/{{LeagueId}}/seasons?sort=name
+Accept: application/json
+
+### Error: limit out of range (400, errors.limit)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues/{{LeagueId}}/seasons?limit=0
+Accept: application/json
+
+### Error: limit above the maximum of 100 (400, errors.limit)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues/{{LeagueId}}/seasons?limit=1000
+Accept: application/json
+
+### Error: negative offset (400, errors.offset)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/leagues/{{LeagueId}}/seasons?offset=-1
+Accept: application/json

@@ -130,7 +130,7 @@ namespace FantasyVolleyballLeague.Importer.Import
             return entity.Id;
         }
 
-        public Guid ResolvePhase(Guid seasonId, NamedOrderFile phase)
+        public Guid ResolvePhase(Guid seasonId, NamedOrderFile phase, PhaseType phaseType)
         {
             var key = (seasonId, phase.Name);
             if (_phases.TryGetValue(key, out var id))
@@ -138,7 +138,7 @@ namespace FantasyVolleyballLeague.Importer.Import
                 return id;
             }
 
-            var entity = new Phase(phase.Name, phase.Order, seasonId);
+            var entity = new Phase(phase.Name, phase.Order, seasonId, phaseType.Id);
             _dbContext.Set<Phase>().Add(entity);
             _phases[key] = entity.Id;
             return entity.Id;

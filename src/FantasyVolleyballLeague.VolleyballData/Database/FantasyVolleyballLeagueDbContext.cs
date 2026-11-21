@@ -1,7 +1,6 @@
 using FantasyVolleyballLeague.VolleyballData.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Storage;
 using System.Reflection;
 
 namespace FantasyVolleyballLeague.VolleyballData.Database
@@ -20,8 +19,17 @@ namespace FantasyVolleyballLeague.VolleyballData.Database
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
             => await base.SaveChangesAsync(cancellationToken);
 
-        public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
-            => Database.BeginTransactionAsync(cancellationToken);
+        public Task ExecuteInTransactionAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken = default)
+        {
+            var strategy = Database.CreateExecutionStrategy();
+
+            return strategy.ExecuteAsync(async token =>
+            {
+                await using var transaction = await Database.BeginTransactionAsync(token);
+                await operation(token);
+                await transaction.CommitAsync(token);
+            }, cancellationToken);
+        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

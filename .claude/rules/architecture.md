@@ -120,7 +120,9 @@ with `FromCode` and filters by the foreign key. Codes are a public contract: add
 (`LookupCodeTests` pins them). `Name` stays for the Importer, which matches raw JSON values by it.
 
 Paging: a list endpoint returns `PagedResults.Ok(page)`, with `links` in the body and no `Link` header. This is the one
-place where this file overrides the REST skill's `{ data, pagination, links }` envelope.
+place where this file overrides the REST skill's `{ data, pagination, links }` envelope. Paging is offset-based (`offset`,
+`limit`), not keyset, on purpose: lists hold at most a few thousand rows, and clients need random page access. Revisit it for
+a list that grows far beyond that.
 
 OpenAPI: `.WithPaging()` and `.WithSorting<,>()` describe `offset`, `limit` and `sort`. Describe other query parameters
 with `.WithParameterDescription(name, text)`. Do not use `[Description]` on the parameters of an `[AsParameters]` type:
@@ -128,7 +130,7 @@ it throws in Microsoft.AspNetCore.OpenApi 10.0.14.
 
 ### REST conventions
 
-Follow the `dotnet-rest-api-rules` skill (resource naming, status codes, Problem Details,
+Follow the `aspnetcore-rest-api` skill (resource naming, status codes, Problem Details,
 pagination, URL versioning, OpenAPI). Where it conflicts with this file, this file wins:
 - One `IEndpoint` class and one handler per use case, not a static `Map<Resource>` class
   and not a service layer behind an interface.

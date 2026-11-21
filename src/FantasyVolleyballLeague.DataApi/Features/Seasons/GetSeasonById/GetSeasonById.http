@@ -1,0 +1,13 @@
+@SeasonId = 00000000-0000-0000-0000-000000000000
+
+### Season with its league, previous and next season, and phases with rounds (take the id from GET /seasons)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/seasons/{{SeasonId}}
+Accept: application/json
+
+### Error: the season does not exist (404)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/seasons/00000000-0000-0000-0000-000000000001
+Accept: application/json
+
+### Error: the id is not a GUID (404, the route does not match)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/seasons/not-a-guid
+Accept: application/json
