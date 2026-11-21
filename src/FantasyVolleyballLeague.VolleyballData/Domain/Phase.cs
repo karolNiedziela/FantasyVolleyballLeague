@@ -10,13 +10,18 @@
 
         public Season Season { get; private set; } = default!;
 
+        public int PhaseTypeId { get; private set; }
+
+        public PhaseType PhaseType { get; private set; } = default!;
+
         private Phase() { }
 
-        public Phase(string name, int order, Guid seasonId)
+        public Phase(string name, int order, Guid seasonId, int phaseTypeId)
         {
             Name = name;
             Order = order;
             SeasonId = seasonId;
+            PhaseTypeId = phaseTypeId;
         }
 
         public void Reorder(int order)

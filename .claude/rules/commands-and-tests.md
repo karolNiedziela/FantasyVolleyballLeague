@@ -34,6 +34,20 @@ Full details are in the Scraper and Importer READMEs.
 - The `.http` files of the DataApi use REST Client variables from `src/FantasyVolleyballLeague.DataApi/http-client.env.json`
   (`DataApi_HostAddress`, `ApiVersion`).
 
+### Query plans on the dev database
+
+The dev Postgres runs in the `fantasy-volleyball-league-postgres` container (database `FantasyVolleyballLeagueDb`). Use the
+container's own password, so no secret is printed, and only run `SELECT` and `EXPLAIN` there:
+
+```bash
+docker exec -i fantasy-volleyball-league-postgres sh -c \
+  'export PGPASSWORD="$POSTGRES_PASSWORD"; psql -U "$POSTGRES_USER" -d FantasyVolleyballLeagueDb' < plan.sql
+```
+
+`plan.sql` holds `EXPLAIN (ANALYZE, BUFFERS, COSTS OFF) <query>;`. Test on the largest data (PlusLiga matches, about 4.6k, and the
+largest season). Dev statistics can be stale, so a `Seq Scan` on a small table is expected. Do not run `ANALYZE`, DDL or writes
+there without asking. The `ef-core-queries` skill describes how to read the plan.
+
 ## Tests
 
 Run all with `dotnet test --solution FantasyVolleyballLeague.sln`, one with `dotnet test --project tests/<Project>`.

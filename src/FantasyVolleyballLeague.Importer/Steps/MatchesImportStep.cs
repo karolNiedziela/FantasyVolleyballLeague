@@ -111,8 +111,15 @@ namespace FantasyVolleyballLeague.Importer.Steps
                 return false;
             }
 
+            var phaseType = PhaseType.FromName(file.Phase.Name);
+            if (phaseType is null)
+            {
+                _report.FileErrors.Add(new FileError(path, $"Unknown phase '{file.Phase.Name}'."));
+                return false;
+            }
+
             var seasonId = _catalog.ResolveSeason(leagueId, file.Season);
-            var phaseId = _catalog.ResolvePhase(seasonId, file.Phase);
+            var phaseId = _catalog.ResolvePhase(seasonId, file.Phase, phaseType);
             var roundId = _catalog.ResolveRound(phaseId, file.Stage, file.Round);
             var homeRosterId = _catalog.ResolveRoster(leagueId, seasonId, file.HomeRoster.Name, file.HomeRoster.ExternalId);
             var awayRosterId = _catalog.ResolveRoster(leagueId, seasonId, file.AwayRoster.Name, file.AwayRoster.ExternalId);
