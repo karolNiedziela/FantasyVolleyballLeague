@@ -1,5 +1,5 @@
 ---
-name: "dotnet-rest-api-rules"
+name: "aspnetcore-rest-api"
 description: "Use when designing, implementing or reviewing ASP.NET Core REST/HTTP APIs: resource naming, status codes, Problem Details errors, pagination, URL versioning, OpenAPI."
 allowed-tools: "Read, Grep, Glob, Bash(dotnet build:*), Bash(dotnet test:*), PowerShell(dotnet build:*), PowerShell(dotnet test:*)"
 ---
