@@ -9,7 +9,7 @@ namespace FantasyVolleyballLeague.DataApi.Features.Leagues.GetLeagueById
         public void MapEndpoint(IEndpointRouteBuilder app)
         {
             app.MapGet(LeaguesRoutes.ResourceById, GetLeagueById)
-                .WithName("GetLeagueById")
+                .WithName(nameof(GetLeagueById))
                 .WithSummary("Get league by ID")
                 .WithDescription("Returns a league by its ID.")
                 .WithTags(LeaguesRoutes.Tag)
