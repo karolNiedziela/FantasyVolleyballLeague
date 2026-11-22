@@ -1,0 +1,51 @@
+### List rosters (defaults: by name, offset 0, limit 25)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/rosters
+Accept: application/json
+
+### Page through the list
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/rosters?offset=0&limit=10
+Accept: application/json
+
+### Newest season first
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/rosters?sort=-startYear,name
+Accept: application/json
+
+### Rosters of one league (take the id from GET /leagues)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/rosters?leagueId=00000000-0000-0000-0000-000000000000
+Accept: application/json
+
+### Rosters of one season (take the id from GET /seasons)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/rosters?seasonId=00000000-0000-0000-0000-000000000000
+Accept: application/json
+
+### One club across the seasons of a league: search by name, newest season first
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/rosters?leagueId=00000000-0000-0000-0000-000000000000&q=resovia&sort=-startYear
+Accept: application/json
+
+### Search by words of the name: any order, case and diacritics ignored
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/rosters?q=resovia rzeszow
+Accept: application/json
+
+### Search and filters together
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/rosters?leagueId=00000000-0000-0000-0000-000000000000&q=jastrzebski&sort=-startYear&limit=5
+Accept: application/json
+
+### A query without letters or digits filters nothing
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/rosters?q=%25
+Accept: application/json
+
+### Offset beyond the end: 200 with empty items, not an error
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/rosters?offset=10000
+Accept: application/json
+
+### Error: unknown sort field (400, errors.sort)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/rosters?sort=city
+Accept: application/json
+
+### Error: limit above the maximum of 100 (400, errors.limit)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/rosters?limit=1000
+Accept: application/json
+
+### Error: negative offset (400, errors.offset)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/rosters?offset=-1
+Accept: application/json
