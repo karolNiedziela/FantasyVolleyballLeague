@@ -360,7 +360,8 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(100)")
+                        .UseCollation("pl-x-icu");
 
                     b.Property<int>("GenderId")
                         .HasColumnType("integer");
