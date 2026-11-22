@@ -144,6 +144,34 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Rosters.GetR
         }
 
         [Fact]
+        public async Task HandleAsync_Should_SortPolishLettersAfterTheirBaseLetter_WhenTheDefaultCollationWouldNot()
+        {
+            var season = SeasonSeeds.Season(_men, 2023);
+            var roster = NameSeeds.Roster(_men, season, "Lublin");
+            var withAccent = NameSeeds.Player("Łazarz Nowak");
+            var withoutAccent = NameSeeds.Player("Leon Nowak");
+            var accentS = NameSeeds.Player("Śliwka Adam");
+            var plainS = NameSeeds.Player("Sobolewski Adam");
+            await SeedAsync(
+                _men,
+                season,
+                roster,
+                withAccent,
+                withoutAccent,
+                accentS,
+                plainS,
+                NameSeeds.RosterPlayer(roster, withAccent),
+                NameSeeds.RosterPlayer(roster, withoutAccent),
+                NameSeeds.RosterPlayer(roster, accentS),
+                NameSeeds.RosterPlayer(roster, plainS));
+
+            var result = await Handle(roster.Id);
+
+            result.ShouldNotBeNull().Players.Select(player => player.FullName).ShouldBe(
+                ["Leon Nowak", "Łazarz Nowak", "Sobolewski Adam", "Śliwka Adam"]);
+        }
+
+        [Fact]
         public async Task HandleAsync_Should_ReturnOnlyThePlayersOfTheRoster()
         {
             var season = SeasonSeeds.Season(_men, 2023);
