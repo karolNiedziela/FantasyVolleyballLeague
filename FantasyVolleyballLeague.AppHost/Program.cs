@@ -1,4 +1,4 @@
-using FantasyVolleyballLeague.Contracts;
+using FantasyVolleyballLeague.Shared.Persistence;
 
 var builder = DistributedApplication.CreateBuilder(args);
 

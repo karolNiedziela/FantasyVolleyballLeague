@@ -27,8 +27,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\FantasyVolleyballLeague.ServiceDefaults\FantasyVolleyballLeague.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\FantasyVolleyballLeague.Contracts\FantasyVolleyballLeague.Contracts.csproj" />
+    <ProjectReference Include="..\FantasyVolleyballLeague.Shared\FantasyVolleyballLeague.Shared.csproj" />
     <ProjectReference Include="..\FantasyVolleyballLeague.VolleyballData\FantasyVolleyballLeague.VolleyballData.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="FantasyVolleyballLeague.Shared.Types" />
   </ItemGroup>
 
   <ItemGroup>

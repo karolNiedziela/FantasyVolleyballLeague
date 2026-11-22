@@ -1,4 +1,4 @@
-namespace FantasyVolleyballLeague.Contracts
+namespace FantasyVolleyballLeague.Shared.Constants
 {
     /// <summary>
     /// The phase names every source writes to the raw JSON (a source maps its own wording to one of them),

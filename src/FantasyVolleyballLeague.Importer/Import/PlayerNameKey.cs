@@ -1,47 +1,23 @@
-using System.Globalization;
-using System.Text;
+using FantasyVolleyballLeague.Shared.Text;
 
 namespace FantasyVolleyballLeague.Importer.Import
 {
     /// <summary>
     /// Comparison key for player names. Sources disagree on the name order ("Benjamin Toniutti" in rosters,
     /// "Toniutti Benjamin" in widget statistics) and sometimes on case, so the key is the sorted set of
-    /// upper-case name tokens without diacritics.
+    /// the words of <see cref="NameNormalizer"/>.
     /// </summary>
     internal static class PlayerNameKey
     {
         public static string Create(string fullName)
         {
-            return string.Join(' ', Tokens(fullName).Order(StringComparer.Ordinal));
+            return string.Join(' ', NameNormalizer.Tokens(fullName).Order(StringComparer.Ordinal));
         }
 
         public static bool ShareToken(string firstKey, string secondKey)
         {
             var firstTokens = firstKey.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             return secondKey.Split(' ', StringSplitOptions.RemoveEmptyEntries).Any(firstTokens.Contains);
-        }
-
-        private static string[] Tokens(string fullName)
-        {
-            return RemoveDiacritics(fullName.ToUpperInvariant())
-                .Split([' ', '\t', ' '], StringSplitOptions.RemoveEmptyEntries);
-        }
-
-        private static string RemoveDiacritics(string text)
-        {
-            var builder = new StringBuilder(text.Length);
-            foreach (var character in text.Normalize(NormalizationForm.FormD))
-            {
-                if (CharUnicodeInfo.GetUnicodeCategory(character) == UnicodeCategory.NonSpacingMark)
-                {
-                    continue;
-                }
-
-                // "Ł" has no decomposed form, so it is mapped explicitly.
-                builder.Append(character == 'Ł' ? 'L' : character);
-            }
-
-            return builder.ToString().Normalize(NormalizationForm.FormC);
         }
     }
 }

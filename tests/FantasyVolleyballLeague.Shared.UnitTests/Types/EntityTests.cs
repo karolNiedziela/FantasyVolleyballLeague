@@ -1,6 +1,6 @@
-using FantasyVolleyballLeague.VolleyballData.Domain;
+using FantasyVolleyballLeague.Shared.Types;
 
-namespace FantasyVolleyballLeague.DataApi.UnitTests.Domain
+namespace FantasyVolleyballLeague.Shared.UnitTests.Types
 {
     public sealed class EntityTests
     {

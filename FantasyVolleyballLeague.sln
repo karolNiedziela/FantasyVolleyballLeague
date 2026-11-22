@@ -37,7 +37,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FantasyVolleyballLeague.Dat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FantasyVolleyballLeague.DataApi.IntegrationTests", "tests\FantasyVolleyballLeague.DataApi.IntegrationTests\FantasyVolleyballLeague.DataApi.IntegrationTests.csproj", "{3B8D2F6A-7C41-4E5B-9A2D-1F6E8C4B7A93}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FantasyVolleyballLeague.Contracts", "src\FantasyVolleyballLeague.Contracts\FantasyVolleyballLeague.Contracts.csproj", "{5D2C7A41-8B3E-4F69-A1D0-3E9B6C2F4A87}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FantasyVolleyballLeague.Shared", "src\FantasyVolleyballLeague.Shared\FantasyVolleyballLeague.Shared.csproj", "{5D2C7A41-8B3E-4F69-A1D0-3E9B6C2F4A87}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FantasyVolleyballLeague.Shared.UnitTests", "tests\FantasyVolleyballLeague.Shared.UnitTests\FantasyVolleyballLeague.Shared.UnitTests.csproj", "{67B4B50D-053B-4501-A6A9-E9EA42BD5C04}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -193,6 +195,18 @@ Global
 		{5D2C7A41-8B3E-4F69-A1D0-3E9B6C2F4A87}.Release|x64.Build.0 = Release|Any CPU
 		{5D2C7A41-8B3E-4F69-A1D0-3E9B6C2F4A87}.Release|x86.ActiveCfg = Release|Any CPU
 		{5D2C7A41-8B3E-4F69-A1D0-3E9B6C2F4A87}.Release|x86.Build.0 = Release|Any CPU
+		{67B4B50D-053B-4501-A6A9-E9EA42BD5C04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67B4B50D-053B-4501-A6A9-E9EA42BD5C04}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67B4B50D-053B-4501-A6A9-E9EA42BD5C04}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{67B4B50D-053B-4501-A6A9-E9EA42BD5C04}.Debug|x64.Build.0 = Debug|Any CPU
+		{67B4B50D-053B-4501-A6A9-E9EA42BD5C04}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{67B4B50D-053B-4501-A6A9-E9EA42BD5C04}.Debug|x86.Build.0 = Debug|Any CPU
+		{67B4B50D-053B-4501-A6A9-E9EA42BD5C04}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67B4B50D-053B-4501-A6A9-E9EA42BD5C04}.Release|Any CPU.Build.0 = Release|Any CPU
+		{67B4B50D-053B-4501-A6A9-E9EA42BD5C04}.Release|x64.ActiveCfg = Release|Any CPU
+		{67B4B50D-053B-4501-A6A9-E9EA42BD5C04}.Release|x64.Build.0 = Release|Any CPU
+		{67B4B50D-053B-4501-A6A9-E9EA42BD5C04}.Release|x86.ActiveCfg = Release|Any CPU
+		{67B4B50D-053B-4501-A6A9-E9EA42BD5C04}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -208,6 +222,7 @@ Global
 		{F6C79539-4A91-486C-BD6F-34D04281E0D5} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{3B8D2F6A-7C41-4E5B-9A2D-1F6E8C4B7A93} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{5D2C7A41-8B3E-4F69-A1D0-3E9B6C2F4A87} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{67B4B50D-053B-4501-A6A9-E9EA42BD5C04} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C5253CD8-5365-4DE3-AA73-05021437E8CB}

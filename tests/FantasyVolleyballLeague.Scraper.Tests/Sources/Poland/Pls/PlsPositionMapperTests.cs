@@ -1,4 +1,4 @@
-using FantasyVolleyballLeague.Contracts;
+using FantasyVolleyballLeague.Shared.Constants;
 using FantasyVolleyballLeague.Scraper.Sources.Poland.Pls.Rosters;
 
 namespace FantasyVolleyballLeague.Scraper.Tests.Sources.Poland.Pls
