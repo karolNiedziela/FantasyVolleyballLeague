@@ -21,6 +21,7 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
                 .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "pg_trgm");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("FantasyVolleyballLeague.VolleyballData.Domain.League", b =>
@@ -367,10 +368,22 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
                     b.Property<int?>("HeightCm")
                         .HasColumnType("integer");
 
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasDefaultValue("");
+
                     b.Property<int?>("WeightKg")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("NormalizedName"), "gin");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("NormalizedName"), new[] { "gin_trgm_ops" });
 
                     b.HasIndex("GenderId", "ExternalId")
                         .IsUnique()
@@ -539,12 +552,24 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasDefaultValue("");
+
                     b.Property<Guid>("SeasonId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
                     b.HasIndex("LeagueId");
+
+                    b.HasIndex("NormalizedName");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("NormalizedName"), "gin");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("NormalizedName"), new[] { "gin_trgm_ops" });
 
                     b.HasIndex("SeasonId", "ExternalId")
                         .IsUnique()

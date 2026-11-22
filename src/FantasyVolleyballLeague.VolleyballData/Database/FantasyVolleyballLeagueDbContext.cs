@@ -33,6 +33,9 @@ namespace FantasyVolleyballLeague.VolleyballData.Database
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // Trigram indexes (gin_trgm_ops) for the name search.
+            modelBuilder.HasPostgresExtension("pg_trgm");
+
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
 
             ConfigureUuidV7Keys(modelBuilder);

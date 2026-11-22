@@ -1,3 +1,4 @@
+using FantasyVolleyballLeague.Shared.Text;
 using FantasyVolleyballLeague.VolleyballData.Domain;
 using FantasyVolleyballLeague.VolleyballData.Database;
 using FantasyVolleyballLeague.Importer.Records;
@@ -46,8 +47,12 @@ namespace FantasyVolleyballLeague.Importer.Import
                 .ToDictionaryAsync(r => (r.PhaseId, r.Stage, r.Name), r => r.Id, cancellationToken);
 
             var rosters = await _dbContext.Set<Roster>().AsNoTracking()
-                .Select(t => new { t.Id, t.SeasonId, t.Name, t.ExternalId })
+                .Select(t => new { t.Id, t.SeasonId, t.Name, t.NormalizedName, t.ExternalId })
                 .ToListAsync(cancellationToken);
+            var staleRosterIds = rosters
+                .Where(t => t.NormalizedName != NameNormalizer.Normalize(t.Name))
+                .Select(t => t.Id)
+                .ToList();
             _rostersByExternalId = rosters
                 .Where(t => t.ExternalId is not null)
                 .ToDictionary(t => (t.SeasonId, t.ExternalId!.Value), t => t.Id);
@@ -58,8 +63,12 @@ namespace FantasyVolleyballLeague.Importer.Import
                 .ToDictionaryAsync(l => l.Id, l => l.GenderId, cancellationToken);
 
             var players = await _dbContext.Set<Player>().AsNoTracking()
-                .Select(p => new { p.Id, p.GenderId, p.ExternalId, p.FullName })
+                .Select(p => new { p.Id, p.GenderId, p.ExternalId, p.FullName, p.NormalizedName })
                 .ToListAsync(cancellationToken);
+            var stalePlayerIds = players
+                .Where(p => p.NormalizedName != NameNormalizer.Normalize(p.FullName))
+                .Select(p => p.Id)
+                .ToList();
             _playersByExternalId = players
                 .Where(p => p.ExternalId is not null)
                 .ToDictionary(p => (p.GenderId, p.ExternalId!.Value), p => p.Id);
@@ -86,6 +95,42 @@ namespace FantasyVolleyballLeague.Importer.Import
                         rosterEntry.MemberFrom,
                         rosterEntry.MemberTo));
             }
+
+            await RefreshSearchNamesAsync(staleRosterIds, stalePlayerIds, cancellationToken);
+        }
+
+        /// <summary>
+        /// Brings <c>NormalizedName</c> up to date for rows where it differs from the current normalization of the name:
+        /// rows stored before the column existed, and every row after the rules change. It runs for every row the
+        /// catalog loads, so a row is repaired even when no file of the import touches it (for example a player that
+        /// only appears in matches that are skipped).
+        /// </summary>
+        private async Task RefreshSearchNamesAsync(List<Guid> rosterIds, List<Guid> playerIds, CancellationToken cancellationToken)
+        {
+            if (rosterIds.Count == 0 && playerIds.Count == 0)
+            {
+                return;
+            }
+
+            var rosters = await _dbContext.Set<Roster>()
+                .Where(r => rosterIds.Contains(r.Id))
+                .ToListAsync(cancellationToken);
+            foreach (var roster in rosters)
+            {
+                roster.RefreshNormalizedName();
+            }
+
+            var players = await _dbContext.Set<Player>()
+                .Where(p => playerIds.Contains(p.Id))
+                .ToListAsync(cancellationToken);
+            foreach (var player in players)
+            {
+                player.RefreshNormalizedName();
+            }
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            _dbContext.ChangeTracker.Clear();
+            Console.WriteLine($"  Search names refreshed: {rosters.Count} rosters, {players.Count} players");
         }
 
         /// <summary>
