@@ -1,3 +1,5 @@
+using FantasyVolleyballLeague.DataApi.Common.API.Summaries;
+
 namespace FantasyVolleyballLeague.DataApi.Features.Players
 {
     internal sealed class PlayerResponse
@@ -20,9 +22,16 @@ namespace FantasyVolleyballLeague.DataApi.Features.Players
         public int? AttackReachCm { get; init; }
 
         /// <summary>
+        /// The roster (the club in one season) of the player's current roster player: the most recent one among the
+        /// roster players the request selects (all of them without a roster, season or league filter). A player who
+        /// moved during the season shows the roster he moved to. <c>null</c> only for a player without any roster player.
+        /// </summary>
+        public RosterSummaryResponse? Roster { get; init; }
+
+        /// <summary>
         /// Code of the position: outside_hitter, opposite_hitter, middle_blocker, setter or libero.
-        /// Taken from the most recent roster player that has a position, among the roster players the request selects
-        /// (all of them without a roster, season or league filter). <c>null</c> when none of them has one.
+        /// Taken from the same current roster player as <see cref="Roster"/>. <c>null</c> when that roster player has
+        /// no position, even if an earlier one had.
         /// </summary>
         public string? Position { get; init; }
     }

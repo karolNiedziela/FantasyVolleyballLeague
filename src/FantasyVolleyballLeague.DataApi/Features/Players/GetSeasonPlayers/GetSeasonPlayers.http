@@ -1,0 +1,49 @@
+@SeasonId = 00000000-0000-0000-0000-000000000000
+
+### Players of a season, by name (take the id from GET /seasons; defaults: offset 0, limit 25)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/seasons/{{SeasonId}}/players
+Accept: application/json
+
+### Page through the players
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/seasons/{{SeasonId}}/players?offset=0&limit=10
+Accept: application/json
+
+### Search by words of the name: any order, case and diacritics ignored
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/seasons/{{SeasonId}}/players?q=kaczmarek lukasz
+Accept: application/json
+
+### Setters of the season: the position is the one from this season
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/seasons/{{SeasonId}}/players?position=setter
+Accept: application/json
+
+### Players of one roster of the season (take the id from GET /rosters?seasonId=)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/seasons/{{SeasonId}}/players?rosterId=00000000-0000-0000-0000-000000000000
+Accept: application/json
+
+### Descending by name
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/seasons/{{SeasonId}}/players?sort=-fullName
+Accept: application/json
+
+### Error: the season does not exist (404, unlike GET /players?seasonId= which returns an empty list)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/seasons/00000000-0000-0000-0000-000000000001/players
+Accept: application/json
+
+### Error: the season id is not a GUID (404, the route does not match)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/seasons/not-a-guid/players
+Accept: application/json
+
+### Error: unknown position (400)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/seasons/{{SeasonId}}/players?position=striker
+Accept: application/json
+
+### Error: unknown sort field (400, errors.sort)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/seasons/{{SeasonId}}/players?sort=heightCm
+Accept: application/json
+
+### Error: limit above the maximum of 100 (400, errors.limit)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/seasons/{{SeasonId}}/players?limit=1000
+Accept: application/json
+
+### Error: negative offset (400, errors.offset)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/seasons/{{SeasonId}}/players?offset=-1
+Accept: application/json

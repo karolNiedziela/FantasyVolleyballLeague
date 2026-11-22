@@ -18,7 +18,7 @@ namespace FantasyVolleyballLeague.DataApi.Features.Players
         {
             return builder.WithCodeFilter(
                 PlayerQueryParameters.Position,
-                "Position of the player, the same value as the position in the response: from the most recent roster player with a position, among the roster players selected by rosterId, seasonId and leagueId (all of them when none is given).",
+                "Position of the player, the same value as the position in the response: from the current roster player, the most recent one among the roster players selected by rosterId, seasonId and leagueId (all of them when none is given). A current roster player without a position never matches.",
                 PlayerPosition.All.Select(position => position.Code));
         }
 

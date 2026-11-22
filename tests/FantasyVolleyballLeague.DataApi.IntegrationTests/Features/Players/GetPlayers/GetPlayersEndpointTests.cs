@@ -61,11 +61,15 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Players.GetP
             using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
             var item = json.RootElement.GetProperty("items")[0];
             item.EnumerateObject().Select(property => property.Name).ShouldBe(
-                ["id", "fullName", "gender", "dateOfBirth", "heightCm", "weightKg", "attackReachCm", "position"],
+                ["id", "fullName", "gender", "dateOfBirth", "heightCm", "weightKg", "attackReachCm", "roster", "position"],
                 ignoreOrder: true);
             item.GetProperty("gender").GetString().ShouldBe("men");
             item.GetProperty("dateOfBirth").GetString().ShouldBe("1990-01-31");
             item.GetProperty("position").GetString().ShouldBe("middle_blocker");
+            var rosterJson = item.GetProperty("roster");
+            rosterJson.EnumerateObject().Select(property => property.Name).ShouldBe(["id", "name"], ignoreOrder: true);
+            rosterJson.GetProperty("id").GetGuid().ShouldBe(roster.Id);
+            rosterJson.GetProperty("name").GetString().ShouldBe("Lublin");
         }
 
         [Fact]
