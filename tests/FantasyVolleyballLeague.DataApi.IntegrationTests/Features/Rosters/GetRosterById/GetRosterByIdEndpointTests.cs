@@ -26,7 +26,7 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Rosters.GetR
         {
             var season = SeasonSeeds.Season(_men, 2023);
             var roster = NameSeeds.Roster(_men, season, "Lublin", externalId: 56);
-            var player = NameSeeds.Player("Łukasz Kaczmarek");
+            var player = NameSeeds.Player("Łukasz Kaczmarek", dateOfBirth: new DateOnly(1994, 12, 2));
             await SeedAsync(
                 _men,
                 season,
@@ -51,8 +51,21 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Rosters.GetR
 
             var playerNode = root["players"]!.AsArray().ShouldHaveSingleItem()!.AsObject();
             PropertyNames(playerNode).ShouldBe(
-                ["playerId", "fullName", "shirtNumber", "position", "memberFrom", "memberTo"],
+                [
+                    "playerId",
+                    "fullName",
+                    "dateOfBirth",
+                    "heightCm",
+                    "weightKg",
+                    "attackReachCm",
+                    "shirtNumber",
+                    "position",
+                    "memberFrom",
+                    "memberTo"
+                ],
                 ignoreOrder: true);
+            playerNode["dateOfBirth"]!.GetValue<string>().ShouldBe("1994-12-02");
+            playerNode["heightCm"].ShouldBeNull();
             playerNode["position"]!.GetValue<string>().ShouldBe("opposite_hitter");
             playerNode["memberFrom"]!.GetValue<string>().ShouldBe("2023-09-01");
             playerNode["memberTo"].ShouldBeNull();
