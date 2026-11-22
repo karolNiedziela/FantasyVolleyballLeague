@@ -72,6 +72,10 @@ namespace FantasyVolleyballLeague.DataApi.Features.Rosters.GetRosterById
                 {
                     PlayerId = x.PlayerId,
                     FullName = x.Player.FullName,
+                    DateOfBirth = x.Player.DateOfBirth,
+                    HeightCm = x.Player.HeightCm,
+                    WeightKg = x.Player.WeightKg,
+                    AttackReachCm = x.Player.AttackReachCm,
                     ShirtNumber = x.ShirtNumber,
                     Position = x.Position == null ? null : x.Position.Code,
                     MemberFrom = x.MemberFrom,

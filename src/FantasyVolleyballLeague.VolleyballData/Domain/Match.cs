@@ -39,6 +39,10 @@ namespace FantasyVolleyballLeague.VolleyballData.Domain
 
         public League League { get; private set; } = default!;
 
+        public Guid SeasonId { get; private set; }
+
+        public Season Season { get; private set; } = default!;
+
         public Guid? MvpId { get; private set; }
 
         public Player? Mvp { get; private set; } = default!;
@@ -61,17 +65,26 @@ namespace FantasyVolleyballLeague.VolleyballData.Domain
 
         private Match() { }
 
-        public Match(int? externalId, Guid leagueId, Guid roundId, Guid homeRosterId, Guid awayRosterId, DateTimeOffset? date, bool isTimeConfirmed)
+        public Match(
+            int? externalId,
+            Guid leagueId,
+            Guid seasonId,
+            Guid roundId,
+            Guid homeRosterId,
+            Guid awayRosterId,
+            DateTimeOffset? date,
+            bool isTimeConfirmed)
         {
             ExternalId = externalId;
             LeagueId = leagueId;
             StatusId = MatchStatus.Scheduled.Id;
             StatisticsLevelId = StatisticsLevel.None.Id;
-            Reschedule(roundId, homeRosterId, awayRosterId, date, isTimeConfirmed);
+            Reschedule(seasonId, roundId, homeRosterId, awayRosterId, date, isTimeConfirmed);
         }
 
-        public void Reschedule(Guid roundId, Guid homeRosterId, Guid awayRosterId, DateTimeOffset? date, bool isTimeConfirmed)
+        public void Reschedule(Guid seasonId, Guid roundId, Guid homeRosterId, Guid awayRosterId, DateTimeOffset? date, bool isTimeConfirmed)
         {
+            SeasonId = seasonId;
             RoundId = roundId;
             HomeRosterId = homeRosterId;
             AwayRosterId = awayRosterId;
