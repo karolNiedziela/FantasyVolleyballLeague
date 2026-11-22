@@ -6,7 +6,7 @@ namespace FantasyVolleyballLeague.VolleyballData.Domain
     /// A club in a given season with its players. <see cref="ExternalId"/> is the club id on the league website,
     /// stable across seasons, so it links the same club between seasons despite sponsor renames.
     /// </summary>
-    internal sealed class Roster : Entity
+    internal sealed class Roster : Entity, ISearchableName
     {
         private readonly List<RosterPlayer> _players = [];
 

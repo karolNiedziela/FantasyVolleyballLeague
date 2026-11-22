@@ -8,7 +8,7 @@ namespace FantasyVolleyballLeague.VolleyballData.Domain
     /// the importer could not resolve. Website ids are only unique within one gender (men's and women's
     /// sites number their players independently), so <see cref="ExternalId"/> is unique per <see cref="GenderId"/>.
     /// </summary>
-    internal sealed class Player : Entity
+    internal sealed class Player : Entity, ISearchableName
     {
         public int GenderId { get; private set; }
 
