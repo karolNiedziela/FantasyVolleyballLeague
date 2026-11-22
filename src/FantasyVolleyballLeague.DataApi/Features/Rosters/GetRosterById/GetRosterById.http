@@ -1,0 +1,13 @@
+@RosterId = 00000000-0000-0000-0000-000000000000
+
+### Roster with its league, season and players (take the id from GET /rosters)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/rosters/{{RosterId}}
+Accept: application/json
+
+### Error: the roster does not exist (404)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/rosters/00000000-0000-0000-0000-000000000001
+Accept: application/json
+
+### Error: the id is not a GUID (404, the route does not match)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/rosters/not-a-guid
+Accept: application/json
