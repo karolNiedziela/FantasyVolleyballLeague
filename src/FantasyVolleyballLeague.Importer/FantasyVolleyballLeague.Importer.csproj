@@ -11,6 +11,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- The projects that create entities ban Guid.NewGuid() (ids are UUID v7 from EntityId); the others may use it. -->
+    <AdditionalFiles Include="..\..\BannedSymbols.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\FantasyVolleyballLeague.VolleyballData\FantasyVolleyballLeague.VolleyballData.csproj" />
     <ProjectReference Include="..\FantasyVolleyballLeague.Shared\FantasyVolleyballLeague.Shared.csproj" />
   </ItemGroup>

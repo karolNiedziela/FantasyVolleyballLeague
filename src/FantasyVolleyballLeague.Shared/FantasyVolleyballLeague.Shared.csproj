@@ -5,4 +5,9 @@
     <NoWarn>$(NoWarn);CA1716</NoWarn>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- The projects that create entities ban Guid.NewGuid() (ids are UUID v7 from EntityId); the others may use it. -->
+    <AdditionalFiles Include="..\..\BannedSymbols.txt" />
+  </ItemGroup>
+
 </Project>
