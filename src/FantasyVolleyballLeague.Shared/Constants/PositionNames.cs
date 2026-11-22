@@ -1,4 +1,4 @@
-namespace FantasyVolleyballLeague.Contracts
+namespace FantasyVolleyballLeague.Shared.Constants
 {
     /// <summary>
     /// Written to the raw JSON by the Scraper and matched by the Importer, and seeded in the database.
