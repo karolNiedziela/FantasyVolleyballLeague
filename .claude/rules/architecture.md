@@ -165,8 +165,9 @@ query provider), so handler tests use the real context, not a substitute.
 Postgres sorts text with the database collation (`en_US.utf8`), which sorts Polish letters wrongly
 (`Łańcut` before `Lublin`, `Śląsk` before `Suwałki`). Name columns that are sorted for users use an ICU collation.
 
-- **Today (Poland only):** `League.Name` is `UseCollation("pl-x-icu")` (`LeagueEntityTypeConfiguration`). Give the
-  same collation to every other sorted name column when its slice is built (`Roster.Name`, `Player.FullName`).
+- **Today (Poland only):** `League.Name` and `Roster.Name` are `UseCollation("pl-x-icu")` (`LeagueEntityTypeConfiguration`,
+  `RosterEntityTypeConfiguration`). Give the same collation to every other sorted name column when its slice is built
+  (`Player.FullName`).
 - **When the first league from another country is added, replace this.** No single collation is right for all
   languages (Turkish `I`/`İ`, Czech `ch` after `h`, Polish `Ł`/`Ś`), and a collation belongs to a column or an
   expression, never to a row. Planned design:
