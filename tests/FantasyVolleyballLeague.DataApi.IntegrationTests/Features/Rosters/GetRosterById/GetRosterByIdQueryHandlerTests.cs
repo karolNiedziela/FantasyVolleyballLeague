@@ -64,11 +64,16 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Rosters.GetR
         }
 
         [Fact]
-        public async Task HandleAsync_Should_MapThePlayerWithTheShirtPositionAndMembership()
+        public async Task HandleAsync_Should_MapThePlayerWithTheProfileShirtPositionAndMembership()
         {
             var season = SeasonSeeds.Season(_men, 2023);
             var roster = NameSeeds.Roster(_men, season, "Lublin");
-            var player = NameSeeds.Player("Łukasz Kaczmarek");
+            var player = NameSeeds.Player(
+                "Łukasz Kaczmarek",
+                dateOfBirth: new DateOnly(1994, 12, 2),
+                heightCm: 204,
+                weightKg: 101,
+                attackReachCm: 352);
             await SeedAsync(
                 _men,
                 season,
@@ -88,6 +93,10 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Rosters.GetR
             item.ShouldSatisfyAllConditions(
                 () => item.PlayerId.ShouldBe(player.Id),
                 () => item.FullName.ShouldBe("Łukasz Kaczmarek"),
+                () => item.DateOfBirth.ShouldBe(new DateOnly(1994, 12, 2)),
+                () => item.HeightCm.ShouldBe(204),
+                () => item.WeightKg.ShouldBe(101),
+                () => item.AttackReachCm.ShouldBe(352),
                 () => item.ShirtNumber.ShouldBe(9),
                 () => item.Position.ShouldBe("opposite_hitter"),
                 () => item.MemberFrom.ShouldBe(new DateOnly(2023, 9, 1)),
@@ -95,7 +104,7 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Rosters.GetR
         }
 
         [Fact]
-        public async Task HandleAsync_Should_ReturnNullPositionAndDates_When_TheyAreUnknown()
+        public async Task HandleAsync_Should_ReturnNullProfilePositionAndDates_When_TheyAreUnknown()
         {
             var season = SeasonSeeds.Season(_men, 2023);
             var roster = NameSeeds.Roster(_men, season, "Lublin");
@@ -106,6 +115,10 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Rosters.GetR
 
             var item = result.ShouldNotBeNull().Players.ShouldHaveSingleItem();
             item.ShouldSatisfyAllConditions(
+                () => item.DateOfBirth.ShouldBeNull(),
+                () => item.HeightCm.ShouldBeNull(),
+                () => item.WeightKg.ShouldBeNull(),
+                () => item.AttackReachCm.ShouldBeNull(),
                 () => item.ShirtNumber.ShouldBeNull(),
                 () => item.Position.ShouldBeNull(),
                 () => item.MemberFrom.ShouldBeNull(),
