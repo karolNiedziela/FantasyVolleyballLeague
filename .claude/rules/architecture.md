@@ -87,6 +87,10 @@ Each feature owns everything it needs. Organise by feature, not by technical lay
   (`Features/Seasons/GetLeagueSeasons/`), returns the same DTO with the same sorting, paging and filters, and returns
   404 when the parent does not exist (the top-level filter returns an empty list). The list and its aliases share the
   projection and filters through `IQueryable` extensions of the feature, not through each other's handlers.
+  Exception: `/players/{id}/rosters` (the career of a player) is not an alias of `/rosters?playerId=`. A roster player
+  is a resource of its own (shirt number, position, `memberFrom`/`memberTo`, which `RosterResponse` does not carry), so
+  it has its own DTO in `Features/Players/GetPlayerRosters/`. It keeps the rest of the alias rules: paging, sorting
+  and 404 when the player does not exist.
 - Detail responses carry the summaries of their parents and the navigation the client cannot compute
   (`currentSeason`, `previousSeason`/`nextSeason`, `previousRound`/`nextRound`) as typed fields. No `links` to
   sub-collections: `links` exist only in the paging envelope.

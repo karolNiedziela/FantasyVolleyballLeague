@@ -1,0 +1,37 @@
+@PlayerId = 00000000-0000-0000-0000-000000000000
+
+### Career of a player, newest season first (take the id from GET /players; defaults: offset 0, limit 25)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/players/{{PlayerId}}/rosters
+Accept: application/json
+
+### Oldest season first
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/players/{{PlayerId}}/rosters?sort=season,memberFrom
+Accept: application/json
+
+### Page through the career
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/players/{{PlayerId}}/rosters?offset=0&limit=5
+Accept: application/json
+
+### Offset beyond the end: 200 with empty items, not an error
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/players/{{PlayerId}}/rosters?offset=10000
+Accept: application/json
+
+### Error: the player does not exist (404)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/players/00000000-0000-0000-0000-000000000001/rosters
+Accept: application/json
+
+### Error: the player id is not a GUID (404, the route does not match)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/players/not-a-guid/rosters
+Accept: application/json
+
+### Error: unknown sort field (400, errors.sort)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/players/{{PlayerId}}/rosters?sort=name
+Accept: application/json
+
+### Error: limit above the maximum of 100 (400, errors.limit)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/players/{{PlayerId}}/rosters?limit=1000
+Accept: application/json
+
+### Error: negative offset (400, errors.offset)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/players/{{PlayerId}}/rosters?offset=-1
+Accept: application/json
