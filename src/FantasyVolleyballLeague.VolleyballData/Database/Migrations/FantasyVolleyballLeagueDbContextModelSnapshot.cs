@@ -166,6 +166,9 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
                     b.Property<Guid>("RoundId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("SeasonId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTimeOffset>("SourceScrapedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -221,6 +224,8 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
                     b.HasIndex("MvpId");
 
                     b.HasIndex("RoundId");
+
+                    b.HasIndex("SeasonId");
 
                     b.HasIndex("StatisticsLevelId");
 
@@ -802,6 +807,12 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("FantasyVolleyballLeague.VolleyballData.Domain.Season", "Season")
+                        .WithMany()
+                        .HasForeignKey("SeasonId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("FantasyVolleyballLeague.VolleyballData.Domain.StatisticsLevel", "StatisticsLevel")
                         .WithMany()
                         .HasForeignKey("StatisticsLevelId")
@@ -823,6 +834,8 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
                     b.Navigation("Mvp");
 
                     b.Navigation("Round");
+
+                    b.Navigation("Season");
 
                     b.Navigation("StatisticsLevel");
 

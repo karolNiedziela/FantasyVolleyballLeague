@@ -133,12 +133,12 @@ namespace FantasyVolleyballLeague.Importer.Steps
                     .Include(m => m.PlayerStatistics)
                     .AsSplitQuery()
                     .SingleAsync(m => m.Id == imported.Id, cancellationToken);
-                match.Reschedule(roundId, homeRosterId, awayRosterId, date, file.IsTimeConfirmed);
+                match.Reschedule(seasonId, roundId, homeRosterId, awayRosterId, date, file.IsTimeConfirmed);
                 _report.MatchesUpdated++;
             }
             else
             {
-                match = new Match(file.MatchId, leagueId, roundId, homeRosterId, awayRosterId, date, file.IsTimeConfirmed);
+                match = new Match(file.MatchId, leagueId, seasonId, roundId, homeRosterId, awayRosterId, date, file.IsTimeConfirmed);
                 _dbContext.Set<Match>().Add(match);
                 _report.MatchesInserted++;
             }
