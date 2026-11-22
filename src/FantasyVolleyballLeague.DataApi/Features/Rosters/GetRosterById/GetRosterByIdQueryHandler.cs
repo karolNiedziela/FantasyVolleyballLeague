@@ -60,15 +60,13 @@ namespace FantasyVolleyballLeague.DataApi.Features.Rosters.GetRosterById
             };
         }
 
-        // The name tiebreak uses the Polish collation explicitly: Player.FullName has no column collation yet
-        // (the players slice adds it, and this Collate call can go then).
         private async Task<List<RosterPlayerResponse>> LoadPlayersAsync(Guid rosterId, CancellationToken cancellationToken)
         {
             return await _dbContext.Set<RosterPlayer>()
                 .Where(x => x.RosterId == rosterId)
                 .OrderBy(x => x.ShirtNumber == null)
                 .ThenBy(x => x.ShirtNumber)
-                .ThenBy(x => EF.Functions.Collate(x.Player.FullName, "pl-x-icu"))
+                .ThenBy(x => x.Player.FullName)
                 .ThenBy(x => x.Id)
                 .Select(x => new RosterPlayerResponse
                 {
