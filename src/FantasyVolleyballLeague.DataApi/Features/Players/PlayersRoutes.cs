@@ -4,6 +4,8 @@ namespace FantasyVolleyballLeague.DataApi.Features.Players
     {
         public const string Resource = "/players";
 
+        public const string BySeason = "/seasons/{seasonId:guid}/players";
+
         public const string Tag = "Players";
     }
 }

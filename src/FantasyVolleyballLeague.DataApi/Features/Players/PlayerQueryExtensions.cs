@@ -1,3 +1,4 @@
+using FantasyVolleyballLeague.DataApi.Common.API.Summaries;
 using FantasyVolleyballLeague.VolleyballData.Domain;
 
 namespace FantasyVolleyballLeague.DataApi.Features.Players
@@ -55,8 +56,9 @@ namespace FantasyVolleyballLeague.DataApi.Features.Players
         }
 
         /// <summary>
-        /// Keeps the players whose position is <paramref name="positionCode"/>: the position of their most recent
-        /// roster player that has one, the same value <see cref="PlayerResponse.Position"/> returns.
+        /// Keeps the players whose position is <paramref name="positionCode"/>: the position of their current roster
+        /// player (the most recent one among <paramref name="rosterPlayers"/>), the same value
+        /// <see cref="PlayerResponse.Position"/> returns.
         /// </summary>
         public static IQueryable<Player> WherePosition(
             this IQueryable<Player> players,
@@ -69,7 +71,7 @@ namespace FantasyVolleyballLeague.DataApi.Features.Players
             }
 
             return players.Where(player => rosterPlayers
-                .Where(rosterPlayer => rosterPlayer.PlayerId == player.Id && rosterPlayer.PositionId != null)
+                .Where(rosterPlayer => rosterPlayer.PlayerId == player.Id)
                 .OrderByDescending(rosterPlayer => rosterPlayer.Roster.Season.StartYear)
                 .ThenBy(rosterPlayer => rosterPlayer.MemberFrom == null)
                 .ThenByDescending(rosterPlayer => rosterPlayer.MemberFrom)
@@ -78,34 +80,36 @@ namespace FantasyVolleyballLeague.DataApi.Features.Players
                 .FirstOrDefault() == positionCode);
         }
 
-        // A player's position is defined twice, here and in WherePosition: the code of the position of the most recent
-        // roster player that has one. Newest season first; within a season (a transfer) the latest known MemberFrom
-        // first, roster players without the date after the dated ones. It cannot live in one shared helper: EF does
-        // not translate a method called inside the expression, and Expression.Compile().Invoke() fails to translate
-        // in Where (in Select it was not checked for what SQL it produces). Keep the two copies identical. The tests
-        // cover both.
         public static IQueryable<PlayerResponse> ProjectToResponse(
             this IQueryable<Player> players,
             IQueryable<RosterPlayer> rosterPlayers)
         {
-            return players.Select(player => new PlayerResponse
-            {
-                Id = player.Id,
-                FullName = player.FullName,
-                Gender = player.Gender.Code,
-                DateOfBirth = player.DateOfBirth,
-                HeightCm = player.HeightCm,
-                WeightKg = player.WeightKg,
-                AttackReachCm = player.AttackReachCm,
-                Position = rosterPlayers
-                    .Where(rosterPlayer => rosterPlayer.PlayerId == player.Id && rosterPlayer.PositionId != null)
-                    .OrderByDescending(rosterPlayer => rosterPlayer.Roster.Season.StartYear)
-                    .ThenBy(rosterPlayer => rosterPlayer.MemberFrom == null)
-                    .ThenByDescending(rosterPlayer => rosterPlayer.MemberFrom)
-                    .ThenByDescending(rosterPlayer => rosterPlayer.Id)
-                    .Select(rosterPlayer => rosterPlayer.Position == null ? null : rosterPlayer.Position.Code)
-                    .FirstOrDefault()
-            });
+            return players
+                .Select(player => new
+                {
+                    Player = player,
+                    Current = rosterPlayers
+                        .Where(rosterPlayer => rosterPlayer.PlayerId == player.Id)
+                        .OrderByDescending(rosterPlayer => rosterPlayer.Roster.Season.StartYear)
+                        .ThenBy(rosterPlayer => rosterPlayer.MemberFrom == null)
+                        .ThenByDescending(rosterPlayer => rosterPlayer.MemberFrom)
+                        .ThenByDescending(rosterPlayer => rosterPlayer.Id)
+                        .FirstOrDefault()
+                })
+                .Select(x => new PlayerResponse
+                {
+                    Id = x.Player.Id,
+                    FullName = x.Player.FullName,
+                    Gender = x.Player.Gender.Code,
+                    DateOfBirth = x.Player.DateOfBirth,
+                    HeightCm = x.Player.HeightCm,
+                    WeightKg = x.Player.WeightKg,
+                    AttackReachCm = x.Player.AttackReachCm,
+                    Roster = x.Current == null
+                        ? null
+                        : new RosterSummaryResponse { Id = x.Current.RosterId, Name = x.Current.Roster.Name },
+                    Position = x.Current == null || x.Current.Position == null ? null : x.Current.Position.Code
+                });
         }
     }
 }

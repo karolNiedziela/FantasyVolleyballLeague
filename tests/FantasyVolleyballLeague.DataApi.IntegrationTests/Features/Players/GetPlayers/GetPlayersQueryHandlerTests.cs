@@ -260,12 +260,12 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Players.GetP
         }
 
         [Fact]
-        public async Task HandleAsync_Should_TakeThePositionFromTheMostRecentEntryThatHasOne()
+        public async Task HandleAsync_Should_ReturnNullPosition_When_TheCurrentRosterPlayerHasNone_EvenIfAnEarlierOneDid()
         {
             var older = SeasonSeeds.Season(_men, 2022);
             var newer = SeasonSeeds.Season(_men, 2023);
             var olderRoster = NameSeeds.Roster(_men, older, "Lublin");
-            var newerRoster = NameSeeds.Roster(_men, newer, "Lublin");
+            var newerRoster = NameSeeds.Roster(_men, newer, "Zawiercie");
             var player = NameSeeds.Player("Unknown Latest Position");
             await SeedAsync(
                 _men,
@@ -279,7 +279,75 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Players.GetP
 
             var page = await Handle(new GetPlayersQuery());
 
-            page.Items.ShouldHaveSingleItem().Position.ShouldBe("setter");
+            var item = page.Items.ShouldHaveSingleItem();
+            item.Position.ShouldBeNull();
+            item.Roster.ShouldNotBeNull().Id.ShouldBe(newerRoster.Id);
+        }
+
+        [Fact]
+        public async Task HandleAsync_Should_ReturnTheRosterAndThePositionOfTheSameCurrentRosterPlayer()
+        {
+            var older = SeasonSeeds.Season(_men, 2022);
+            var newer = SeasonSeeds.Season(_men, 2023);
+            var olderRoster = NameSeeds.Roster(_men, older, "Lublin");
+            var newerRoster = NameSeeds.Roster(_men, newer, "Zawiercie");
+            var player = NameSeeds.Player("Moved Club");
+            await SeedAsync(
+                _men,
+                older,
+                newer,
+                olderRoster,
+                newerRoster,
+                player,
+                NameSeeds.RosterPlayer(olderRoster, player, position: PlayerPosition.Setter),
+                NameSeeds.RosterPlayer(newerRoster, player, position: PlayerPosition.OppositeHitter));
+
+            var current = await Handle(new GetPlayersQuery());
+            var inOlder = await Handle(new GetPlayersQuery(SeasonId: older.Id));
+
+            var item = current.Items.ShouldHaveSingleItem();
+            item.Roster.ShouldNotBeNull().ShouldSatisfyAllConditions(
+                roster => roster.Id.ShouldBe(newerRoster.Id),
+                roster => roster.Name.ShouldBe("Zawiercie"));
+            item.Position.ShouldBe("opposite_hitter");
+            var olderItem = inOlder.Items.ShouldHaveSingleItem();
+            olderItem.Roster.ShouldNotBeNull().Id.ShouldBe(olderRoster.Id);
+            olderItem.Position.ShouldBe("setter");
+        }
+
+        [Fact]
+        public async Task HandleAsync_Should_ReturnNullRoster_When_ThePlayerHasNoRosterPlayer()
+        {
+            await SeedAsync(NameSeeds.Player("Without Roster"));
+
+            var page = await Handle(new GetPlayersQuery());
+
+            var item = page.Items.ShouldHaveSingleItem();
+            item.Roster.ShouldBeNull();
+            item.Position.ShouldBeNull();
+        }
+
+        [Fact]
+        public async Task HandleAsync_Should_ReturnTheRosterTheFilterSelects_When_ThePlayerMovedWithinTheSeason()
+        {
+            var season = SeasonSeeds.Season(_men, 2023);
+            var lublin = NameSeeds.Roster(_men, season, "Lublin");
+            var zawiercie = NameSeeds.Roster(_men, season, "Zawiercie");
+            var player = NameSeeds.Player("Transferred Player");
+            await SeedAsync(
+                _men,
+                season,
+                lublin,
+                zawiercie,
+                player,
+                NameSeeds.RosterPlayer(lublin, player, position: PlayerPosition.OutsideHitter, memberFrom: new DateOnly(2023, 9, 1)),
+                NameSeeds.RosterPlayer(zawiercie, player, position: PlayerPosition.Libero, memberFrom: new DateOnly(2024, 1, 1)));
+
+            var inSeason = await Handle(new GetPlayersQuery(SeasonId: season.Id));
+            var inLublin = await Handle(new GetPlayersQuery(RosterId: lublin.Id));
+
+            inSeason.Items.ShouldHaveSingleItem().Roster.ShouldNotBeNull().Name.ShouldBe("Zawiercie");
+            inLublin.Items.ShouldHaveSingleItem().Roster.ShouldNotBeNull().Name.ShouldBe("Lublin");
         }
 
         [Fact]
