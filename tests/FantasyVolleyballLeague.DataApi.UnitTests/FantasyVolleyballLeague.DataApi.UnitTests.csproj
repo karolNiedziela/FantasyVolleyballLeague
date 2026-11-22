@@ -25,6 +25,7 @@
   <ItemGroup>
     <Using Include="Xunit" />
     <Using Include="Shouldly" />
+    <Using Include="FantasyVolleyballLeague.Shared.Types" />
   </ItemGroup>
 
 </Project>

@@ -5,7 +5,7 @@ using FantasyVolleyballLeague.DataApi.Common.ErrorHandling;
 using FantasyVolleyballLeague.DataApi.Common.Handlers;
 using FantasyVolleyballLeague.DataApi.Common.Versioning;
 using FantasyVolleyballLeague.DataApi.Infrastructure;
-using FantasyVolleyballLeague.Contracts;
+using FantasyVolleyballLeague.Shared.Persistence;
 using FantasyVolleyballLeague.VolleyballData.Database;
 using Microsoft.Extensions.Options;
 using Scalar.AspNetCore;

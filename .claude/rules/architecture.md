@@ -6,7 +6,7 @@ League websites ──(Scraper)──► data/raw/*.json ──(Importer)──�
                                AppHost (Aspire) starts Postgres and the DataApi; Scraper and Importer on demand
 ```
 
-The Scraper and the Importer share nothing but the raw JSON files and the position names in `Contracts`, and only the Importer and the DataApi know the database.
+The Scraper and the Importer share nothing but the raw JSON files and the position names in `Shared`, and only the Importer and the DataApi know the database.
 
 ### Solution map
 
@@ -18,14 +18,14 @@ The Scraper and the Importer share nothing but the raw JSON files and the positi
 | `FantasyVolleyballLeague.Importer` | **Importer** console app. Reads `data/raw`, upserts into Postgres using the VolleyballData DbContext (`InternalsVisibleTo`). |
 | `FantasyVolleyballLeague.AppHost` | Aspire: Postgres container, DataApi (healthy once migrations are applied), and explicit-start resources started from the dashboard: `scraper-matches` (current season matches), `scraper-rosters` (current season rosters) and `importer` (waits for the DataApi). Historical backfills run from the Scraper CLI. |
 | `FantasyVolleyballLeague.ServiceDefaults` | Aspire service defaults (OpenTelemetry, health checks). |
-| `FantasyVolleyballLeague.Contracts` | Constants shared by the AppHost, the DataApi, the Importer, the Scraper, `VolleyballData` and the tests (`DatabaseResource`: database name and the pinned Postgres image; `PositionNames`: the position names in the raw JSON and in the database). No packages. |
+| `FantasyVolleyballLeague.Shared` | Small dependency-free types and constants shared by the AppHost, the DataApi, the Importer, the Scraper, `VolleyballData` and the tests: `Constants/` (`PhaseNames`, `PositionNames`: the names in the raw JSON and in the database), `Persistence/` (`DatabaseResource`: database name and the pinned Postgres image), `Types/` (`Entity`, `EntityId`) and `Text/` (`NameNormalizer`). No packages. |
 
 Project references:
-- `DataApi` → `VolleyballData`, `Contracts`, `ServiceDefaults`.
-- `Importer` → `VolleyballData`, `Contracts`.
-- `AppHost` → `DataApi`, `Scraper`, `Importer`, `Contracts`.
-- `Scraper` → `Contracts` (constants only); it references no other project.
-- `VolleyballData` → `Contracts`; it references no web project.
+- `DataApi` → `VolleyballData`, `Shared`, `ServiceDefaults`.
+- `Importer` → `VolleyballData`, `Shared`.
+- `AppHost` → `DataApi`, `Scraper`, `Importer`, `Shared`.
+- `Scraper` → `Shared`; it references no other project.
+- `VolleyballData` → `Shared`; it references no web project.
 
 ### Importer layout
 
@@ -54,10 +54,12 @@ The backend is split by product area, not by technical layer. Do not add Domain/
       ├── Features/        # Vertical slices — one folder per feature
       └── Infrastructure/  # DI wiring
 
-- `FantasyVolleyballLeague.Contracts`: a tiny library of compile-time constants shared by the AppHost, the apps and the
-  integration tests (`DatabaseResource`: database name and Postgres image; `PositionNames`: the position names in the raw JSON and in the database). No logic and no NuGet packages, so the
-  Importer and the AppHost do not pull in ASP.NET Core (the reason it is not part of `ServiceDefaults`). It is not a
-  place for general shared code.
+- `FantasyVolleyballLeague.Shared`: a small library of public, dependency-free building blocks used by several projects,
+  one folder per kind: `Constants/` (`PhaseNames`, `PositionNames`), `Persistence/` (`DatabaseResource`), `Types/`
+  (`Entity`, `EntityId`) and `Text/` (`NameNormalizer`). Pure code only: no NuGet packages and no reference to another
+  project, so the Importer and the AppHost do not pull in ASP.NET Core (the reason it is not part of `ServiceDefaults`).
+  Something belongs here only when two projects need it; code used by one project stays in that project. Its namespaces
+  contain `Shared`, a Visual Basic keyword, so CA1716 is switched off in `Shared` and `Shared.UnitTests` (the solution is C# only).
 - A future Fantasy game gets its own projects (domain and API) that reference `VolleyballData`.
   Never reference `DataApi` from another project.
 - `VolleyballData` types are `internal` and exposed through `InternalsVisibleTo`
@@ -226,6 +228,7 @@ Enforced via `.editorconfig`:
       environment. Do not remove or re-register services.
     - Tests derive from `IntegrationTestBase`: the database is reset with Respawn before each test (lookup tables with
       seed data are kept). Tests run sequentially, because they share the database.
+- `Shared.UnitTests`: pure unit tests of `Shared` (`Types/`, `Text/`), mirroring its folders.
 - In every test project, shared test helpers live in `Fixtures/` (e.g. `DataApiFactory`, `IntegrationTestBase`,
   `ArchitectureFixture`) and test data builders in `Seeds/` (e.g. `LeagueSeeds`). Neither name exists in `src`, because the
   other test folders mirror the `src` folders (tests of `Program.cs` sit in the project root).

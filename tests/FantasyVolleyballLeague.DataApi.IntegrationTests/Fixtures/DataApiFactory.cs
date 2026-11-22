@@ -1,4 +1,4 @@
-using FantasyVolleyballLeague.Contracts;
+using FantasyVolleyballLeague.Shared.Persistence;
 using FantasyVolleyballLeague.VolleyballData.Database;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;

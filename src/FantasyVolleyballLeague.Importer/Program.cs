@@ -1,6 +1,6 @@
 ﻿using FantasyVolleyballLeague.VolleyballData.Database;
 using FantasyVolleyballLeague.Importer;
-using FantasyVolleyballLeague.Contracts;
+using FantasyVolleyballLeague.Shared.Persistence;
 using FantasyVolleyballLeague.Importer.Import;
 using FantasyVolleyballLeague.Importer.Steps;
 using Microsoft.Extensions.Configuration;

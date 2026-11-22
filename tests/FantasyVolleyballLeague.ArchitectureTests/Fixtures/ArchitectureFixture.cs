@@ -3,6 +3,7 @@ using ArchUnitNET.Fluent;
 using ArchUnitNET.Loader;
 using FantasyVolleyballLeague.DataApi.Common.Endpoints;
 using FantasyVolleyballLeague.DataApi.Common.Handlers;
+using FantasyVolleyballLeague.Shared.Types;
 using FantasyVolleyballLeague.VolleyballData.Domain;
 using static ArchUnitNET.Fluent.ArchRuleDefinition;
 
@@ -20,7 +21,7 @@ namespace FantasyVolleyballLeague.ArchitectureTests.Fixtures
         public const string FeaturesNamespace = @"^FantasyVolleyballLeague\.DataApi\.Features(\..*)?$";
 
         public static Architecture Model { get; } = new ArchLoader()
-            .LoadAssemblies(typeof(IEndpoint).Assembly, typeof(Entity).Assembly)
+            .LoadAssemblies(typeof(IEndpoint).Assembly, typeof(League).Assembly, typeof(Entity).Assembly)
             .Build();
 
         public static IObjectProvider<Class> Handlers { get; } = Classes()
