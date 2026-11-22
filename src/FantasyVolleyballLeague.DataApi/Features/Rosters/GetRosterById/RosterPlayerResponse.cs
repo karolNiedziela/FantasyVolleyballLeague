@@ -6,6 +6,14 @@ namespace FantasyVolleyballLeague.DataApi.Features.Rosters.GetRosterById
 
         public string FullName { get; init; } = string.Empty;
 
+        public DateOnly? DateOfBirth { get; init; }
+
+        public int? HeightCm { get; init; }
+
+        public int? WeightKg { get; init; }
+
+        public int? AttackReachCm { get; init; }
+
         public int? ShirtNumber { get; init; }
 
         /// <summary>
