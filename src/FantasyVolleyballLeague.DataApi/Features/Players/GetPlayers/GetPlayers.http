@@ -1,0 +1,59 @@
+### List players (defaults: by fullName, offset 0, limit 25)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/players
+Accept: application/json
+
+### Page through the list
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/players?offset=0&limit=10
+Accept: application/json
+
+### Descending by name
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/players?sort=-fullName
+Accept: application/json
+
+### Women players (gender: men or women)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/players?gender=women
+Accept: application/json
+
+### Search by words of the name: any order, case and diacritics ignored
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/players?q=kaczmarek lukasz
+Accept: application/json
+
+### Players on one roster (take the id from GET /rosters)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/players?rosterId=00000000-0000-0000-0000-000000000000
+Accept: application/json
+
+### Players of one season (take the id from GET /seasons)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/players?seasonId=00000000-0000-0000-0000-000000000000
+Accept: application/json
+
+### Players of one league in any season (take the id from GET /leagues)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/players?leagueId=00000000-0000-0000-0000-000000000000
+Accept: application/json
+
+### Setters of one season: the position is the one of the player's roster player in that season
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/players?seasonId=00000000-0000-0000-0000-000000000000&position=setter
+Accept: application/json
+
+### Position without a season or roster: the player's most recent position
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/players?position=libero
+Accept: application/json
+
+### Offset beyond the end: 200 with empty items, not an error
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/players?offset=10000
+Accept: application/json
+
+### Error: unknown gender (400)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/players?gender=other
+Accept: application/json
+
+### Error: unknown position (400)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/players?position=striker
+Accept: application/json
+
+### Error: unknown sort field (400, errors.sort)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/players?sort=heightCm
+Accept: application/json
+
+### Error: limit above the maximum of 100 (400, errors.limit)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/players?limit=1000
+Accept: application/json

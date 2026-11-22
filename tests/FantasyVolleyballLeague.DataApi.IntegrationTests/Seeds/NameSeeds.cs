@@ -4,9 +4,18 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Seeds
 {
     internal static class NameSeeds
     {
-        public static Player Player(string fullName, LeagueGender? gender = null)
+        public static Player Player(
+            string fullName,
+            LeagueGender? gender = null,
+            DateOnly? dateOfBirth = null,
+            int? heightCm = null,
+            int? weightKg = null,
+            int? attackReachCm = null)
         {
-            return new Player((gender ?? LeagueGender.Men).Id, fullName, externalId: null);
+            var player = new Player((gender ?? LeagueGender.Men).Id, fullName, externalId: null);
+            player.UpdateProfile(fullName, dateOfBirth, heightCm, weightKg, attackReachCm);
+
+            return player;
         }
 
         public static Roster Roster(League league, Season season, string name, int? externalId = null)
