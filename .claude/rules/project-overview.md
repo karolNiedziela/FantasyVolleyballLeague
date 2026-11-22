@@ -84,7 +84,8 @@ League → Season → Phase → Round (with `Stage`) → Match → SetScore / Pl
 - `Player` is a **global person**. Its `ExternalId` is the player id. `RosterPlayer` is the season
   roster entry (shirt number, position, `MemberFrom`/`MemberTo` = the dates the player belonged to the club, taken from his career).
 - Every entity derives from `Entity`, which assigns a time-ordered UUID v7 id (`EntityId.New()`).
-  `Guid.NewGuid()` is banned (`BannedSymbols.txt`, RS0030 is a build error), EF never generates keys, and
+  `Guid.NewGuid()` is banned in the projects that create entities (`Shared`, `VolleyballData`, `Importer`; each lists
+  `BannedSymbols.txt` in its csproj, RS0030 is a build error) and allowed elsewhere, for example in tests. EF never generates keys, and
   PostgreSQL defaults ids to `uuidv7()`. `tests/FantasyVolleyballLeague.ArchitectureTests` guards these rules.
 - Player resolution order: player id → roster shirt number confirmed by name → roster name (members valid on the match date first, one day of tolerance) → the only player of that
   name on any roster of the same gender and season → an unresolved player without `ExternalId`, listed in the import report.
