@@ -46,6 +46,21 @@ namespace FantasyVolleyballLeague.DataApi.Features.Players
         }
 
         /// <summary>
+        /// Orders the roster players of one player so that the current one is first: newest season first; within a
+        /// season (a transfer) the latest known <c>MemberFrom</c> first, roster players without the date after the
+        /// dated ones. Use it on a query of its own; inside a correlated subquery (<c>WherePosition</c>,
+        /// <c>ProjectToResponse</c>) EF does not translate a method call, so those spell the same order out.
+        /// </summary>
+        public static IOrderedQueryable<RosterPlayer> OrderByMostRecent(this IQueryable<RosterPlayer> rosterPlayers)
+        {
+            return rosterPlayers
+                .OrderByDescending(rosterPlayer => rosterPlayer.Roster.Season.StartYear)
+                .ThenBy(rosterPlayer => rosterPlayer.MemberFrom == null)
+                .ThenByDescending(rosterPlayer => rosterPlayer.MemberFrom)
+                .ThenByDescending(rosterPlayer => rosterPlayer.Id);
+        }
+
+        /// <summary>
         /// Keeps the players who are among <paramref name="rosterPlayers"/> (the ones left by <c>WhereRoster</c>,
         /// <c>WhereSeason</c> and <c>WhereLeague</c>). One <c>EXISTS</c>, so a player with several roster players
         /// (a transfer within a season, several seasons) appears once.
