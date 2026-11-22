@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FantasyVolleyballLeague.Contracts\FantasyVolleyballLeague.Contracts.csproj" />
+    <ProjectReference Include="..\FantasyVolleyballLeague.Shared\FantasyVolleyballLeague.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

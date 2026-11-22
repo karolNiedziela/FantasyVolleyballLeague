@@ -1,6 +1,6 @@
-namespace FantasyVolleyballLeague.VolleyballData.Domain
+namespace FantasyVolleyballLeague.Shared.Types
 {
-    internal abstract class Entity
+    public abstract class Entity
     {
         protected Entity()
         {

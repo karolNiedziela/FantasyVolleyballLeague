@@ -1,4 +1,4 @@
-using FantasyVolleyballLeague.Contracts;
+using FantasyVolleyballLeague.Shared.Constants;
 
 namespace FantasyVolleyballLeague.VolleyballData.Domain
 {

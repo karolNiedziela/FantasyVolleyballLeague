@@ -1,4 +1,4 @@
-namespace FantasyVolleyballLeague.Contracts
+namespace FantasyVolleyballLeague.Shared.Persistence
 {
     public static class DatabaseResource
     {
