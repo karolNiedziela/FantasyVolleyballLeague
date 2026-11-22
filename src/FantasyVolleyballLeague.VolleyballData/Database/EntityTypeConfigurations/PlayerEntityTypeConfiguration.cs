@@ -14,6 +14,16 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.EntityTypeConfiguratio
                 .IsRequired()
                 .HasMaxLength(100);
 
+            // Default '' only fills the rows that exist when the column is added; the importer then computes the real value.
+            builder.Property(p => p.NormalizedName)
+                .IsRequired()
+                .HasMaxLength(200)
+                .HasDefaultValue(string.Empty);
+
+            builder.HasIndex(p => p.NormalizedName)
+                .HasMethod("gin")
+                .HasOperators("gin_trgm_ops");
+
             builder.HasIndex(p => new { p.GenderId, p.ExternalId })
                 .IsUnique()
                 .HasFilter("\"ExternalId\" IS NOT NULL");
