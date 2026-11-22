@@ -12,7 +12,8 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.EntityTypeConfiguratio
 
             builder.Property(p => p.FullName)
                 .IsRequired()
-                .HasMaxLength(100);
+                .HasMaxLength(100)
+                .UseCollation("pl-x-icu");
 
             // Default '' only fills the rows that exist when the column is added; the importer then computes the real value.
             builder.Property(p => p.NormalizedName)

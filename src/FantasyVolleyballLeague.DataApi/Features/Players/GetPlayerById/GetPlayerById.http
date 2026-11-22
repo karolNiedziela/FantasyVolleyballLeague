@@ -1,0 +1,13 @@
+@PlayerId = 00000000-0000-0000-0000-000000000000
+
+### Player with the profile and the current roster (take the id from GET /players)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/players/{{PlayerId}}
+Accept: application/json
+
+### Error: the player does not exist (404)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/players/00000000-0000-0000-0000-000000000001
+Accept: application/json
+
+### Error: the id is not a GUID (404, the route does not match)
+GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/players/not-a-guid
+Accept: application/json
