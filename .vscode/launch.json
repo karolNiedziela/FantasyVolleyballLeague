@@ -1,0 +1,11 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Importer",
+      "type": "dotnet",
+      "request": "launch",
+      "projectPath": "${workspaceFolder}/src/FantasyVolleyballLeague.Importer/FantasyVolleyballLeague.Importer.csproj"
+    }
+  ]
+}
