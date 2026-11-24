@@ -4,9 +4,9 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Seeds
 {
     internal static class SeasonSeeds
     {
-        public static Season Season(League league, int startYear)
+        public static Season Season(League league, int startYear, string? leagueName = null)
         {
-            return new Season(startYear, startYear + 1, league.Id, externalId: null);
+            return new Season(startYear, startYear + 1, league.Id, leagueName ?? league.Name, externalId: null);
         }
 
         // Seasons of one league in consecutive years starting at firstStartYear.

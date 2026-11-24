@@ -14,6 +14,8 @@ namespace FantasyVolleyballLeague.DataApi.Features.Seasons.GetSeasonById
 
         public int EndYear { get; init; }
 
+        public string LeagueName { get; init; } = string.Empty;
+
         public bool IsCurrent { get; init; }
 
         public LeagueSummaryResponse League { get; init; } = new();

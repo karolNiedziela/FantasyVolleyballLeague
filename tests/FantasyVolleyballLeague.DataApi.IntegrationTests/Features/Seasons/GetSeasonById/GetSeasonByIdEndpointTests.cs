@@ -44,7 +44,7 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Seasons.GetS
             response.ShouldHaveMediaType(MediaTypeNames.Application.Json);
             var root = (await response.Content.ReadFromJsonAsync<JsonObject>(TestContext.Current.CancellationToken)).ShouldNotBeNull();
             PropertyNames(root).ShouldBe(
-                ["id", "externalId", "name", "startYear", "endYear", "isCurrent", "league", "previousSeason", "nextSeason", "phases"],
+                ["id", "externalId", "name", "startYear", "endYear", "leagueName", "isCurrent", "league", "previousSeason", "nextSeason", "phases"],
                 ignoreOrder: true);
             root["externalId"].ShouldBeNull();
             root["isCurrent"]!.GetValueKind().ShouldBe(JsonValueKind.True);

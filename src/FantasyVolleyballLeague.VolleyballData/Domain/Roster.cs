@@ -3,8 +3,8 @@ using FantasyVolleyballLeague.Shared.Text;
 namespace FantasyVolleyballLeague.VolleyballData.Domain
 {
     /// <summary>
-    /// A club in a given season with its players. <see cref="ExternalId"/> is the club id on the league website,
-    /// stable across seasons, so it links the same club between seasons despite sponsor renames.
+    /// A club in a given season with its players. <see cref="Club"/> links the rosters of one club across seasons and
+    /// leagues.
     /// </summary>
     internal sealed class Roster : Entity, ISearchableName
     {
@@ -28,17 +28,27 @@ namespace FantasyVolleyballLeague.VolleyballData.Domain
 
         public Season Season { get; private set; } = default!;
 
+        public Guid ClubId { get; private set; }
+
+        public Club Club { get; private set; } = default!;
+
         public IReadOnlyCollection<RosterPlayer> Players => _players.AsReadOnly();
 
         private Roster() { }
 
-        public Roster(string name, Guid leagueId, Guid seasonId, int? externalId)
+        public Roster(string name, Guid leagueId, Guid seasonId, Guid clubId, int? externalId)
         {
             Name = name;
             NormalizedName = NameNormalizer.Normalize(name);
             LeagueId = leagueId;
             SeasonId = seasonId;
+            ClubId = clubId;
             ExternalId = externalId;
+        }
+
+        public void AssignClub(Guid clubId)
+        {
+            ClubId = clubId;
         }
 
         public void Rename(string name)

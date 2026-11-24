@@ -39,6 +39,22 @@ namespace FantasyVolleyballLeague.Importer.Import
         /// </summary>
         public int RosterEntriesFromCareer { get; set; }
 
+        /// <summary>
+        /// Seasons whose league name changed after <c>ManualData/league-names.json</c>.
+        /// </summary>
+        public int SeasonsRenamed { get; set; }
+
+        public int ClubsCreated { get; set; }
+
+        public int ClubsRenamed { get; set; }
+
+        public int ClubsDeleted { get; set; }
+
+        /// <summary>
+        /// Rosters assigned to another club by the grouping (<c>ManualData/clubs.json</c>).
+        /// </summary>
+        public int RostersMovedToAnotherClub { get; set; }
+
         public List<UnresolvedPlayer> UnresolvedPlayers { get; } = [];
 
         public List<string> UnresolvedMvps { get; } = [];

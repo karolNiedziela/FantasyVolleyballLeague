@@ -14,6 +14,12 @@ namespace FantasyVolleyballLeague.DataApi.Features.Rosters.GetRosterById
 
         public string Name { get; init; } = string.Empty;
 
+        /// <summary>
+        /// The club across seasons and leagues: every roster of the club has the same club id. Named after its newest
+        /// roster.
+        /// </summary>
+        public ClubSummaryResponse Club { get; init; } = new();
+
         public LeagueSummaryResponse League { get; init; } = new();
 
         public SeasonSummaryResponse Season { get; init; } = new();

@@ -27,6 +27,17 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Seasons.GetS
         }
 
         [Fact]
+        public async Task HandleAsync_Should_ReturnTheLeagueNameOfTheSeason()
+        {
+            var league = new League("TAURON Liga", 1, LeagueCountry.Poland.Id, LeagueGender.Men.Id);
+            await SeedAsync(league, SeasonSeeds.Season(league, 2023, leagueName: "PlusLiga"));
+
+            var page = await Handle(new GetSeasonsQuery());
+
+            page.Items.ShouldHaveSingleItem().LeagueName.ShouldBe("PlusLiga");
+        }
+
+        [Fact]
         public async Task HandleAsync_Should_SortByStartYearDescendingByDefault()
         {
             await SeedAsync(_men, SeasonSeeds.Season(_men, 2021), SeasonSeeds.Season(_men, 2023), SeasonSeeds.Season(_men, 2022));

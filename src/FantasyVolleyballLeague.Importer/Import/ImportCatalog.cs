@@ -20,7 +20,10 @@ namespace FantasyVolleyballLeague.Importer.Import
         private Dictionary<(Guid PhaseId, string Stage, string Name), Guid> _rounds = [];
         private Dictionary<(Guid SeasonId, int ExternalId), Guid> _rostersByExternalId = [];
         private Dictionary<(Guid SeasonId, string Name), Guid> _rostersByName = [];
+        private Dictionary<(Guid LeagueId, int ExternalId), Guid> _clubsByExternalId = [];
+        private Dictionary<(Guid LeagueId, string NormalizedName), Guid> _clubsByName = [];
         private Dictionary<Guid, int> _leagueGenders = [];
+        private Dictionary<Guid, string> _leagueNames = [];
         private Dictionary<(int GenderId, int ExternalId), Guid> _playersByExternalId = [];
         private Dictionary<(int GenderId, string NameKey), Guid> _unresolvedPlayersByNameKey = [];
         private Dictionary<Guid, List<RosterMember>> _rosterMembers = [];
@@ -47,7 +50,7 @@ namespace FantasyVolleyballLeague.Importer.Import
                 .ToDictionaryAsync(r => (r.PhaseId, r.Stage, r.Name), r => r.Id, cancellationToken);
 
             var rosters = await _dbContext.Set<Roster>().AsNoTracking()
-                .Select(t => new { t.Id, t.SeasonId, t.Name, t.NormalizedName, t.ExternalId })
+                .Select(t => new { t.Id, t.LeagueId, t.SeasonId, t.ClubId, t.Name, t.NormalizedName, t.ExternalId })
                 .ToListAsync(cancellationToken);
             var staleRosterIds = rosters
                 .Where(t => t.NormalizedName != NameNormalizer.Normalize(t.Name))
@@ -58,9 +61,25 @@ namespace FantasyVolleyballLeague.Importer.Import
                 .ToDictionary(t => (t.SeasonId, t.ExternalId!.Value), t => t.Id);
             _rostersByName = rosters.ToDictionary(t => (t.SeasonId, t.Name), t => t.Id);
             _rosterSeasons = rosters.ToDictionary(t => t.Id, t => t.SeasonId);
+            _clubsByExternalId = [];
+            _clubsByName = [];
+            foreach (var roster in rosters)
+            {
+                if (roster.ExternalId is not null)
+                {
+                    _clubsByExternalId.TryAdd((roster.LeagueId, roster.ExternalId.Value), roster.ClubId);
+                }
+                else
+                {
+                    _clubsByName.TryAdd((roster.LeagueId, NameNormalizer.Normalize(roster.Name)), roster.ClubId);
+                }
+            }
 
-            _leagueGenders = await _dbContext.Set<League>().AsNoTracking()
-                .ToDictionaryAsync(l => l.Id, l => l.GenderId, cancellationToken);
+            var leagues = await _dbContext.Set<League>().AsNoTracking()
+                .Select(l => new { l.Id, l.GenderId, l.Name })
+                .ToListAsync(cancellationToken);
+            _leagueGenders = leagues.ToDictionary(l => l.Id, l => l.GenderId);
+            _leagueNames = leagues.ToDictionary(l => l.Id, l => l.Name);
 
             var players = await _dbContext.Set<Player>().AsNoTracking()
                 .Select(p => new { p.Id, p.GenderId, p.ExternalId, p.FullName, p.NormalizedName })
@@ -157,7 +176,26 @@ namespace FantasyVolleyballLeague.Importer.Import
 
             await _dbContext.SaveChangesAsync(cancellationToken);
             _leagueGenders[league.Id] = genderId;
+            _leagueNames[league.Id] = league.Name;
             return league.Id;
+        }
+
+        /// <summary>
+        /// The configured leagues by their database id. The database does not store the configuration key
+        /// (<c>PlusLiga</c>), which the manual data files use.
+        /// </summary>
+        public async Task<IReadOnlyDictionary<Guid, LeagueImportOptions>> EnsureLeaguesAsync(
+            IEnumerable<LeagueImportOptions> leagues,
+            CancellationToken cancellationToken)
+        {
+            var leaguesById = new Dictionary<Guid, LeagueImportOptions>();
+            foreach (var league in leagues)
+            {
+                var leagueId = await EnsureLeagueAsync(league, cancellationToken);
+                leaguesById[leagueId] = league;
+            }
+
+            return leaguesById;
         }
 
         public Guid ResolveSeason(Guid leagueId, SeasonFile season)
@@ -168,7 +206,7 @@ namespace FantasyVolleyballLeague.Importer.Import
                 return id;
             }
 
-            var entity = new Season(season.StartYear, season.EndYear, leagueId, season.ExternalId);
+            var entity = new Season(season.StartYear, season.EndYear, leagueId, _leagueNames[leagueId], season.ExternalId);
             _dbContext.Set<Season>().Add(entity);
             _seasons[key] = entity.Id;
             _seasonInfo[entity.Id] = (leagueId, season.StartYear);
@@ -215,7 +253,8 @@ namespace FantasyVolleyballLeague.Importer.Import
                 return id;
             }
 
-            var entity = new Roster(name, leagueId, seasonId, externalId);
+            var clubId = ResolveClub(leagueId, name, externalId);
+            var entity = new Roster(name, leagueId, seasonId, clubId, externalId);
             _dbContext.Set<Roster>().Add(entity);
             _rostersByName[(seasonId, name)] = entity.Id;
             _rosterSeasons[entity.Id] = seasonId;
@@ -225,6 +264,38 @@ namespace FantasyVolleyballLeague.Importer.Import
             }
 
             return entity.Id;
+        }
+
+        private Guid ResolveClub(Guid leagueId, string name, int? externalId)
+        {
+            if (externalId is not null)
+            {
+                if (_clubsByExternalId.TryGetValue((leagueId, externalId.Value), out var clubId))
+                {
+                    return clubId;
+                }
+
+                var club = AddClub(leagueId, name);
+                _clubsByExternalId[(leagueId, externalId.Value)] = club.Id;
+                return club.Id;
+            }
+
+            var nameKey = (leagueId, NameNormalizer.Normalize(name));
+            if (_clubsByName.TryGetValue(nameKey, out var clubIdByName))
+            {
+                return clubIdByName;
+            }
+
+            var clubByName = AddClub(leagueId, name);
+            _clubsByName[nameKey] = clubByName.Id;
+            return clubByName.Id;
+        }
+
+        private Club AddClub(Guid leagueId, string name)
+        {
+            var club = new Club(name, _leagueGenders[leagueId]);
+            _dbContext.Set<Club>().Add(club);
+            return club;
         }
 
         public Guid? FindRoster(Guid seasonId, int clubExternalId)

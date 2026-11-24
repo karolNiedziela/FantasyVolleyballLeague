@@ -14,6 +14,11 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.EntityTypeConfiguratio
                 .IsRequired()
                 .HasMaxLength(100);
 
+            builder.Property(x => x.LeagueName)
+                .IsRequired()
+                .HasMaxLength(100)
+                .UseCollation("pl-x-icu");
+
             builder.HasIndex(x => new { x.LeagueId, x.StartYear, x.EndYear }).IsUnique();
             
             builder.HasOne(x => x.League)

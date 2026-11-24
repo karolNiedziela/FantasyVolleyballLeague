@@ -1,0 +1,18 @@
+[
+  { "league": "PlusLiga", "fromStartYear": 2000, "name": "Polska Liga Siatkówki" },
+  { "league": "PlusLiga", "fromStartYear": 2008, "name": "PlusLiga" },
+  { "league": "PlusLiga", "fromStartYear": 2026, "name": "TAURON Liga" },
+
+  { "league": "PLS1Liga", "fromStartYear": 2018, "name": "Krispol 1. Liga" },
+  { "league": "PLS1Liga", "fromStartYear": 2020, "name": "TAURON 1. Liga" },
+  { "league": "PLS1Liga", "fromStartYear": 2024, "name": "PLS 1. Liga" },
+  { "league": "PLS1Liga", "fromStartYear": 2026, "name": "TAURON 1. Liga" },
+
+  { "league": "TauronLigaKobiet", "fromStartYear": 2008, "name": "PlusLiga Kobiet" },
+  { "league": "TauronLigaKobiet", "fromStartYear": 2012, "name": "ORLEN Liga" },
+  { "league": "TauronLigaKobiet", "fromStartYear": 2017, "name": "Liga Siatkówki Kobiet" },
+  { "league": "TauronLigaKobiet", "fromStartYear": 2020, "name": "TAURON Liga" },
+  { "league": "TauronLigaKobiet", "fromStartYear": 2026, "name": "TAURON Liga Kobiet" },
+
+  { "league": "Tauron1LigaKobiet", "fromStartYear": 2026, "name": "TAURON 1. Liga Kobiet" }
+]

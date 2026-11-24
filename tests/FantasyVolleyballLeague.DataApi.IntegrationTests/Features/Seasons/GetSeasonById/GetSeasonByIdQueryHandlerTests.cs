@@ -30,7 +30,7 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Seasons.GetS
         [Fact]
         public async Task HandleAsync_Should_ReturnTheSeasonFields()
         {
-            var seasonEntity = new Season(2023, 2024, _men.Id, ExternalId);
+            var seasonEntity = new Season(2023, 2024, _men.Id, "PlusLiga", ExternalId);
             await SeedAsync(_men, seasonEntity);
 
             var season = (await Handle(new GetSeasonByIdQuery(seasonEntity.Id))).ShouldNotBeNull();
@@ -40,7 +40,9 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Seasons.GetS
                 () => season.ExternalId.ShouldBe(ExternalId),
                 () => season.Name.ShouldBe("2023-2024"),
                 () => season.StartYear.ShouldBe(2023),
-                () => season.EndYear.ShouldBe(2024));
+                () => season.EndYear.ShouldBe(2024),
+                () => season.LeagueName.ShouldBe("PlusLiga"),
+                () => season.League.Name.ShouldBe("Men's league"));
         }
 
         [Fact]
