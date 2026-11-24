@@ -1,0 +1,19 @@
+[
+  { "key": "bbts-bielsko-biala", "ids": ["PLS1Liga:12", "PlusLiga:11"] },
+  { "key": "bks-bydgoszcz", "ids": ["PLS1Liga:16", "PlusLiga:15"] },
+  { "key": "gks-katowice", "ids": ["PLS1Liga:88", "PlusLiga:18"] },
+  { "key": "gwardia-wroclaw", "ids": ["PLS1Liga:31", "PlusLiga:23"] },
+  { "key": "mks-bedzin", "ids": ["PLS1Liga:53", "PlusLiga:52"] },
+  { "key": "stal-nysa", "ids": ["PLS1Liga:69", "PLS1Liga:90", "PlusLiga:68"] },
+  { "key": "lublin", "ids": ["PLS1Liga:46", "PlusLiga:45"] },
+  { "key": "chks-chelm", "ids": ["PLS1Liga:13", "PlusLiga:93"] },
+  { "key": "norwid-czestochowa", "ids": ["PLS1Liga:72", "PlusLiga:71"] },
+  { "key": "azs-czestochowa", "ids": ["PLS1Liga:76", "PlusLiga:30"] },
+  { "key": "czarni-radom", "ids": ["PLS1Liga:85", "PlusLiga:83", "PlusLiga:25"] },
+  { "key": "slepsk-suwalki", "ids": ["PLS1Liga:50", "PlusLiga:56"] },
+  { "key": "kps-kielce", "ids": ["PLS1Liga:74", "PlusLiga:75"] },
+  { "key": "stal-mielec", "ids": ["TauronLigaKobiet:40", "TauronLigaKobiet:36"] },
+  { "key": "mks-kalisz", "ids": ["TauronLigaKobiet:67", "TauronLigaKobiet:54"] },
+  { "key": "los-nowy-dwor-mazowiecki", "ids": ["TauronLigaKobiet:92", "Tauron1LigaKobiet:107"] },
+  { "key": "gedania-gdansk", "ids": ["TauronLigaKobiet:34", "Tauron1LigaKobiet:106"] }
+]

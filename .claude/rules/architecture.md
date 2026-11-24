@@ -29,10 +29,16 @@ Project references:
 
 ### Importer layout
 
-`ImportRunner` runs the `IImportStep`s ordered by `Order` (`RostersImportStep`, then `MatchesImportStep`) and writes an
-`ImportReport` (unresolved players, file errors, warnings) next to the data. `Records/*File` are the DTOs that mirror the
-raw JSON, `Import/` holds the pure helpers (`RosterMatching`, `PlayerNameKey`, `CareerMembership`,
-`SeasonNameIndex`, `StatisticsParsing`) and `RawDataReader` (reads the raw JSON files; tested on read-only files in `Fixtures/RawData`) that `Importer.Tests` cover, and `Steps/` holds the per-match context.
+`ImportRunner` runs the `IImportStep`s ordered by `Order` (`RostersImportStep`, `MatchesImportStep`, then
+`SeasonLeagueNamesImportStep`, which sets the league name of each season, and `ClubGroupingImportStep`, which groups the rosters
+into clubs) and writes an
+`ImportReport` (unresolved players, file errors, warnings, counters) next to the data. `Records/*File` are the DTOs
+that mirror the raw JSON and the manual data files, `ManualData/*.json` is the data entered by hand (in git, copied to
+the output: `league-names.json`, `clubs.json`, `club-splits.json`), `Import/` holds the pure helpers (`RosterMatching`, `PlayerNameKey`,
+`CareerMembership`, `SeasonNameIndex`, `StatisticsParsing`, `LeagueNaming`, `ClubKey`, `ClubGrouping`) and the readers
+`RawDataReader` (raw JSON; tested on read-only files in `Fixtures/RawData`) and `ManualDataReader` (reads and validates
+the manual files; `Fixtures/ManualData`)
+that `Importer.Tests` cover, and `Steps/` holds the steps and the per-match context.
 
 ## Backend
 

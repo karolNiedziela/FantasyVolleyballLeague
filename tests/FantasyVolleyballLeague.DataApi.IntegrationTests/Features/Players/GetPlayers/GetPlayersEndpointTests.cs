@@ -41,7 +41,8 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Players.GetP
         public async Task GetPlayers_Should_ReturnTheJsonShapeOfAPlayer()
         {
             var season = SeasonSeeds.Season(_men, 2023);
-            var roster = NameSeeds.Roster(_men, season, "Lublin");
+            var club = NameSeeds.Club(_men, "Lublin");
+            var roster = NameSeeds.Roster(_men, season, club, "Lublin");
             var player = NameSeeds.Player(
                 "Jan Kowalski",
                 dateOfBirth: new DateOnly(1990, 1, 31),
@@ -51,6 +52,7 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Players.GetP
             await SeedAsync(
                 _men,
                 season,
+                club,
                 roster,
                 player,
                 NameSeeds.RosterPlayer(roster, player, position: PlayerPosition.MiddleBlocker));
@@ -76,13 +78,15 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Players.GetP
         public async Task GetPlayers_Should_ApplyTheFiltersAndTheSearchFromTheQueryString()
         {
             var season = SeasonSeeds.Season(_men, 2023);
-            var roster = NameSeeds.Roster(_men, season, "Lublin");
+            var club = NameSeeds.Club(_men, "Lublin");
+            var roster = NameSeeds.Roster(_men, season, club, "Lublin");
             var setter = NameSeeds.Player("Jan Setter");
             var libero = NameSeeds.Player("Jan Libero");
             var woman = NameSeeds.Player("Anna Setter", LeagueGender.Women);
             await SeedAsync(
                 _men,
                 season,
+                club,
                 roster,
                 setter,
                 libero,

@@ -138,14 +138,18 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Players.GetP
         public async Task HandleAsync_Should_FilterByRoster()
         {
             var season = SeasonSeeds.Season(_men, 2023);
-            var lublin = NameSeeds.Roster(_men, season, "Lublin");
-            var zawiercie = NameSeeds.Roster(_men, season, "Zawiercie");
+            var lublinClub = NameSeeds.Club(_men, "Lublin");
+            var zawiercieClub = NameSeeds.Club(_men, "Zawiercie");
+            var lublin = NameSeeds.Roster(_men, season, lublinClub, "Lublin");
+            var zawiercie = NameSeeds.Roster(_men, season, zawiercieClub, "Zawiercie");
             var own = NameSeeds.Player("Own Player");
             var other = NameSeeds.Player("Other Player");
             var free = NameSeeds.Player("Without Roster");
             await SeedAsync(
                 _men,
                 season,
+                lublinClub,
+                zawiercieClub,
                 lublin,
                 zawiercie,
                 own,
@@ -164,14 +168,16 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Players.GetP
         {
             var older = SeasonSeeds.Season(_men, 2022);
             var newer = SeasonSeeds.Season(_men, 2023);
-            var olderRoster = NameSeeds.Roster(_men, older, "Lublin");
-            var newerRoster = NameSeeds.Roster(_men, newer, "Lublin");
+            var club = NameSeeds.Club(_men, "Lublin");
+            var olderRoster = NameSeeds.Roster(_men, older, club, "Lublin");
+            var newerRoster = NameSeeds.Roster(_men, newer, club, "Lublin");
             var inOlder = NameSeeds.Player("In Older");
             var inNewer = NameSeeds.Player("In Newer");
             await SeedAsync(
                 _men,
                 older,
                 newer,
+                club,
                 olderRoster,
                 newerRoster,
                 inOlder,
@@ -189,8 +195,10 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Players.GetP
         {
             var season = SeasonSeeds.Season(_men, 2023);
             var otherSeason = SeasonSeeds.Season(_otherMen, 2023);
-            var rosterOfLeague = NameSeeds.Roster(_men, season, "Lublin");
-            var rosterOfOther = NameSeeds.Roster(_otherMen, otherSeason, "Lublin");
+            var clubOfLeague = NameSeeds.Club(_men, "Lublin");
+            var clubOfOther = NameSeeds.Club(_otherMen, "Lublin");
+            var rosterOfLeague = NameSeeds.Roster(_men, season, clubOfLeague, "Lublin");
+            var rosterOfOther = NameSeeds.Roster(_otherMen, otherSeason, clubOfOther, "Lublin");
             var inLeague = NameSeeds.Player("In League");
             var inOther = NameSeeds.Player("In Other League");
             await SeedAsync(
@@ -198,6 +206,8 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Players.GetP
                 _otherMen,
                 season,
                 otherSeason,
+                clubOfLeague,
+                clubOfOther,
                 rosterOfLeague,
                 rosterOfOther,
                 inLeague,
@@ -214,12 +224,16 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Players.GetP
         public async Task HandleAsync_Should_ListAPlayerWithSeveralEntriesInOneSeasonOnce()
         {
             var season = SeasonSeeds.Season(_men, 2023);
-            var lublin = NameSeeds.Roster(_men, season, "Lublin");
-            var zawiercie = NameSeeds.Roster(_men, season, "Zawiercie");
+            var lublinClub = NameSeeds.Club(_men, "Lublin");
+            var zawiercieClub = NameSeeds.Club(_men, "Zawiercie");
+            var lublin = NameSeeds.Roster(_men, season, lublinClub, "Lublin");
+            var zawiercie = NameSeeds.Roster(_men, season, zawiercieClub, "Zawiercie");
             var player = NameSeeds.Player("Transferred Player");
             await SeedAsync(
                 _men,
                 season,
+                lublinClub,
+                zawiercieClub,
                 lublin,
                 zawiercie,
                 player,
@@ -237,13 +251,15 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Players.GetP
         {
             var older = SeasonSeeds.Season(_men, 2022);
             var newer = SeasonSeeds.Season(_men, 2023);
-            var olderRoster = NameSeeds.Roster(_men, older, "Lublin");
-            var newerRoster = NameSeeds.Roster(_men, newer, "Lublin");
+            var club = NameSeeds.Club(_men, "Lublin");
+            var olderRoster = NameSeeds.Roster(_men, older, club, "Lublin");
+            var newerRoster = NameSeeds.Roster(_men, newer, club, "Lublin");
             var player = NameSeeds.Player("Changed Position");
             await SeedAsync(
                 _men,
                 older,
                 newer,
+                club,
                 olderRoster,
                 newerRoster,
                 player,
@@ -264,13 +280,17 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Players.GetP
         {
             var older = SeasonSeeds.Season(_men, 2022);
             var newer = SeasonSeeds.Season(_men, 2023);
-            var olderRoster = NameSeeds.Roster(_men, older, "Lublin");
-            var newerRoster = NameSeeds.Roster(_men, newer, "Zawiercie");
+            var lublin = NameSeeds.Club(_men, "Lublin");
+            var zawiercie = NameSeeds.Club(_men, "Zawiercie");
+            var olderRoster = NameSeeds.Roster(_men, older, lublin, "Lublin");
+            var newerRoster = NameSeeds.Roster(_men, newer, zawiercie, "Zawiercie");
             var player = NameSeeds.Player("Unknown Latest Position");
             await SeedAsync(
                 _men,
                 older,
                 newer,
+                lublin,
+                zawiercie,
                 olderRoster,
                 newerRoster,
                 player,
@@ -289,13 +309,17 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Players.GetP
         {
             var older = SeasonSeeds.Season(_men, 2022);
             var newer = SeasonSeeds.Season(_men, 2023);
-            var olderRoster = NameSeeds.Roster(_men, older, "Lublin");
-            var newerRoster = NameSeeds.Roster(_men, newer, "Zawiercie");
+            var lublin = NameSeeds.Club(_men, "Lublin");
+            var zawiercie = NameSeeds.Club(_men, "Zawiercie");
+            var olderRoster = NameSeeds.Roster(_men, older, lublin, "Lublin");
+            var newerRoster = NameSeeds.Roster(_men, newer, zawiercie, "Zawiercie");
             var player = NameSeeds.Player("Moved Club");
             await SeedAsync(
                 _men,
                 older,
                 newer,
+                lublin,
+                zawiercie,
                 olderRoster,
                 newerRoster,
                 player,
@@ -331,12 +355,16 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Players.GetP
         public async Task HandleAsync_Should_ReturnTheRosterTheFilterSelects_When_ThePlayerMovedWithinTheSeason()
         {
             var season = SeasonSeeds.Season(_men, 2023);
-            var lublin = NameSeeds.Roster(_men, season, "Lublin");
-            var zawiercie = NameSeeds.Roster(_men, season, "Zawiercie");
+            var lublinClub = NameSeeds.Club(_men, "Lublin");
+            var zawiercieClub = NameSeeds.Club(_men, "Zawiercie");
+            var lublin = NameSeeds.Roster(_men, season, lublinClub, "Lublin");
+            var zawiercie = NameSeeds.Roster(_men, season, zawiercieClub, "Zawiercie");
             var player = NameSeeds.Player("Transferred Player");
             await SeedAsync(
                 _men,
                 season,
+                lublinClub,
+                zawiercieClub,
                 lublin,
                 zawiercie,
                 player,
@@ -354,12 +382,16 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Players.GetP
         public async Task HandleAsync_Should_TakeThePositionOfTheLatestMemberFrom_When_ThePlayerMovedWithinTheSeason()
         {
             var season = SeasonSeeds.Season(_men, 2023);
-            var lublin = NameSeeds.Roster(_men, season, "Lublin");
-            var zawiercie = NameSeeds.Roster(_men, season, "Zawiercie");
+            var lublinClub = NameSeeds.Club(_men, "Lublin");
+            var zawiercieClub = NameSeeds.Club(_men, "Zawiercie");
+            var lublin = NameSeeds.Roster(_men, season, lublinClub, "Lublin");
+            var zawiercie = NameSeeds.Roster(_men, season, zawiercieClub, "Zawiercie");
             var player = NameSeeds.Player("Transferred Player");
             await SeedAsync(
                 _men,
                 season,
+                lublinClub,
+                zawiercieClub,
                 lublin,
                 zawiercie,
                 player,
@@ -376,13 +408,15 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Players.GetP
         {
             var older = SeasonSeeds.Season(_men, 2022);
             var newer = SeasonSeeds.Season(_men, 2023);
-            var olderRoster = NameSeeds.Roster(_men, older, "Lublin");
-            var newerRoster = NameSeeds.Roster(_men, newer, "Lublin");
+            var club = NameSeeds.Club(_men, "Lublin");
+            var olderRoster = NameSeeds.Roster(_men, older, club, "Lublin");
+            var newerRoster = NameSeeds.Roster(_men, newer, club, "Lublin");
             var player = NameSeeds.Player("Changed Position");
             await SeedAsync(
                 _men,
                 older,
                 newer,
+                club,
                 olderRoster,
                 newerRoster,
                 player,
@@ -405,13 +439,15 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Players.GetP
         {
             var older = SeasonSeeds.Season(_men, 2022);
             var newer = SeasonSeeds.Season(_men, 2023);
-            var olderRoster = NameSeeds.Roster(_men, older, "Lublin");
-            var newerRoster = NameSeeds.Roster(_men, newer, "Lublin");
+            var club = NameSeeds.Club(_men, "Lublin");
+            var olderRoster = NameSeeds.Roster(_men, older, club, "Lublin");
+            var newerRoster = NameSeeds.Roster(_men, newer, club, "Lublin");
             var player = NameSeeds.Player("Setter Only In Older Season");
             await SeedAsync(
                 _men,
                 older,
                 newer,
+                club,
                 olderRoster,
                 newerRoster,
                 player,
@@ -427,13 +463,15 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Players.GetP
         public async Task HandleAsync_Should_CombineTheFiltersWithAnd()
         {
             var season = SeasonSeeds.Season(_men, 2023);
-            var roster = NameSeeds.Roster(_men, season, "Lublin");
+            var club = NameSeeds.Club(_men, "Lublin");
+            var roster = NameSeeds.Roster(_men, season, club, "Lublin");
             var match = NameSeeds.Player("Jan Setter");
             var wrongPosition = NameSeeds.Player("Jan Libero");
             var wrongName = NameSeeds.Player("Piotr Setter");
             await SeedAsync(
                 _men,
                 season,
+                club,
                 roster,
                 match,
                 wrongPosition,

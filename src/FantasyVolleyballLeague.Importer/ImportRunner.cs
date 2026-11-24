@@ -35,6 +35,9 @@ namespace FantasyVolleyballLeague.Importer
                 $"skipped: {_report.MatchesSkipped}; players by roster: {_report.PlayersResolvedByRoster}, by season: {_report.PlayersResolvedBySeason}, " +
                 $"unresolved players: {_report.UnresolvedPlayers.Count}, matches without MVP: {_report.MatchesWithoutMvp}, " +
                 $"file errors: {_report.FileErrors.Count}, warnings: {_report.Warnings.Count}");
+            Console.WriteLine(
+                $"Seasons renamed: {_report.SeasonsRenamed}; clubs created: {_report.ClubsCreated}, renamed: {_report.ClubsRenamed}, " +
+                $"deleted: {_report.ClubsDeleted}; rosters moved to another club: {_report.RostersMovedToAnotherClub}");
             Console.WriteLine($"Report: {reportPath}");
         }
     }

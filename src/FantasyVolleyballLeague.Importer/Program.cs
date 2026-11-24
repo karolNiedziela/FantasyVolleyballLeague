@@ -25,9 +25,12 @@ builder.Services.Configure<StorageOptions>(builder.Configuration.GetSection(Stor
 
 builder.Services.AddSingleton<ImportReport>();
 builder.Services.AddSingleton<RawDataReader>();
+builder.Services.AddSingleton(new ManualDataReader(Path.Combine(AppContext.BaseDirectory, "ManualData")));
 builder.Services.AddScoped<ImportCatalog>();
 builder.Services.AddTransient<IImportStep, RostersImportStep>();
 builder.Services.AddTransient<IImportStep, MatchesImportStep>();
+builder.Services.AddTransient<IImportStep, SeasonLeagueNamesImportStep>();
+builder.Services.AddTransient<IImportStep, ClubGroupingImportStep>();
 builder.Services.AddTransient<ImportRunner>();
 
 using var host = builder.Build();

@@ -83,7 +83,7 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Leagues.GetL
 
         private static Season Season(int startYear, League league)
         {
-            return new Season(startYear, startYear + 1, league.Id, externalId: null);
+            return new Season(startYear, startYear + 1, league.Id, league.Name, externalId: null);
         }
 
         private static League League(string name, short divisionNumber, LeagueGender gender)

@@ -25,11 +25,13 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Rosters.GetR
         public async Task GetRosterById_Should_ReturnTheDocumentedJsonShape()
         {
             var season = SeasonSeeds.Season(_men, 2023);
-            var roster = NameSeeds.Roster(_men, season, "Lublin", externalId: 56);
+            var club = NameSeeds.Club(_men, "Lublin");
+            var roster = NameSeeds.Roster(_men, season, club, "Lublin", externalId: 56);
             var player = NameSeeds.Player("Łukasz Kaczmarek", dateOfBirth: new DateOnly(1994, 12, 2));
             await SeedAsync(
                 _men,
                 season,
+                club,
                 roster,
                 player,
                 NameSeeds.RosterPlayer(
@@ -44,8 +46,9 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Rosters.GetR
             await response.ShouldHaveStatusCode(HttpStatusCode.OK);
             response.ShouldHaveMediaType(MediaTypeNames.Application.Json);
             var root = (await response.Content.ReadFromJsonAsync<JsonObject>(TestContext.Current.CancellationToken)).ShouldNotBeNull();
-            PropertyNames(root).ShouldBe(["id", "externalId", "name", "league", "season", "players"], ignoreOrder: true);
+            PropertyNames(root).ShouldBe(["id", "externalId", "name", "club", "league", "season", "players"], ignoreOrder: true);
             root["externalId"]!.GetValue<int>().ShouldBe(56);
+            PropertyNames(root["club"]!.AsObject()).ShouldBe(["id", "name"], ignoreOrder: true);
             PropertyNames(root["league"]!.AsObject()).ShouldBe(["id", "name", "divisionNumber", "country", "gender"], ignoreOrder: true);
             PropertyNames(root["season"]!.AsObject()).ShouldBe(["id", "name", "startYear", "endYear"], ignoreOrder: true);
 
@@ -75,7 +78,8 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Rosters.GetR
         public async Task GetRosterById_Should_ReturnNotFoundAsProblemDetails_When_TheRosterDoesNotExist()
         {
             var season = SeasonSeeds.Season(_men, 2023);
-            await SeedAsync(_men, season, NameSeeds.Roster(_men, season, "Lublin"));
+            var club = NameSeeds.Club(_men, "Lublin");
+            await SeedAsync(_men, season, club, NameSeeds.Roster(_men, season, club, "Lublin"));
 
             var response = await Get($"{Rosters}/{EntityId.New()}");
 

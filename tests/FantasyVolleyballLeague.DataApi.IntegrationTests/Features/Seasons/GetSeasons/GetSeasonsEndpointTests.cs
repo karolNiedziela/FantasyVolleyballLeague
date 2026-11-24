@@ -51,7 +51,7 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Seasons.GetS
             await response.ShouldHaveStatusCode(HttpStatusCode.OK);
             var root = (await response.Content.ReadFromJsonAsync<JsonObject>(TestContext.Current.CancellationToken)).ShouldNotBeNull();
             var season = root["items"]!.AsArray().ShouldHaveSingleItem().ShouldNotBeNull().AsObject();
-            PropertyNames(season).ShouldBe(["id", "name", "startYear", "endYear", "isCurrent", "leagueId"], ignoreOrder: true);
+            PropertyNames(season).ShouldBe(["id", "name", "startYear", "endYear", "leagueName", "isCurrent", "leagueId"], ignoreOrder: true);
             season["name"]!.GetValue<string>().ShouldBe("2023-2024");
             season["startYear"]!.GetValueKind().ShouldBe(JsonValueKind.Number);
             season["endYear"]!.GetValueKind().ShouldBe(JsonValueKind.Number);

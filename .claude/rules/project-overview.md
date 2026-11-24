@@ -38,7 +38,7 @@ Config keys are stable identifiers used for folder names. They stay the same whe
 changes.
 
 PLS URL patterns (`PlsUrls`):
-- Season list: `/games.html`. The season dropdown links look like `/games/tour/{tour}/nocookies/1.html`. `tour` is the season id; 53 = 2026/27.
+- Season list: `/games.html`. The season dropdown links look like `/games/tour/{tour}/nocookies/1.html`. `tour` is the season id **of that site**: each PLS site numbers its seasons itself (2026/27 is 53 on tauronliga.pl and 55 on tauron1liga.pl), so only the start year is shared.
 - Match: `/games/action/show/id/{matchId}.html`. Match ids are global across PLS sites.
 - Team: `/teams/id/{clubId}/tour/{tour}.html`. The club id is stable across seasons **within one site only**: each PLS site has its own club ids
   (BBTS Bielsko-Biała is 11 on tauronliga.pl and 12 on tauron1liga.pl), and the same id means different clubs on
@@ -77,10 +77,19 @@ tauronliga.pl / tauron1liga.pl ──(Scraper, Playwright)──► data/raw/*.j
 
 ### Domain model
 
-League → Season → Phase → Round (with `Stage`) → Match → SetScore / PlayerMatchStatistics.
+League → Season → Phase → Round (with `Stage`) → Match → SetScore / PlayerMatchStatistics; Club → Roster (per season).
 
-- `Roster` is a club **in a given season** with its players. Its `ExternalId` is the club id. Matches are
-  played by `HomeRoster` and `AwayRoster` (the same names are used in the raw JSON).
+- `Season.LeagueName` is the name of the league in that season (`PlusLiga` in 2015/16); `League.Name` is the current
+  name. The Importer sets it from `Importer/ManualData/league-names.json`, because the league websites show the current
+  brand for old seasons too.
+- `Roster` is a club **in a given season** with its players. Its `ExternalId` is the club id on that website (each
+  PLS site has its own ids). Matches are played by `HomeRoster` and `AwayRoster` (the same names are used in the raw
+  JSON).
+- `Club` is the club **across seasons and leagues**: every `Roster` belongs to one (`Roster.ClubId`). By default one club
+  per (league, club id); `Importer/ManualData/clubs.json` merges ids that are the same club (no automatic merging by
+  name), and `club-splits.json` splits an id that passed to another club from a given season (a licence transfer). A
+  successor of a dissolved club is a separate club (as on volleybox.net). A club is named after its newest roster, and
+  the men's and women's sections are different clubs.
 - `Player` is a **global person**. Its `ExternalId` is the player id. `RosterPlayer` is the season
   roster entry (shirt number, position, `MemberFrom`/`MemberTo` = the dates the player belonged to the club, taken from his career).
 - Every entity derives from `Entity`, which assigns a time-ordered UUID v7 id (`EntityId.New()`).

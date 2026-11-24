@@ -11,7 +11,7 @@ namespace FantasyVolleyballLeague.DataApi.Features.Rosters.GetRosterById
             app.MapGet(RostersRoutes.ResourceById, GetRosterById)
                 .WithName(nameof(GetRosterById))
                 .WithSummary("Get roster by ID")
-                .WithDescription("Returns a roster (a club in one season) with its league and season and its players, by shirt number and then by name, each with the position and the dates the player belonged to the club.")
+                .WithDescription("Returns a roster (a club in one season) with its club (the same club across seasons and leagues), league and season and its players, by shirt number and then by name, each with the position and the dates the player belonged to the club.")
                 .WithTags(RostersRoutes.Tag)
                 .ProducesProblem(StatusCodes.Status404NotFound);
         }

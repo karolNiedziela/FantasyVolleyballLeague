@@ -18,9 +18,14 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Seeds
             return player;
         }
 
-        public static Roster Roster(League league, Season season, string name, int? externalId = null)
+        public static Club Club(League league, string name)
         {
-            return new Roster(name, league.Id, season.Id, externalId);
+            return new Club(name, league.GenderId);
+        }
+
+        public static Roster Roster(League league, Season season, Club club, string name, int? externalId = null)
+        {
+            return new Roster(name, league.Id, season.Id, club.Id, externalId);
         }
 
         public static RosterPlayer RosterPlayer(

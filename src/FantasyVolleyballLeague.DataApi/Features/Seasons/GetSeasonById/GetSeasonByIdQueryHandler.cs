@@ -36,6 +36,7 @@ namespace FantasyVolleyballLeague.DataApi.Features.Seasons.GetSeasonById
                     x.Name,
                     x.StartYear,
                     x.EndYear,
+                    x.LeagueName,
                     IsCurrent = x.StartYear == allSeasons
                         .Where(other => other.LeagueId == x.LeagueId)
                         .Max(other => other.StartYear),
@@ -74,6 +75,7 @@ namespace FantasyVolleyballLeague.DataApi.Features.Seasons.GetSeasonById
                 Name = season.Name,
                 StartYear = season.StartYear,
                 EndYear = season.EndYear,
+                LeagueName = season.LeagueName,
                 IsCurrent = season.IsCurrent,
                 League = season.League,
                 PreviousSeason = season.PreviousSeason,

@@ -34,6 +34,7 @@ namespace FantasyVolleyballLeague.DataApi.Features.Seasons
                 Name = x.Name,
                 StartYear = x.StartYear,
                 EndYear = x.EndYear,
+                LeagueName = x.LeagueName,
                 LeagueId = x.LeagueId,
                 IsCurrent = x.StartYear == allSeasons
                     .Where(season => season.LeagueId == x.LeagueId)
