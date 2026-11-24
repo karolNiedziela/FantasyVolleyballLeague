@@ -104,11 +104,15 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Common.API.Search
         {
             var league = LeagueSeeds.CreateLeagues(1).Single();
             var season = SeasonSeeds.Season(league, 2025);
+            var resovia = NameSeeds.Club(league, "ASSECO RESOVIA Rzeszów");
+            var jastrzebski = NameSeeds.Club(league, "Jastrzębski Węgiel");
             await SeedAsync(
                 league,
                 season,
-                NameSeeds.Roster(league, season, "ASSECO RESOVIA Rzeszów"),
-                NameSeeds.Roster(league, season, "Jastrzębski Węgiel"));
+                resovia,
+                jastrzebski,
+                NameSeeds.Roster(league, season, resovia, "ASSECO RESOVIA Rzeszów"),
+                NameSeeds.Roster(league, season, jastrzebski, "Jastrzębski Węgiel"));
 
             var names = await ExecuteDbContextAsync(dbContext => dbContext.Set<Roster>()
                 .WhereNameMatches("resovia rzeszow")

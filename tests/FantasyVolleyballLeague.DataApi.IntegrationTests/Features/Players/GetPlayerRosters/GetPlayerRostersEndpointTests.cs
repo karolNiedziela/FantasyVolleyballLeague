@@ -23,11 +23,13 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Players.GetP
         public async Task GetPlayerRosters_Should_ReturnTheDocumentedJsonShapeWithDefaultPaging()
         {
             var season = SeasonSeeds.Season(_men, 2023);
-            var roster = NameSeeds.Roster(_men, season, "Lublin");
+            var club = NameSeeds.Club(_men, "Lublin");
+            var roster = NameSeeds.Roster(_men, season, club, "Lublin");
             var player = NameSeeds.Player("Jan Kowalski");
             await SeedAsync(
                 _men,
                 season,
+                club,
                 roster,
                 player,
                 NameSeeds.RosterPlayer(
@@ -66,13 +68,17 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Players.GetP
         {
             var older = SeasonSeeds.Season(_men, 2022);
             var newer = SeasonSeeds.Season(_men, 2023);
-            var olderRoster = NameSeeds.Roster(_men, older, "Lublin");
-            var newerRoster = NameSeeds.Roster(_men, newer, "Zawiercie");
+            var lublin = NameSeeds.Club(_men, "Lublin");
+            var zawiercie = NameSeeds.Club(_men, "Zawiercie");
+            var olderRoster = NameSeeds.Roster(_men, older, lublin, "Lublin");
+            var newerRoster = NameSeeds.Roster(_men, newer, zawiercie, "Zawiercie");
             var player = NameSeeds.Player("Moved Club");
             await SeedAsync(
                 _men,
                 older,
                 newer,
+                lublin,
+                zawiercie,
                 olderRoster,
                 newerRoster,
                 player,
@@ -90,9 +96,10 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Players.GetP
         public async Task GetPlayerRosters_Should_ReturnAnEmptyPage_When_TheOffsetIsBeyondTheEnd()
         {
             var season = SeasonSeeds.Season(_men, 2023);
-            var roster = NameSeeds.Roster(_men, season, "Lublin");
+            var club = NameSeeds.Club(_men, "Lublin");
+            var roster = NameSeeds.Roster(_men, season, club, "Lublin");
             var player = NameSeeds.Player("Jan Kowalski");
-            await SeedAsync(_men, season, roster, player, NameSeeds.RosterPlayer(roster, player));
+            await SeedAsync(_men, season, club, roster, player, NameSeeds.RosterPlayer(roster, player));
 
             var items = await ReadItems(await Get($"{Url(player.Id)}?offset=1000"));
 

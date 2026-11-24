@@ -70,6 +70,25 @@ A connection string from environment variables (as set by Aspire) takes preceden
 
 Only leagues listed here are imported.
 
+## Manual data
+
+Data the league websites do not provide is entered by hand in `ManualData/*.json` (in git, copied to the output
+directory). Each file is a JSON array; property names are case-insensitive. Leagues are named by their
+`Importer:Leagues` key. Steps 3 and 4 apply the files on every run, so editing a file and re-running the Importer is
+enough.
+
+| File | Entry | Meaning |
+|---|---|---|
+| `league-names.json` | `{ "league": "PlusLiga", "fromStartYear": 2008, "name": "PlusLiga" }` | The league is called `name` from the season starting in `fromStartYear` until the next entry of that league. A season before the first entry keeps the current `League.Name`. |
+| `clubs.json` | `{ "key": "lublin", "ids": ["PLS1Liga:46", "PlusLiga:45"] }` | The club ids (`League:clubId`) are one club. `key` only names the entry. |
+| `club-splits.json` | `{ "id": "PLS1Liga:57", "fromStartYear": 2026 }` | The rosters of the club id from that season on are another club (the id passed to another club, e.g. Astra Nowa Sól → FORT Poznań). In `clubs.json` that part is `PLS1Liga:57@2026`; `PLS1Liga:57` is the part before the first split. |
+
+To merge two clubs, add an entry to `clubs.json`; to split them again, remove it. A file with errors (invalid JSON,
+an unknown league, a malformed or repeated id, a group of one id or of two genders, a repeated year, an `@year` that
+`club-splits.json` does not have) is listed in
+`FileErrors` and the step that uses it is skipped: the data stays as it was, so a typo does not split the merged clubs
+and change their ids.
+
 ## How it works
 
 The import runs a sequence of **steps** (`Steps/`, `IImportStep`) ordered by `Order`, then writes a report.
@@ -78,19 +97,22 @@ The import runs a sequence of **steps** (`Steps/`, `IImportStep`) ordered by `Or
 flowchart TD
     A[Load ids of existing seasons, phases, rounds,<br/>rosters, players and roster entries] --> B
     B[Step 1: Rosters<br/>data/raw/rosters] --> C
-    C[Step 2: Matches<br/>data/raw/matches] --> D
+    C[Step 2: Matches<br/>data/raw/matches] --> E
+    E[Step 3: League name of each season<br/>ManualData/league-names.json] --> F
+    F[Step 4: Clubs<br/>ManualData/clubs.json, club-splits.json] --> D
     D[Write data/import-report.json]
 ```
 
 Rosters run first, so that the match step can match widget-era players (statistics without player ids) to the
-season roster.
+season roster. Steps 3 and 4 run last, because steps 1 and 2 both create seasons and rosters.
 
 ### Step 1: rosters
 
 For every roster file:
 
 1. **Season** and **roster** (a club in a season) are found or created. A roster is matched by the club id
-   (`ExternalId`) first, then by name within the season.
+   (`ExternalId`) first, then by name within the season. A new season gets the current league name and a new roster
+   the club that already has the same (league, club id), otherwise a new club; steps 3 and 4 correct them.
 2. **Players** are matched by their website id. New players are created; existing ones get their profile updated
    (full name, date of birth, height, weight, attack reach).
 3. **Roster entries** (`RosterPlayer`: shirt number, position, `MemberFrom`/`MemberTo`) are created or updated. The dates
@@ -110,6 +132,28 @@ Matches are upserted by **(league, website match id)**:
 
 Season, phase and round are taken from the file content, not from folder names. Changes are saved in batches of
 100 matches.
+
+### Step 3: league name of each season
+
+`SeasonLeagueNamesImportStep` sets `Season.LeagueName`, the name the league had in that season, from
+`league-names.json` (see [Manual data](#manual-data)). A season before the first entry of its league gets the current
+name (`Importer:Leagues:Name`, which also keeps `League.Name` current in every step).
+
+### Step 4: clubs
+
+`ClubGroupingImportStep`: the rosters are grouped into clubs. A roster belongs to the group of its (league, club id), or
+(league, name) when it has no club id; a club id split by `club-splits.json` gives one group per part, and the groups of
+`clubs.json` are merged into one club.
+
+- The groups are taken from the earliest season, and each keeps the oldest club its rosters already use that no
+  earlier group kept (club ids are UUID v7). Club ids therefore stay stable: when a merge is removed, the part with
+  the earliest season keeps the club and the other part gets a new one.
+- A club is named after its newest roster (of two rosters in the newest season, the one imported later).
+- Clubs left without rosters are deleted. An id of `clubs.json` that matches no roster is a warning.
+- Rosters of leagues missing from `Importer:Leagues` are left as they are.
+
+The grouping is a pure function (`Import/ClubGrouping`, unit-tested); the step applies its result in one transaction.
+A second run with the same data changes nothing.
 
 ### Player resolution
 
@@ -136,7 +180,8 @@ it. The MVP is matched by player id, otherwise by name among the match participa
 Every run writes `data/import-report.json` and prints a summary:
 
 ```
-Rosters: 30; matches inserted: 751, updated: 0, skipped: 0; players by roster: 1415, unresolved players: 0, matches without MVP: 0, file errors: 0
+Rosters: 705; matches inserted: 0, updated: 0, skipped: 8641; players by roster: 0, by season: 0, unresolved players: 0, matches without MVP: 0, file errors: 0, warnings: 0
+Seasons renamed: 48; clubs created: 0, renamed: 6, deleted: 17; rosters moved to another club: 62
 ```
 
 | Field | Meaning |
@@ -145,10 +190,12 @@ Rosters: 30; matches inserted: 751, updated: 0, skipped: 0; players by roster: 1
 | `PlayersResolvedByRoster` | Statistics lines matched through a roster (no player id in the file). |
 | `PlayersResolvedBySeason` | Lines matched by name on another roster of the same gender and season (step 4 above). |
 | `RosterEntriesFromCareer` | Roster entries created from the career of a player who moved during the season. |
+| `SeasonsRenamed` | Seasons whose league name changed (step 3). |
+| `ClubsCreated`, `ClubsRenamed`, `ClubsDeleted`, `RostersMovedToAnotherClub` | Changes made by the club grouping (step 4). |
 | `UnresolvedPlayers` | Players that could not be matched. Usually means the roster of that season was not scraped. |
 | `UnresolvedMvps` | MVPs given by name that are not among the match participants. |
-| `FileErrors` | Files that could not be read (invalid JSON, unsupported `SchemaVersion`, unknown status) or duplicate lines. Such files are skipped; the rest of the import continues. |
-| `Warnings` | Wrong data on the website that the import repaired, e.g. one player id used for both squads of a match (two players merged into one profile): the second line is imported as a separate player without a website id. |
+| `FileErrors` | Files that could not be read (invalid JSON, unsupported `SchemaVersion`, unknown status) or duplicate lines, and errors in the manual data files. Such files are skipped; the rest of the import continues. |
+| `Warnings` | Wrong data on the website that the import repaired, e.g. one player id used for both squads of a match (two players merged into one profile): the second line is imported as a separate player without a website id. Also ids of `clubs.json` that match no roster. |
 
 ## Database schema
 

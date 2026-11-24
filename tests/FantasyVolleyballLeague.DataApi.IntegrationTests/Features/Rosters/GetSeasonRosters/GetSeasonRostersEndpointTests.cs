@@ -25,13 +25,19 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Rosters.GetS
         {
             var season = SeasonSeeds.Season(_men, 2023);
             var otherSeason = SeasonSeeds.Season(_men, 2022);
+            var zawiercie = NameSeeds.Club(_men, "Zawiercie");
+            var lublin = NameSeeds.Club(_men, "Lublin");
+            var otherSeasonClub = NameSeeds.Club(_men, "Other season club");
             await SeedAsync(
                 _men,
                 season,
                 otherSeason,
-                NameSeeds.Roster(_men, season, "Zawiercie"),
-                NameSeeds.Roster(_men, season, "Lublin"),
-                NameSeeds.Roster(_men, otherSeason, "Other season club"));
+                zawiercie,
+                lublin,
+                otherSeasonClub,
+                NameSeeds.Roster(_men, season, zawiercie, "Zawiercie"),
+                NameSeeds.Roster(_men, season, lublin, "Lublin"),
+                NameSeeds.Roster(_men, otherSeason, otherSeasonClub, "Other season club"));
 
             var response = await Get(Url(season.Id));
             var page = await ReadPage(response);
@@ -48,7 +54,8 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Rosters.GetS
         public async Task GetSeasonRosters_Should_ReturnNotFoundAsProblemDetails_When_TheSeasonDoesNotExist()
         {
             var season = SeasonSeeds.Season(_men, 2023);
-            await SeedAsync(_men, season, NameSeeds.Roster(_men, season, "Lublin"));
+            var club = NameSeeds.Club(_men, "Lublin");
+            await SeedAsync(_men, season, club, NameSeeds.Roster(_men, season, club, "Lublin"));
 
             var response = await Get(Url(EntityId.New()));
 
@@ -72,12 +79,18 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Rosters.GetS
         public async Task GetSeasonRosters_Should_ApplyTheSearchAndTheSortFromTheQueryString()
         {
             var season = SeasonSeeds.Season(_men, 2023);
+            var resovia = NameSeeds.Club(_men, "Resovia Rzeszów");
+            var resoviaReserves = NameSeeds.Club(_men, "Resovia Rzeszów II");
+            var lublin = NameSeeds.Club(_men, "Lublin");
             await SeedAsync(
                 _men,
                 season,
-                NameSeeds.Roster(_men, season, "Resovia Rzeszów"),
-                NameSeeds.Roster(_men, season, "Resovia Rzeszów II"),
-                NameSeeds.Roster(_men, season, "Lublin"));
+                resovia,
+                resoviaReserves,
+                lublin,
+                NameSeeds.Roster(_men, season, resovia, "Resovia Rzeszów"),
+                NameSeeds.Roster(_men, season, resoviaReserves, "Resovia Rzeszów II"),
+                NameSeeds.Roster(_men, season, lublin, "Lublin"));
 
             var page = await ReadPage(await Get($"{Url(season.Id)}?q=RESOVIA&sort=-name"));
 

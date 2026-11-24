@@ -24,6 +24,38 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "pg_trgm");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("FantasyVolleyballLeague.VolleyballData.Domain.Club", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("uuidv7()");
+
+                    b.Property<int>("GenderId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .UseCollation("pl-x-icu");
+
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GenderId");
+
+                    b.HasIndex("NormalizedName");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("NormalizedName"), "gin");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("NormalizedName"), new[] { "gin_trgm_ops" });
+
+                    b.ToTable("Club");
+                });
+
             modelBuilder.Entity("FantasyVolleyballLeague.VolleyballData.Domain.League", b =>
                 {
                     b.Property<Guid>("Id")
@@ -547,6 +579,9 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
                         .HasColumnType("uuid")
                         .HasDefaultValueSql("uuidv7()");
 
+                    b.Property<Guid>("ClubId")
+                        .HasColumnType("uuid");
+
                     b.Property<int?>("ExternalId")
                         .HasColumnType("integer");
 
@@ -570,6 +605,8 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ClubId");
 
                     b.HasIndex("LeagueId");
 
@@ -672,6 +709,12 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
                     b.Property<Guid>("LeagueId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("LeagueName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .UseCollation("pl-x-icu");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -755,6 +798,17 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
                             Code = "full",
                             Name = "Full"
                         });
+                });
+
+            modelBuilder.Entity("FantasyVolleyballLeague.VolleyballData.Domain.Club", b =>
+                {
+                    b.HasOne("FantasyVolleyballLeague.VolleyballData.Domain.LeagueGender", "Gender")
+                        .WithMany()
+                        .HasForeignKey("GenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Gender");
                 });
 
             modelBuilder.Entity("FantasyVolleyballLeague.VolleyballData.Domain.League", b =>
@@ -901,6 +955,12 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
 
             modelBuilder.Entity("FantasyVolleyballLeague.VolleyballData.Domain.Roster", b =>
                 {
+                    b.HasOne("FantasyVolleyballLeague.VolleyballData.Domain.Club", "Club")
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("FantasyVolleyballLeague.VolleyballData.Domain.League", "League")
                         .WithMany()
                         .HasForeignKey("LeagueId")
@@ -912,6 +972,8 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
                         .HasForeignKey("SeasonId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Club");
 
                     b.Navigation("League");
 

@@ -24,6 +24,11 @@ namespace FantasyVolleyballLeague.DataApi.Features.Rosters.GetRosterById
                     x.Id,
                     x.ExternalId,
                     x.Name,
+                    Club = new ClubSummaryResponse
+                    {
+                        Id = x.Club.Id,
+                        Name = x.Club.Name
+                    },
                     League = new LeagueSummaryResponse
                     {
                         Id = x.League.Id,
@@ -54,6 +59,7 @@ namespace FantasyVolleyballLeague.DataApi.Features.Rosters.GetRosterById
                 Id = roster.Id,
                 ExternalId = roster.ExternalId,
                 Name = roster.Name,
+                Club = roster.Club,
                 League = roster.League,
                 Season = roster.Season,
                 Players = players

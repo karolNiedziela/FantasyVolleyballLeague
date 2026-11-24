@@ -25,12 +25,14 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Players.GetP
         public async Task GetPlayerById_Should_ReturnTheDocumentedJsonShape()
         {
             var season = SeasonSeeds.Season(_men, 2023);
-            var roster = NameSeeds.Roster(_men, season, "Lublin");
+            var club = NameSeeds.Club(_men, "Lublin");
+            var roster = NameSeeds.Roster(_men, season, club, "Lublin");
             var player = new Player(LeagueGender.Men.Id, "Jan Kowalski", externalId: 77);
             player.UpdateProfile("Jan Kowalski", new DateOnly(1990, 1, 31), 200, 95, 345);
             await SeedAsync(
                 _men,
                 season,
+                club,
                 roster,
                 player,
                 NameSeeds.RosterPlayer(roster, player, shirtNumber: 9, position: PlayerPosition.MiddleBlocker));

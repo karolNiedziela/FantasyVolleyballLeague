@@ -26,11 +26,15 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Rosters.GetR
         public async Task GetRosters_Should_ReturnTheRostersByNameWithDefaultPaging()
         {
             var season = SeasonSeeds.Season(_men, 2023);
+            var zawiercie = NameSeeds.Club(_men, "Zawiercie");
+            var lublin = NameSeeds.Club(_men, "Lublin");
             await SeedAsync(
                 _men,
                 season,
-                NameSeeds.Roster(_men, season, "Zawiercie"),
-                NameSeeds.Roster(_men, season, "Lublin"));
+                zawiercie,
+                lublin,
+                NameSeeds.Roster(_men, season, zawiercie, "Zawiercie"),
+                NameSeeds.Roster(_men, season, lublin, "Lublin"));
 
             var response = await Get(Rosters);
             var page = await ReadPage(response);
@@ -47,14 +51,20 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Rosters.GetR
         {
             var menSeason = SeasonSeeds.Season(_men, 2023);
             var womenSeason = SeasonSeeds.Season(_women, 2023);
+            var menResovia = NameSeeds.Club(_men, "Resovia");
+            var womenResovia = NameSeeds.Club(_women, "Resovia");
+            var lublin = NameSeeds.Club(_men, "Lublin");
             await SeedAsync(
                 _men,
                 _women,
                 menSeason,
                 womenSeason,
-                NameSeeds.Roster(_men, menSeason, "Resovia"),
-                NameSeeds.Roster(_women, womenSeason, "Resovia"),
-                NameSeeds.Roster(_men, menSeason, "Lublin"));
+                menResovia,
+                womenResovia,
+                lublin,
+                NameSeeds.Roster(_men, menSeason, menResovia, "Resovia"),
+                NameSeeds.Roster(_women, womenSeason, womenResovia, "Resovia"),
+                NameSeeds.Roster(_men, menSeason, lublin, "Lublin"));
 
             var byLeague = await ReadPage(await Get($"{Rosters}?leagueId={_women.Id}"));
             var bySeason = await ReadPage(await Get($"{Rosters}?seasonId={menSeason.Id}&q=RESOVIA"));
@@ -68,12 +78,16 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Rosters.GetR
         {
             var older = SeasonSeeds.Season(_men, 2022);
             var newer = SeasonSeeds.Season(_men, 2023);
+            var lublin = NameSeeds.Club(_men, "Lublin");
+            var zawiercie = NameSeeds.Club(_men, "Zawiercie");
             await SeedAsync(
                 _men,
                 older,
                 newer,
-                NameSeeds.Roster(_men, older, "Lublin"),
-                NameSeeds.Roster(_men, newer, "Zawiercie"));
+                lublin,
+                zawiercie,
+                NameSeeds.Roster(_men, older, lublin, "Lublin"),
+                NameSeeds.Roster(_men, newer, zawiercie, "Zawiercie"));
 
             var page = await ReadPage(await Get($"{Rosters}?sort=-startYear"));
 
@@ -84,7 +98,8 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Rosters.GetR
         public async Task GetRosters_Should_ReturnAnEmptyPage_When_TheOffsetIsBeyondTheEnd()
         {
             var season = SeasonSeeds.Season(_men, 2023);
-            await SeedAsync(_men, season, NameSeeds.Roster(_men, season, "Lublin"));
+            var club = NameSeeds.Club(_men, "Lublin");
+            await SeedAsync(_men, season, club, NameSeeds.Roster(_men, season, club, "Lublin"));
 
             var page = await ReadPage(await Get($"{Rosters}?offset=1000"));
 
