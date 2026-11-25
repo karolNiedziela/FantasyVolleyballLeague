@@ -48,6 +48,7 @@ namespace FantasyVolleyballLeague.Scraper.Sources.Poland.Pls.Rosters
                 Season = season.Reference,
                 Club = new ClubLink(club.ExternalId, teamPage.Name ?? club.Name),
                 Players = players,
+                Staff = teamPage.Staff,
             };
         }
 
