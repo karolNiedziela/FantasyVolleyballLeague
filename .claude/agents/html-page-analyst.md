@@ -33,7 +33,10 @@ you only download, search and report. The main conversation decides what to chan
    - **Entities and whitespace:** `&nbsp;`, mixed name orders ("First Last" vs "Last First"), localized dates and
      numbers.
    - **Ids:** stable ids in links (e.g. `/players/id/{id}/`, `/teams/id/{id}/`) and whether they repeat across pages.
-4. When comparing with a fixture, compare the relevant fragments of both files, not whole files.
+4. When comparing with a fixture, compare the relevant fragments of both files, not whole files. Fixtures are
+   minimized (no scripts, navigation, news or images), so compare only the parts the parsers read.
+   When asked for a new fixture, report the path of the downloaded page in the temporary folder; the main
+   conversation saves it minimized with `tools/fixtures/Minimize-PlsFixtures.ps1`.
 5. Quote real HTML snippets (a few lines each). Never guess a selector you have not seen in the page.
 
 ## Report format
