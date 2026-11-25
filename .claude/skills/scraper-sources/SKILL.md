@@ -23,7 +23,7 @@ whole HTML pages into this conversation.
    `tests/FantasyVolleyballLeague.Scraper.Tests/Fixtures/` and to locate the data the parser reads.
 3. **Propose.** Diagnosis, the parser change, the fixture to update and the test to add. Wait for approval.
 4. **Implement test first.** Save the new page as a fixture (keep the old one if older seasons still use the
-   old format), add a failing test, then fix the parser.
+   old format), minimized (see "Fixtures" below), add a failing test, then fix the parser.
 5. **Verify.** `dotnet build FantasyVolleyballLeague.sln` (analyzer warnings are errors), `dotnet test`,
    re-scrape the season with `--force true`, run section C, and run the Importer.
 
@@ -43,12 +43,21 @@ whole HTML pages into this conversation.
   3. Implement following `Sources/Poland/Pls/` as the reference: static parsers that take an `HtmlDocument`
      (testable without a browser), Playwright only for pages that need a browser, a `<Provider>Urls` class
      for URL patterns, registration `builder.Services.AddScoped<ILeagueSource, ...>()` in `Program.cs`.
-  4. Tests: save real pages as fixtures (one per page type and format) and test every parser.
+  4. Tests: save real pages as minimized fixtures (one per page type and format) and test every parser.
   5. Verify as in A.5, then scrape one past season and the current season.
 
 The raw JSON format is shared by all sources. If a source needs a new field, change `Models/` and the
 Importer `Records/` together, keep the field optional, and discuss with the user whether `SchemaVersion`
 changes.
+
+### Fixtures
+
+The repository is public. Never commit a full page: the PLS terms of use (point 10) forbid publishing their pages,
+news texts are copyrighted and the info boxes contain personal data. Download the page outside the repository, then
+save it minimized: `pwsh tools/fixtures/Minimize-PlsFixtures.ps1 -Path <downloaded page> -OutDir
+tests/FantasyVolleyballLeague.Scraper.Tests/Fixtures`. The tool keeps what the parsers read; if a parser needs
+something it removes, its test fails, so adjust the tool rather than committing the full page. A new source needs its
+own minimizing rules.
 
 ## C. Check scraped data quality
 

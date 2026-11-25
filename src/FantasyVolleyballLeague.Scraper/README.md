@@ -310,11 +310,17 @@ source-independent.
 
 `tests/FantasyVolleyballLeague.Scraper.Tests` runs the parsers against real
 pages saved in `Fixtures/` (one per format, plus season, team and player pages),
-so they run offline:
+so they run offline. The pages are minimized to what the parsers read (no
+scripts, navigation, news, images or private contacts), because the repository
+is public:
 
 ```powershell
 dotnet test tests/FantasyVolleyballLeague.Scraper.Tests
 ```
 
-When a website changes, save the new page into `Fixtures/`, add a test and fix
-the parser.
+When a website changes, download the new page outside the repository, save it
+minimized into `Fixtures/`, add a test and fix the parser:
+
+```powershell
+pwsh tools/fixtures/Minimize-PlsFixtures.ps1 -Path <downloaded page> -OutDir tests/FantasyVolleyballLeague.Scraper.Tests/Fixtures
+```
