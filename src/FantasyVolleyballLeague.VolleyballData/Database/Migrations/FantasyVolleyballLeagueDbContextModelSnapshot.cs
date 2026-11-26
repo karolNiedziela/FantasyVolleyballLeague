@@ -661,6 +661,33 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
                     b.ToTable("RosterPlayer");
                 });
 
+            modelBuilder.Entity("FantasyVolleyballLeague.VolleyballData.Domain.RosterStaffMember", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("uuidv7()");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("RosterId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("StaffMemberId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
+
+                    b.HasIndex("StaffMemberId");
+
+                    b.HasIndex("RosterId", "StaffMemberId", "RoleId")
+                        .IsUnique();
+
+                    b.ToTable("RosterStaffMember");
+                });
+
             modelBuilder.Entity("FantasyVolleyballLeague.VolleyballData.Domain.Round", b =>
                 {
                     b.Property<Guid>("Id")
@@ -755,6 +782,85 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
                         .IsUnique();
 
                     b.ToTable("SetScore");
+                });
+
+            modelBuilder.Entity("FantasyVolleyballLeague.VolleyballData.Domain.StaffMember", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("uuidv7()");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .UseCollation("pl-x-icu");
+
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique();
+
+                    b.HasIndex(new[] { "NormalizedName" }, "IX_StaffMember_NormalizedName_Trigram");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex(new[] { "NormalizedName" }, "IX_StaffMember_NormalizedName_Trigram"), "gin");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex(new[] { "NormalizedName" }, "IX_StaffMember_NormalizedName_Trigram"), new[] { "gin_trgm_ops" });
+
+                    b.ToTable("StaffMember");
+                });
+
+            modelBuilder.Entity("FantasyVolleyballLeague.VolleyballData.Domain.StaffRole", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("StaffRole");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Code = "head_coach",
+                            Name = "Head Coach"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Code = "second_coach",
+                            Name = "Second Coach"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Code = "third_coach",
+                            Name = "Third Coach"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Code = "president",
+                            Name = "President"
+                        });
                 });
 
             modelBuilder.Entity("FantasyVolleyballLeague.VolleyballData.Domain.StatisticsLevel", b =>
@@ -1006,6 +1112,33 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
                     b.Navigation("Roster");
                 });
 
+            modelBuilder.Entity("FantasyVolleyballLeague.VolleyballData.Domain.RosterStaffMember", b =>
+                {
+                    b.HasOne("FantasyVolleyballLeague.VolleyballData.Domain.StaffRole", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FantasyVolleyballLeague.VolleyballData.Domain.Roster", "Roster")
+                        .WithMany("Staff")
+                        .HasForeignKey("RosterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FantasyVolleyballLeague.VolleyballData.Domain.StaffMember", "StaffMember")
+                        .WithMany()
+                        .HasForeignKey("StaffMemberId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Role");
+
+                    b.Navigation("Roster");
+
+                    b.Navigation("StaffMember");
+                });
+
             modelBuilder.Entity("FantasyVolleyballLeague.VolleyballData.Domain.Round", b =>
                 {
                     b.HasOne("FantasyVolleyballLeague.VolleyballData.Domain.Phase", "Phase")
@@ -1049,6 +1182,8 @@ namespace FantasyVolleyballLeague.VolleyballData.Database.Migrations
             modelBuilder.Entity("FantasyVolleyballLeague.VolleyballData.Domain.Roster", b =>
                 {
                     b.Navigation("Players");
+
+                    b.Navigation("Staff");
                 });
 #pragma warning restore 612, 618
         }

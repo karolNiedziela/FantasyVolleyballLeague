@@ -19,5 +19,7 @@ namespace FantasyVolleyballLeague.Scraper.Models
         public required ClubLink Club { get; init; }
 
         public IReadOnlyList<PlayerProfile> Players { get; init; } = [];
+
+        public IReadOnlyList<StaffMemberRecord> Staff { get; init; } = [];
     }
 }

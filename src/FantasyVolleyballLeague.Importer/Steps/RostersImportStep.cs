@@ -62,7 +62,8 @@ namespace FantasyVolleyballLeague.Importer.Steps
                         continue;
                     }
 
-                    await ImportRosterAsync(leagueId, roster, stints, cancellationToken);
+                    var rosterId = await ImportRosterAsync(leagueId, roster, stints, cancellationToken);
+                    await ImportStaffAsync(rosterId, path, roster.Staff, cancellationToken);
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     _dbContext.ChangeTracker.Clear();
                     _report.RostersImported++;
@@ -110,7 +111,7 @@ namespace FantasyVolleyballLeague.Importer.Steps
             }
         }
 
-        private async Task ImportRosterAsync(Guid leagueId, RosterFile roster, List<ClubStint> stints, CancellationToken cancellationToken)
+        private async Task<Guid> ImportRosterAsync(Guid leagueId, RosterFile roster, List<ClubStint> stints, CancellationToken cancellationToken)
         {
             var seasonId = _catalog.ResolveSeason(leagueId, roster.Season);
             var rosterId = _catalog.ResolveRoster(leagueId, seasonId, roster.Club.Name, roster.Club.ExternalId);
@@ -159,6 +160,46 @@ namespace FantasyVolleyballLeague.Importer.Steps
 
                 AddStintsInOtherClubs(stints, seasonId, roster.Club.ExternalId, player.Id, rosterPlayer);
             }
+
+            return rosterId;
+        }
+
+        private async Task ImportStaffAsync(Guid rosterId, string path, IReadOnlyList<StaffMemberFile> staff, CancellationToken cancellationToken)
+        {
+            var scrapedAssignments = new List<RosterStaffAssignment>();
+            foreach (var member in staff)
+            {
+                var role = StaffRole.FromName(member.Role);
+                if (role is null)
+                {
+                    _report.Warnings.Add(new FileError(path, $"Unknown staff role '{member.Role}' of {member.FullName}; skipped."));
+                    continue;
+                }
+
+                var staffMemberId = _catalog.FindStaffMember(member.FullName) ?? AddStaffMember(member.FullName);
+                scrapedAssignments.Add(new RosterStaffAssignment(staffMemberId, role.Id));
+            }
+
+            var storedRows = await _dbContext.Set<RosterStaffMember>()
+                .Where(row => row.RosterId == rosterId)
+                .ToListAsync(cancellationToken);
+            var storedAssignments = storedRows.Select(row => new RosterStaffAssignment(row.StaffMemberId, row.RoleId)).ToList();
+            var changes = RosterStaffChanges.Between(storedAssignments, scrapedAssignments);
+
+            var removedRows = storedRows.Where(row => changes.Removed.Contains(new RosterStaffAssignment(row.StaffMemberId, row.RoleId)));
+            _dbContext.Set<RosterStaffMember>().RemoveRange(removedRows);
+
+            var addedRows = changes.Added.Select(assignment => new RosterStaffMember(rosterId, assignment.StaffMemberId, assignment.RoleId));
+            _dbContext.Set<RosterStaffMember>().AddRange(addedRows);
+        }
+
+        private Guid AddStaffMember(string fullName)
+        {
+            var staffMember = new StaffMember(fullName);
+            _dbContext.Set<StaffMember>().Add(staffMember);
+            _catalog.RegisterStaffMember(staffMember);
+            _report.StaffMembersCreated++;
+            return staffMember.Id;
         }
 
         private static void AddStintsInOtherClubs(List<ClubStint> stints, Guid seasonId, int ownClubExternalId, Guid playerId, RosterPlayerFile rosterPlayer)

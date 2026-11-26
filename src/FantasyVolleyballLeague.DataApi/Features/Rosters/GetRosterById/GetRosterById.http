@@ -1,6 +1,6 @@
 @RosterId = 00000000-0000-0000-0000-000000000000
 
-### Roster with its league, season and players (take the id from GET /rosters)
+### Roster with its league, season, players and staff (take the id from GET /rosters)
 GET {{DataApi_HostAddress}}/api/{{ApiVersion}}/rosters/{{RosterId}}
 Accept: application/json
 

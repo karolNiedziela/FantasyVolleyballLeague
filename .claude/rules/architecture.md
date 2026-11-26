@@ -35,7 +35,7 @@ into clubs) and writes an
 `ImportReport` (unresolved players, file errors, warnings, counters) next to the data. `Records/*File` are the DTOs
 that mirror the raw JSON and the manual data files, `ManualData/*.json` is the data entered by hand (in git, copied to
 the output: `league-names.json`, `clubs.json`, `club-splits.json`), `Import/` holds the pure helpers (`RosterMatching`, `PlayerNameKey`,
-`CareerMembership`, `SeasonNameIndex`, `StatisticsParsing`, `LeagueNaming`, `ClubKey`, `ClubGrouping`) and the readers
+`CareerMembership`, `SeasonNameIndex`, `StatisticsParsing`, `LeagueNaming`, `ClubKey`, `ClubGrouping`, `RosterStaffChanges`) and the readers
 `RawDataReader` (raw JSON; tested on read-only files in `Fixtures/RawData`) and `ManualDataReader` (reads and validates
 the manual files; `Fixtures/ManualData`)
 that `Importer.Tests` cover, and `Steps/` holds the steps and the per-match context.
@@ -175,8 +175,8 @@ query provider), so handler tests use the real context, not a substitute.
 Postgres sorts text with the database collation (`en_US.utf8`), which sorts Polish letters wrongly
 (`Łańcut` before `Lublin`, `Śląsk` before `Suwałki`). Name columns that are sorted for users use an ICU collation.
 
-- **Today (Poland only):** `League.Name`, `Roster.Name` and `Player.FullName` are `UseCollation("pl-x-icu")`
-  (`LeagueEntityTypeConfiguration`, `RosterEntityTypeConfiguration`, `PlayerEntityTypeConfiguration`). Give the same
+- **Today (Poland only):** `League.Name`, `Roster.Name`, `Club.Name`, `Player.FullName` and `StaffMember.FullName` are
+  `UseCollation("pl-x-icu")` (their `...EntityTypeConfiguration` classes). Give the same
   collation to every other sorted name column when its slice is built. Do not use `EF.Functions.Collate` in queries for
   these columns.
 - **When the first league from another country is added, replace this.** No single collation is right for all
@@ -188,7 +188,7 @@ Postgres sorts text with the database collation (`en_US.utf8`), which sorts Poli
     group with its own collation. `EF.Functions.Collate` needs a constant, so generate one
     `CASE WHEN CountryId = n THEN Collate(Name, "<collation>") END` ordering per country from `LeagueCountry.All`.
   - `SortMap` allows one expression per sort key today. A key must be able to produce several orderings.
-  - `Player` has no country, so decide the rule for player names (for example use the country of the league being
+  - `Player` and `StaffMember` have no country, so decide the rule for their names (for example use the country of the league being
     queried, or a neutral collation such as `und-x-icu`).
   - Name search (`?q=`) is unaffected: it matches on the normalized name column, not on a collation.
 - ICU collations have a version. When the Postgres image (`DatabaseResource.PostgresImageTag`) is upgraded, check

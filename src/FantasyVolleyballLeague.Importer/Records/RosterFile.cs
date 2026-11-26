@@ -13,5 +13,7 @@ namespace FantasyVolleyballLeague.Importer.Records
         public ClubFile Club { get; init; } = new(0, string.Empty);
 
         public IReadOnlyList<RosterPlayerFile> Players { get; init; } = [];
+
+        public IReadOnlyList<StaffMemberFile> Staff { get; init; } = [];
     }
 }

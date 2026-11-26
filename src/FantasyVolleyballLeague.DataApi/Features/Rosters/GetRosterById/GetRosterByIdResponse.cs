@@ -28,5 +28,11 @@ namespace FantasyVolleyballLeague.DataApi.Features.Rosters.GetRosterById
         /// By shirt number (players without one last), then by name.
         /// </summary>
         public IReadOnlyList<RosterPlayerResponse> Players { get; init; } = [];
+
+        /// <summary>
+        /// By role (head, second and third coach, then the president), then by name; a person with two roles is listed
+        /// once per role. In the Polish leagues the coaches are known from 2023/24 onwards.
+        /// </summary>
+        public IReadOnlyList<RosterStaffMemberResponse> Staff { get; init; } = [];
     }
 }

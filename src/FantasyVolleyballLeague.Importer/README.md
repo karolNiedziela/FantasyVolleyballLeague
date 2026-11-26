@@ -119,6 +119,9 @@ For every roster file:
    come from the `Career` of the player (the stint in this club). A player who moved during the season is also given
    an entry, with the dates of the stint, in the roster of each other club from his career (a roster lists only the
    end of the season). Files scraped before the career was read have no dates; the entries then have no dates.
+4. **Staff** (`RosterStaffMember`: coaches and the president) is replaced by the `Staff` of the file. A staff member is
+   found by the normalized name or created: the websites give no id, so two people with the same name are one staff
+   member. An unknown role is a warning and is skipped.
 
 ### Step 2: matches
 
@@ -180,7 +183,7 @@ it. The MVP is matched by player id, otherwise by name among the match participa
 Every run writes `data/import-report.json` and prints a summary:
 
 ```
-Rosters: 705; matches inserted: 0, updated: 0, skipped: 8641; players by roster: 0, by season: 0, unresolved players: 0, matches without MVP: 0, file errors: 0, warnings: 0
+Rosters: 705, staff members created: 0; matches inserted: 0, updated: 0, skipped: 8641; players by roster: 0, by season: 0, unresolved players: 0, matches without MVP: 0, file errors: 0, warnings: 0
 Seasons renamed: 48; clubs created: 0, renamed: 6, deleted: 17; rosters moved to another club: 62
 ```
 
@@ -190,12 +193,13 @@ Seasons renamed: 48; clubs created: 0, renamed: 6, deleted: 17; rosters moved to
 | `PlayersResolvedByRoster` | Statistics lines matched through a roster (no player id in the file). |
 | `PlayersResolvedBySeason` | Lines matched by name on another roster of the same gender and season (step 4 above). |
 | `RosterEntriesFromCareer` | Roster entries created from the career of a player who moved during the season. |
+| `StaffMembersCreated` | New coaches and presidents (step 1). |
 | `SeasonsRenamed` | Seasons whose league name changed (step 3). |
 | `ClubsCreated`, `ClubsRenamed`, `ClubsDeleted`, `RostersMovedToAnotherClub` | Changes made by the club grouping (step 4). |
 | `UnresolvedPlayers` | Players that could not be matched. Usually means the roster of that season was not scraped. |
 | `UnresolvedMvps` | MVPs given by name that are not among the match participants. |
 | `FileErrors` | Files that could not be read (invalid JSON, unsupported `SchemaVersion`, unknown status) or duplicate lines, and errors in the manual data files. Such files are skipped; the rest of the import continues. |
-| `Warnings` | Wrong data on the website that the import repaired, e.g. one player id used for both squads of a match (two players merged into one profile): the second line is imported as a separate player without a website id. Also ids of `clubs.json` that match no roster. |
+| `Warnings` | Wrong data on the website that the import repaired, e.g. one player id used for both squads of a match (two players merged into one profile): the second line is imported as a separate player without a website id. Also ids of `clubs.json` that match no roster, and unknown staff roles. |
 
 ## Database schema
 

@@ -92,6 +92,10 @@ League → Season → Phase → Round (with `Stage`) → Match → SetScore / Pl
   the men's and women's sections are different clubs.
 - `Player` is a **global person**. Its `ExternalId` is the player id. `RosterPlayer` is the season
   roster entry (shirt number, position, `MemberFrom`/`MemberTo` = the dates the player belonged to the club, taken from his career).
+- `StaffMember` is a coach or club official, without a website id: identified by the normalized name (unique), so
+  namesakes are one person. `RosterStaffMember` is a role (`StaffRole`: head, second, third coach, president) in a
+  roster; one person can hold two roles. Coaches come from the "Sztab" box (2023/24 onwards); the president is the
+  club's current one on every season page, so the Scraper records it only for the latest season.
 - Every entity derives from `Entity`, which assigns a time-ordered UUID v7 id (`EntityId.New()`).
   `Guid.NewGuid()` is banned in the projects that create entities (`Shared`, `VolleyballData`, `Importer`; each lists
   `BannedSymbols.txt` in its csproj, RS0030 is a build error) and allowed elsewhere, for example in tests. EF never generates keys, and

@@ -66,6 +66,11 @@ namespace FantasyVolleyballLeague.Scraper.Storage
             return WriteAsync(Path.Combine(GetMatchesDirectory(leagueKey, season), ManifestFileName), manifest, cancellationToken);
         }
 
+        public RosterRecord? TryReadRoster(string leagueKey, SeasonReference season, int clubId)
+        {
+            return TryRead<RosterRecord>(GetRosterPath(leagueKey, season, clubId));
+        }
+
         public bool RosterExists(string leagueKey, SeasonReference season, int clubId)
         {
             return File.Exists(GetRosterPath(leagueKey, season, clubId));

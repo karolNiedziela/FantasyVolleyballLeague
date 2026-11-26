@@ -1,0 +1,12 @@
+{
+  "SchemaVersion": 1,
+  "ScrapedAtUtc": "2026-11-25T10:00:00Z",
+  "League": "TestLeague",
+  "Season": { "StartYear": 2025, "EndYear": 2026, "ExternalId": 52 },
+  "Club": { "ExternalId": 2, "Name": "Test Club" },
+  "Players": [],
+  "Staff": [
+    { "FullName": "Jan Kowalski", "Role": "Head Coach" },
+    { "FullName": "Anna Nowak", "Role": "President" }
+  ]
+}

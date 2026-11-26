@@ -1,11 +1,20 @@
 using System.Globalization;
+using System.Text.RegularExpressions;
 using FantasyVolleyballLeague.Scraper.Models;
+using FantasyVolleyballLeague.Shared.Constants;
 using HtmlAgilityPack;
 
 namespace FantasyVolleyballLeague.Scraper.Sources.Poland.Pls.Rosters
 {
-    internal static class PlsRosterParser
+    internal static partial class PlsRosterParser
     {
+        private static readonly Dictionary<string, string> CoachRoles = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Pierwszy trener"] = StaffRoleNames.HeadCoach,
+            ["Drugi trener"] = StaffRoleNames.SecondCoach,
+            ["Trzeci trener"] = StaffRoleNames.ThirdCoach,
+        };
+
         /// <summary>
         /// Clubs of a season from the teams page: <c>div.team-box-caption a[href="/teams/id/{clubId}/..."]</c>.
         /// </summary>
@@ -39,7 +48,14 @@ namespace FantasyVolleyballLeague.Scraper.Sources.Poland.Pls.Rosters
                 .DistinctBy(player => player.ExternalId)
                 .ToList();
 
-            return new PlsTeamPage(string.IsNullOrEmpty(name) ? null : name, players);
+            var staff = ParseCoaches(document).ToList();
+            var president = ParsePresident(document);
+            if (president is not null)
+            {
+                staff.Add(new StaffMemberRecord { FullName = president, Role = StaffRoleNames.President });
+            }
+
+            return new PlsTeamPage(string.IsNullOrEmpty(name) ? null : name, players, staff);
         }
 
         /// <summary>
@@ -119,6 +135,48 @@ namespace FantasyVolleyballLeague.Scraper.Sources.Poland.Pls.Rosters
                 string.IsNullOrEmpty(position) ? null : PlsPositionMapper.Map(position));
         }
 
+        /// <summary>
+        /// The <c>div</c> after <c>h4.title</c> "SZTAB" (2023/24 onwards), one role per line:
+        /// <c>&lt;b&gt;Trzeci trener:&lt;/b&gt; A,B</c>.
+        /// </summary>
+        private static IEnumerable<StaffMemberRecord> ParseCoaches(HtmlDocument document)
+        {
+            var title = document.DocumentNode.Descendants("h4")
+                .FirstOrDefault(h4 => h4.HasClass("title") && h4.CleanText() == "SZTAB");
+            var box = title?.NextSibling;
+            while (box is not null && box.NodeType != HtmlNodeType.Element)
+            {
+                box = box.NextSibling;
+            }
+
+            if (box is null)
+            {
+                return [];
+            }
+
+            return box.TextLines()
+                .Select(line => line.Split(':', 2))
+                .Where(parts => parts.Length == 2 && CoachRoles.ContainsKey(parts[0].Trim()))
+                .SelectMany(parts => parts[1]
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Select(fullName => new StaffMemberRecord { FullName = fullName, Role = CoachRoles[parts[0].Trim()] }));
+        }
+
+        /// <summary>
+        /// The management box is free text, so the president is the first line "Prezes ...: Name" of an
+        /// <c>div.info-box</c> without a title (the titled boxes are "SZTAB" and "KLUB KIBICA").
+        /// </summary>
+        private static string? ParsePresident(HtmlDocument document)
+        {
+            return document.DocumentNode.FindDescendantsWithClass("div", "info-box")
+                .Where(box => !box.Descendants("h4").Any(h4 => h4.HasClass("title")))
+                .SelectMany(box => box.TextLines())
+                .Select(line => PresidentRegex().Match(line))
+                .Where(match => match.Success)
+                .Select(match => match.Groups["name"].Value)
+                .FirstOrDefault();
+        }
+
         private static PlsRosterEntry? ParseRosterEntry(HtmlNode box)
         {
             var link = box.Descendants("a")
@@ -146,5 +204,9 @@ namespace FantasyVolleyballLeague.Scraper.Sources.Poland.Pls.Rosters
                 ? date
                 : null;
         }
+
+        // "Prezes Zarządu:", "Prezes klubu:", "Prezes:"; not "Wiceprezes", "Prezes Klubu Kibica" or "Prezes Honorowy".
+        [GeneratedRegex(@"^Prezes(?![^:]*(Kibica|Honorow))[^:]*:\s*(?<name>.+)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+        private static partial Regex PresidentRegex();
     }
 }

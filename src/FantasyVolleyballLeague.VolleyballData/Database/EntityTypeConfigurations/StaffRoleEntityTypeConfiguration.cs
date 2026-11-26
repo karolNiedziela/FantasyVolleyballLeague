@@ -1,0 +1,30 @@
+using FantasyVolleyballLeague.VolleyballData.Domain;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace FantasyVolleyballLeague.VolleyballData.Database.EntityTypeConfigurations
+{
+    internal sealed class StaffRoleEntityTypeConfiguration : IEntityTypeConfiguration<StaffRole>
+    {
+        public void Configure(EntityTypeBuilder<StaffRole> builder)
+        {
+            builder.HasKey(x => x.Id);
+
+            builder.Property(x => x.Id)
+                .ValueGeneratedNever();
+
+            builder.Property(x => x.Code)
+                .HasMaxLength(30)
+                .IsRequired();
+
+            builder.HasIndex(x => x.Code)
+                .IsUnique();
+
+            builder.Property(x => x.Name)
+                .HasMaxLength(50)
+                .IsRequired();
+
+            builder.HasData(StaffRole.All);
+        }
+    }
+}

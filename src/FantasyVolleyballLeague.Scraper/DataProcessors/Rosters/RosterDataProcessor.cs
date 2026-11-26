@@ -83,6 +83,12 @@ namespace FantasyVolleyballLeague.Scraper.DataProcessors.Rosters
                 try
                 {
                     var roster = await source.GetRosterAsync(league, season, club, session);
+                    if (!isLatestSeason)
+                    {
+                        var stored = _store.TryReadRoster(league.Key, season.Reference, club.ExternalId);
+                        roster = PastSeasonStaff.KeepStoredPresident(roster, stored);
+                    }
+
                     await _store.WriteRosterAsync(roster, cancellationToken);
                     Console.WriteLine($"{label} {roster.Club.Name}: {roster.Players.Count} players.");
                 }

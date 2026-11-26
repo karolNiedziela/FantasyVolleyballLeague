@@ -9,6 +9,7 @@ namespace FantasyVolleyballLeague.VolleyballData.Domain
     internal sealed class Roster : Entity, ISearchableName
     {
         private readonly List<RosterPlayer> _players = [];
+        private readonly List<RosterStaffMember> _staff = [];
 
         public string Name { get; private set; } = string.Empty;
 
@@ -33,6 +34,8 @@ namespace FantasyVolleyballLeague.VolleyballData.Domain
         public Club Club { get; private set; } = default!;
 
         public IReadOnlyCollection<RosterPlayer> Players => _players.AsReadOnly();
+
+        public IReadOnlyCollection<RosterStaffMember> Staff => _staff.AsReadOnly();
 
         private Roster() { }
 

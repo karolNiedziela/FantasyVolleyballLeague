@@ -1,4 +1,6 @@
+using FantasyVolleyballLeague.Scraper.Models;
+
 namespace FantasyVolleyballLeague.Scraper.Sources.Poland.Pls.Rosters
 {
-    internal sealed record PlsTeamPage(string? Name, IReadOnlyList<PlsRosterEntry> Players);
+    internal sealed record PlsTeamPage(string? Name, IReadOnlyList<PlsRosterEntry> Players, IReadOnlyList<StaffMemberRecord> Staff);
 }
