@@ -45,7 +45,7 @@ namespace FantasyVolleyballLeague.Scraper.Tests.Fixtures
             throw new NotSupportedException();
         }
 
-        public Task<RosterRecord> GetRosterAsync(LeagueOptions league, Season season, ClubLink club, PlaywrightSession session)
+        public Task<RosterRecord> GetRosterAsync(LeagueOptions league, Season season, ClubLink club, RosterRecord? stored, PlaywrightSession session)
         {
             throw new NotSupportedException();
         }

@@ -47,6 +47,11 @@ namespace FantasyVolleyballLeague.Scraper.Sources
         /// </summary>
         Task<IReadOnlyList<ClubLink>> GetClubsAsync(Season season, PlaywrightSession session);
 
-        Task<RosterRecord> GetRosterAsync(LeagueOptions league, Season season, ClubLink club, PlaywrightSession session);
+        /// <param name="stored">
+        /// The roster file saved earlier, if any. A player it lists who is no longer on the team page (he left during the
+        /// season) stays in the roster while his career still places him in the club, so his membership dates follow
+        /// the website.
+        /// </param>
+        Task<RosterRecord> GetRosterAsync(LeagueOptions league, Season season, ClubLink club, RosterRecord? stored, PlaywrightSession session);
     }
 }

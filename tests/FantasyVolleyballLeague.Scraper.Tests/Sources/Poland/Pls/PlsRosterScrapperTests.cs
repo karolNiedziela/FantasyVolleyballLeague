@@ -8,6 +8,10 @@ namespace FantasyVolleyballLeague.Scraper.Tests.Sources.Poland.Pls
     {
         private const int Season = 32;
         private const int OtherSeason = 35;
+        private const int ClubId = 93;
+        private const int OtherClubId = 45;
+        private const int StayingPlayerId = 100;
+        private const int LeavingPlayerId = 2433;
 
         [Fact]
         public void ToCareerEntries_Should_KeepOnlyTheStintsOfTheGivenSeason()
@@ -66,6 +70,80 @@ namespace FantasyVolleyballLeague.Scraper.Tests.Sources.Poland.Pls
             var entries = PlsRosterScrapper.ToCareerEntries(rows, null);
 
             entries.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public void FormerPlayers_Should_ReturnTheStoredPlayersMissingFromTheTeamPage()
+        {
+            var teamPagePlayers = new[] { Entry(StayingPlayerId) };
+            var stored = Roster(Player(StayingPlayerId), Player(LeavingPlayerId));
+
+            var formerPlayers = PlsRosterScrapper.FormerPlayers(teamPagePlayers, stored);
+
+            formerPlayers.Select(player => player.ExternalId).ShouldBe([LeavingPlayerId]);
+        }
+
+        [Fact]
+        public void FormerPlayers_Should_ReturnNothing_When_NoFileIsStored()
+        {
+            var formerPlayers = PlsRosterScrapper.FormerPlayers([Entry(StayingPlayerId)], stored: null);
+
+            formerPlayers.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public void KeepFormerPlayer_Should_KeepThePlayerWithTheCurrentCareer_When_TheCareerHasAStintInTheClub()
+        {
+            var career = new[] { Stint(ClubId, new DateOnly(2026, 9, 16), new DateOnly(2026, 11, 25)) };
+
+            var player = PlsRosterScrapper.KeepFormerPlayer(Player(LeavingPlayerId), Details(shirtNumber: 4), career, ClubId);
+
+            player.ShouldNotBeNull().ShouldSatisfyAllConditions(
+                () => player.FullName.ShouldBe("Jan Kowalski"),
+                () => player.ShirtNumber.ShouldBe(4),
+                () => player.Career.ShouldHaveSingleItem().To.ShouldBe(new DateOnly(2026, 11, 25)));
+        }
+
+        [Fact]
+        public void KeepFormerPlayer_Should_DropThePlayer_When_TheCareerHasNoStintInTheClub()
+        {
+            var career = new[] { Stint(OtherClubId, new DateOnly(2026, 9, 16), new DateOnly(2027, 3, 30)) };
+
+            var player = PlsRosterScrapper.KeepFormerPlayer(Player(LeavingPlayerId), Details(shirtNumber: 4), career, ClubId);
+
+            player.ShouldBeNull();
+        }
+
+        private static PlsRosterEntry Entry(int playerId)
+        {
+            return new PlsRosterEntry(playerId, "Anna Nowak", 1, null, $"/players/id/{playerId}/tour/53.html");
+        }
+
+        private static PlayerProfile Player(int playerId)
+        {
+            return new PlayerProfile { ExternalId = playerId, FullName = "Jan Kowalski" };
+        }
+
+        private static PlsPlayerDetails Details(int shirtNumber)
+        {
+            return new PlsPlayerDetails(null, null, null, null, null, shirtNumber);
+        }
+
+        private static PlayerCareerEntry Stint(int clubId, DateOnly from, DateOnly to)
+        {
+            return new PlayerCareerEntry { ClubExternalId = clubId, From = from, To = to };
+        }
+
+        private static RosterRecord Roster(params PlayerProfile[] players)
+        {
+            return new RosterRecord
+            {
+                ScrapedAtUtc = new DateTime(2026, 11, 25, 0, 0, 0, DateTimeKind.Utc),
+                League = "PlusLiga",
+                Season = new SeasonReference(2026, 2027, 53),
+                Club = new ClubLink(ClubId, "Podziemia Kredowe ChKS Chełm"),
+                Players = players,
+            };
         }
 
         private static PlsCareerRow Row(int clubId, int tour, DateOnly from, DateOnly to)

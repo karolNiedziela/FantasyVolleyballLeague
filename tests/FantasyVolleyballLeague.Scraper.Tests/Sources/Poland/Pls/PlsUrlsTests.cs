@@ -35,5 +35,11 @@ namespace FantasyVolleyballLeague.Scraper.Tests.Sources.Poland.Pls
         {
             PlsUrls.Team(League, 18, null).ShouldBe("https://www.tauronliga.pl/teams/id/18.html");
         }
+
+        [Fact]
+        public void Player_Should_ReturnThePlayerPageOfTheSeason()
+        {
+            PlsUrls.Player(League, 2433, 53).ShouldBe("https://www.tauronliga.pl/players/id/2433/tour/53.html");
+        }
     }
 }

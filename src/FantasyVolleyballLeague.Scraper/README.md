@@ -247,7 +247,10 @@ A roster file contains `Club` (`ExternalId`, `Name`) and `Players`
 stints of the player in clubs during the season of the roster, read from the
 "Kariera zawodowa w lidze" table of the player page (`ClubExternalId`, `From`,
 `To`, `ShirtNumber`, `Position`). It tells which club a player who moved
-during the season played for on a given day. `Staff` lists the coaches of the
+during the season played for on a given day. A player who disappears from the
+team page during the season (he left the club) stays in the file while his
+career still has a stint in the club, so his `To` date follows the website.
+`Staff` lists the coaches of the
 season (`Head Coach`, `Second Coach`, `Third Coach`, from the "Sztab" box,
 2023/24 onwards) and the club `President` (`FullName`, `Role`). The team page
 of every season shows the club's current president, so the president is read

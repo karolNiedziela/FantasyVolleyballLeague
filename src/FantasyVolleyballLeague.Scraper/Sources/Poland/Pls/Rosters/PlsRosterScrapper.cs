@@ -21,7 +21,7 @@ namespace FantasyVolleyballLeague.Scraper.Sources.Poland.Pls.Rosters
             return PlsRosterParser.ParseClubs(document);
         }
 
-        public async Task<RosterRecord> GetRosterAsync(LeagueOptions league, Season season, ClubLink club, PlaywrightSession session)
+        public async Task<RosterRecord> GetRosterAsync(LeagueOptions league, Season season, ClubLink club, RosterRecord? stored, PlaywrightSession session)
         {
             var teamUrl = PlsUrls.Team(league, club.ExternalId, season.Tour);
 
@@ -41,13 +41,24 @@ namespace FantasyVolleyballLeague.Scraper.Sources.Poland.Pls.Rosters
                 }
             }));
 
+            var formerPlayers = new List<PlayerProfile>();
+            var storedFormerPlayers = FormerPlayers(teamPage.Players, stored);
+            foreach (var storedPlayer in storedFormerPlayers)
+            {
+                var formerPlayer = await GetFormerPlayerAsync(league, season, club, storedPlayer, session);
+                if (formerPlayer is not null)
+                {
+                    formerPlayers.Add(formerPlayer);
+                }
+            }
+
             return new RosterRecord
             {
                 ScrapedAtUtc = DateTime.UtcNow,
                 League = league.Key,
                 Season = season.Reference,
                 Club = new ClubLink(club.ExternalId, teamPage.Name ?? club.Name),
-                Players = players,
+                Players = [.. players, .. formerPlayers],
                 Staff = teamPage.Staff,
             };
         }
@@ -82,6 +93,61 @@ namespace FantasyVolleyballLeague.Scraper.Sources.Poland.Pls.Rosters
                 AttackReach = details?.AttackReach,
                 Career = career,
             };
+        }
+
+        /// <summary>
+        /// Players of the stored roster file who are no longer on the team page: they left the club during the season.
+        /// </summary>
+        internal static IReadOnlyList<PlayerProfile> FormerPlayers(IReadOnlyList<PlsRosterEntry> teamPagePlayers, RosterRecord? stored)
+        {
+            if (stored is null)
+            {
+                return [];
+            }
+
+            var listedIds = teamPagePlayers.Select(player => player.ExternalId).ToHashSet();
+            return [.. stored.Players.Where(player => !listedIds.Contains(player.ExternalId))];
+        }
+
+        /// <summary>
+        /// A former player stays while his career still has a stint in the club in this season (the stint then ends
+        /// on the day he left); otherwise the website corrected the roster and he is dropped.
+        /// </summary>
+        internal static PlayerProfile? KeepFormerPlayer(PlayerProfile stored, PlsPlayerDetails details, IReadOnlyList<PlayerCareerEntry> career, int clubExternalId)
+        {
+            if (!career.Any(entry => entry.ClubExternalId == clubExternalId))
+            {
+                return null;
+            }
+
+            return stored with
+            {
+                Position = details.Position ?? stored.Position,
+                ShirtNumber = details.ShirtNumber ?? stored.ShirtNumber,
+                DateOfBirth = details.DateOfBirth ?? stored.DateOfBirth,
+                Height = details.Height ?? stored.Height,
+                Weight = details.Weight ?? stored.Weight,
+                AttackReach = details.AttackReach ?? stored.AttackReach,
+                Career = career,
+            };
+        }
+
+        /// <summary>
+        /// A profile page that fails to load keeps the stored player as he was.
+        /// </summary>
+        private static async Task<PlayerProfile?> GetFormerPlayerAsync(LeagueOptions league, Season season, ClubLink club, PlayerProfile stored, PlaywrightSession session)
+        {
+            try
+            {
+                var profile = await LoadAsync(session, PlsUrls.Player(league, stored.ExternalId, season.Tour));
+                var career = ToCareerEntries(PlsRosterParser.ParseCareer(profile), season.Tour);
+                return KeepFormerPlayer(stored, PlsRosterParser.ParsePlayerProfile(profile), career, club.ExternalId);
+            }
+            catch (Exception ex) when (ex is PlaywrightException or TimeoutException)
+            {
+                Console.WriteLine($"  Former player {stored.ExternalId} ({stored.FullName}): profile page failed ({ex.Message}), keeping the stored data.");
+                return stored;
+            }
         }
 
         /// <summary>
