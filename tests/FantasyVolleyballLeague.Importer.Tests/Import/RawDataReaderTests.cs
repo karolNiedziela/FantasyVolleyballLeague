@@ -1,4 +1,6 @@
 using FantasyVolleyballLeague.Importer.Import;
+using FantasyVolleyballLeague.Importer.Records;
+using FantasyVolleyballLeague.Shared.Constants;
 using Microsoft.Extensions.Options;
 
 namespace FantasyVolleyballLeague.Importer.Tests.Import
@@ -57,6 +59,26 @@ namespace FantasyVolleyballLeague.Importer.Tests.Import
                 () => RawDataReader.ReadAsync<Sample>(FilePath("empty.json"), sample => sample.SchemaVersion, TestContext.Current.CancellationToken));
 
             exception.Message.ShouldContain("empty");
+        }
+
+        [Fact]
+        public async Task ReadAsync_Should_ReadTheStaffOfARosterFile()
+        {
+            var roster = await RawDataReader.ReadAsync<RosterFile>(FilePath("roster-with-staff.json"), file => file.SchemaVersion, TestContext.Current.CancellationToken);
+
+            roster.Staff.ShouldBe(
+            [
+                new StaffMemberFile("Jan Kowalski", StaffRoleNames.HeadCoach),
+                new StaffMemberFile("Anna Nowak", StaffRoleNames.President),
+            ]);
+        }
+
+        [Fact]
+        public async Task ReadAsync_Should_ReadNoStaff_When_TheRosterFileHasNone()
+        {
+            var roster = await RawDataReader.ReadAsync<RosterFile>(FilePath("valid.json"), file => file.SchemaVersion, TestContext.Current.CancellationToken);
+
+            roster.Staff.ShouldBeEmpty();
         }
 
         private static RawDataReader CreateReader()

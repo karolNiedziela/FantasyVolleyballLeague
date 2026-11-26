@@ -44,6 +44,8 @@ namespace FantasyVolleyballLeague.Importer.Import
         /// </summary>
         public int SeasonsRenamed { get; set; }
 
+        public int StaffMembersCreated { get; set; }
+
         public int ClubsCreated { get; set; }
 
         public int ClubsRenamed { get; set; }

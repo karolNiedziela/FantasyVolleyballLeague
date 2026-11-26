@@ -13,6 +13,7 @@ namespace FantasyVolleyballLeague.DataApi.UnitTests.Domain
             .. StatisticsLevel.All.Select(x => x.Code),
             .. PlayerPosition.All.Select(x => x.Code),
             .. PhaseType.All.Select(x => x.Code),
+            .. StaffRole.All.Select(x => x.Code),
         ];
 
         [Fact]
@@ -56,6 +57,18 @@ namespace FantasyVolleyballLeague.DataApi.UnitTests.Domain
         public void PhaseType_Should_HaveTheContractCodes()
         {
             Codes(PhaseType.All, x => x.Id, x => x.Code).ShouldBe([(1, "regular_season"), (2, "playoff"), (3, "relegation")]);
+        }
+
+        [Fact]
+        public void StaffRole_Should_HaveTheContractCodes()
+        {
+            Codes(StaffRole.All, x => x.Id, x => x.Code).ShouldBe(
+            [
+                (1, "head_coach"),
+                (2, "second_coach"),
+                (3, "third_coach"),
+                (4, "president"),
+            ]);
         }
 
         [Theory]

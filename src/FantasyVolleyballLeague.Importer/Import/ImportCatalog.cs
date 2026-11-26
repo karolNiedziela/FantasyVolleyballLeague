@@ -30,6 +30,7 @@ namespace FantasyVolleyballLeague.Importer.Import
         private HashSet<(Guid RosterId, Guid PlayerId)> _rosterEntries = [];
         private Dictionary<Guid, (Guid LeagueId, int StartYear)> _seasonInfo = [];
         private Dictionary<Guid, Guid> _rosterSeasons = [];
+        private Dictionary<string, Guid> _staffMembersByNormalizedName = [];
         private SeasonNameIndex _seasonNames = new();
 
         public ImportCatalog(FantasyVolleyballLeagueDbContext dbContext)
@@ -114,6 +115,9 @@ namespace FantasyVolleyballLeague.Importer.Import
                         rosterEntry.MemberFrom,
                         rosterEntry.MemberTo));
             }
+
+            _staffMembersByNormalizedName = await _dbContext.Set<StaffMember>().AsNoTracking()
+                .ToDictionaryAsync(s => s.NormalizedName, s => s.Id, cancellationToken);
 
             await RefreshSearchNamesAsync(staleRosterIds, stalePlayerIds, cancellationToken);
         }
@@ -333,6 +337,16 @@ namespace FantasyVolleyballLeague.Importer.Import
         public void RegisterPlayer(Guid leagueId, int externalId, Guid playerId)
         {
             _playersByExternalId[(GetGenderId(leagueId), externalId)] = playerId;
+        }
+
+        public Guid? FindStaffMember(string fullName)
+        {
+            return _staffMembersByNormalizedName.TryGetValue(NameNormalizer.Normalize(fullName), out var id) ? id : null;
+        }
+
+        public void RegisterStaffMember(StaffMember staffMember)
+        {
+            _staffMembersByNormalizedName[staffMember.NormalizedName] = staffMember.Id;
         }
 
         /// <summary>
