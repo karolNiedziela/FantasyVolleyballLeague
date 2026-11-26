@@ -28,25 +28,28 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Rosters.GetR
             var club = NameSeeds.Club(_men, "Lublin");
             var roster = NameSeeds.Roster(_men, season, club, "Lublin", externalId: 56);
             var player = NameSeeds.Player("Łukasz Kaczmarek", dateOfBirth: new DateOnly(1994, 12, 2));
+            var coach = NameSeeds.StaffMember("Jan Kowalski");
             await SeedAsync(
                 _men,
                 season,
                 club,
                 roster,
                 player,
+                coach,
                 NameSeeds.RosterPlayer(
                     roster,
                     player,
                     shirtNumber: 9,
                     position: PlayerPosition.OppositeHitter,
-                    memberFrom: new DateOnly(2023, 9, 1)));
+                    memberFrom: new DateOnly(2023, 9, 1)),
+                NameSeeds.RosterStaffMember(roster, coach, StaffRole.HeadCoach));
 
             var response = await Get($"{Rosters}/{roster.Id}");
 
             await response.ShouldHaveStatusCode(HttpStatusCode.OK);
             response.ShouldHaveMediaType(MediaTypeNames.Application.Json);
             var root = (await response.Content.ReadFromJsonAsync<JsonObject>(TestContext.Current.CancellationToken)).ShouldNotBeNull();
-            PropertyNames(root).ShouldBe(["id", "externalId", "name", "club", "league", "season", "players"], ignoreOrder: true);
+            PropertyNames(root).ShouldBe(["id", "externalId", "name", "club", "league", "season", "players", "staff"], ignoreOrder: true);
             root["externalId"]!.GetValue<int>().ShouldBe(56);
             PropertyNames(root["club"]!.AsObject()).ShouldBe(["id", "name"], ignoreOrder: true);
             PropertyNames(root["league"]!.AsObject()).ShouldBe(["id", "name", "divisionNumber", "country", "gender"], ignoreOrder: true);
@@ -72,6 +75,10 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Rosters.GetR
             playerNode["position"]!.GetValue<string>().ShouldBe("opposite_hitter");
             playerNode["memberFrom"]!.GetValue<string>().ShouldBe("2023-09-01");
             playerNode["memberTo"].ShouldBeNull();
+
+            var staffNode = root["staff"]!.AsArray().ShouldHaveSingleItem()!.AsObject();
+            PropertyNames(staffNode).ShouldBe(["staffMemberId", "fullName", "role"], ignoreOrder: true);
+            staffNode["role"]!.GetValue<string>().ShouldBe("head_coach");
         }
 
         [Fact]

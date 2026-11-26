@@ -53,6 +53,7 @@ namespace FantasyVolleyballLeague.DataApi.Features.Rosters.GetRosterById
             }
 
             var players = await LoadPlayersAsync(query.Id, cancellationToken);
+            var staff = await LoadStaffAsync(query.Id, cancellationToken);
 
             return new GetRosterByIdResponse
             {
@@ -62,8 +63,25 @@ namespace FantasyVolleyballLeague.DataApi.Features.Rosters.GetRosterById
                 Club = roster.Club,
                 League = roster.League,
                 Season = roster.Season,
-                Players = players
+                Players = players,
+                Staff = staff
             };
+        }
+
+        private async Task<List<RosterStaffMemberResponse>> LoadStaffAsync(Guid rosterId, CancellationToken cancellationToken)
+        {
+            return await _dbContext.Set<RosterStaffMember>()
+                .Where(x => x.RosterId == rosterId)
+                .OrderBy(x => x.RoleId)
+                .ThenBy(x => x.StaffMember.FullName)
+                .ThenBy(x => x.Id)
+                .Select(x => new RosterStaffMemberResponse
+                {
+                    StaffMemberId = x.StaffMemberId,
+                    FullName = x.StaffMember.FullName,
+                    Role = x.Role.Code
+                })
+                .ToListAsync(cancellationToken);
         }
 
         private async Task<List<RosterPlayerResponse>> LoadPlayersAsync(Guid rosterId, CancellationToken cancellationToken)

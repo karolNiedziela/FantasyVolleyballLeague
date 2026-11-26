@@ -237,6 +237,120 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Features.Rosters.GetR
             result.ShouldNotBeNull().Players.ShouldHaveSingleItem().PlayerId.ShouldBe(own.Id);
         }
 
+        [Fact]
+        public async Task HandleAsync_Should_MapTheStaffMemberWithTheRoleCode()
+        {
+            var season = SeasonSeeds.Season(_men, 2025);
+            var club = NameSeeds.Club(_men, "Lublin");
+            var roster = NameSeeds.Roster(_men, season, club, "Lublin");
+            var coach = NameSeeds.StaffMember("Jan Kowalski");
+            await SeedAsync(_men, season, club, roster, coach, NameSeeds.RosterStaffMember(roster, coach, StaffRole.HeadCoach));
+
+            var result = await Handle(roster.Id);
+
+            var staffMember = result.ShouldNotBeNull().Staff.ShouldHaveSingleItem();
+            staffMember.ShouldSatisfyAllConditions(
+                () => staffMember.StaffMemberId.ShouldBe(coach.Id),
+                () => staffMember.FullName.ShouldBe("Jan Kowalski"),
+                () => staffMember.Role.ShouldBe("head_coach"));
+        }
+
+        [Fact]
+        public async Task HandleAsync_Should_SortTheStaffByRole_ThenByNameWithThePolishCollation()
+        {
+            var season = SeasonSeeds.Season(_men, 2025);
+            var club = NameSeeds.Club(_men, "Lublin");
+            var roster = NameSeeds.Roster(_men, season, club, "Lublin");
+            var president = NameSeeds.StaffMember("Adam Kowalski");
+            var headCoach = NameSeeds.StaffMember("Zenon Nowak");
+            var secondCoachWithAccent = NameSeeds.StaffMember("Łukasz Wiśniewski");
+            var secondCoach = NameSeeds.StaffMember("Leon Zieliński");
+            await SeedAsync(
+                _men,
+                season,
+                club,
+                roster,
+                president,
+                headCoach,
+                secondCoachWithAccent,
+                secondCoach,
+                NameSeeds.RosterStaffMember(roster, president, StaffRole.President),
+                NameSeeds.RosterStaffMember(roster, secondCoachWithAccent, StaffRole.SecondCoach),
+                NameSeeds.RosterStaffMember(roster, headCoach, StaffRole.HeadCoach),
+                NameSeeds.RosterStaffMember(roster, secondCoach, StaffRole.SecondCoach));
+
+            var result = await Handle(roster.Id);
+
+            result.ShouldNotBeNull().Staff.Select(staffMember => (staffMember.FullName, staffMember.Role)).ShouldBe(
+            [
+                ("Zenon Nowak", "head_coach"),
+                ("Leon Zieliński", "second_coach"),
+                ("Łukasz Wiśniewski", "second_coach"),
+                ("Adam Kowalski", "president"),
+            ]);
+        }
+
+        [Fact]
+        public async Task HandleAsync_Should_ListAStaffMemberOncePerRole()
+        {
+            var season = SeasonSeeds.Season(_men, 2026);
+            var club = NameSeeds.Club(_men, "Lublin");
+            var roster = NameSeeds.Roster(_men, season, club, "Lublin");
+            var coachAndPresident = NameSeeds.StaffMember("Jan Kowalski");
+            await SeedAsync(
+                _men,
+                season,
+                club,
+                roster,
+                coachAndPresident,
+                NameSeeds.RosterStaffMember(roster, coachAndPresident, StaffRole.HeadCoach),
+                NameSeeds.RosterStaffMember(roster, coachAndPresident, StaffRole.President));
+
+            var result = await Handle(roster.Id);
+
+            result.ShouldNotBeNull().Staff.Select(staffMember => staffMember.Role).ShouldBe(["head_coach", "president"]);
+        }
+
+        [Fact]
+        public async Task HandleAsync_Should_ReturnAnEmptyStaffList_When_TheRosterHasNoStaff()
+        {
+            var season = SeasonSeeds.Season(_men, 2015);
+            var club = NameSeeds.Club(_men, "Lublin");
+            var roster = NameSeeds.Roster(_men, season, club, "Lublin");
+            await SeedAsync(_men, season, club, roster);
+
+            var result = await Handle(roster.Id);
+
+            result.ShouldNotBeNull().Staff.ShouldBeEmpty();
+        }
+
+        [Fact]
+        public async Task HandleAsync_Should_ReturnOnlyTheStaffOfTheRoster()
+        {
+            var season = SeasonSeeds.Season(_men, 2025);
+            var club = NameSeeds.Club(_men, "Lublin");
+            var otherClub = NameSeeds.Club(_men, "Zawiercie");
+            var roster = NameSeeds.Roster(_men, season, club, "Lublin");
+            var otherRoster = NameSeeds.Roster(_men, season, otherClub, "Zawiercie");
+            var own = NameSeeds.StaffMember("Jan Kowalski");
+            var other = NameSeeds.StaffMember("Anna Nowak");
+            await SeedAsync(
+                _men,
+                season,
+                club,
+                otherClub,
+                roster,
+                otherRoster,
+                own,
+                other,
+                NameSeeds.RosterStaffMember(roster, own, StaffRole.HeadCoach),
+                NameSeeds.RosterStaffMember(otherRoster, other, StaffRole.HeadCoach));
+
+            var result = await Handle(roster.Id);
+
+            result.ShouldNotBeNull().Staff.ShouldHaveSingleItem().StaffMemberId.ShouldBe(own.Id);
+        }
+
         private Task<GetRosterByIdResponse?> Handle(Guid id)
         {
             return ExecuteDbContextAsync(dbContext =>

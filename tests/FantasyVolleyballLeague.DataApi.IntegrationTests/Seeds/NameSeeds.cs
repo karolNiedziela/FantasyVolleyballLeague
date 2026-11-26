@@ -38,5 +38,15 @@ namespace FantasyVolleyballLeague.DataApi.IntegrationTests.Seeds
         {
             return new RosterPlayer(roster.Id, player.Id, shirtNumber, position?.Id, memberFrom, memberTo);
         }
+
+        public static StaffMember StaffMember(string fullName)
+        {
+            return new StaffMember(fullName);
+        }
+
+        public static RosterStaffMember RosterStaffMember(Roster roster, StaffMember staffMember, StaffRole role)
+        {
+            return new RosterStaffMember(roster.Id, staffMember.Id, role.Id);
+        }
     }
 }
