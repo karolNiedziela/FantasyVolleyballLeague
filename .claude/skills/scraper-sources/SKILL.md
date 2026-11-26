@@ -33,6 +33,10 @@ whole HTML pages into this conversation.
   `appsettings.json` with the existing `Source` key, and to `Importer:Leagues` (key, name, country, gender,
   division). Verify with `--current true`.
 - **New website system:**
+  0. **Access rules.** Ask `html-page-analyst` to check the website's `robots.txt` and terms of use first, and present
+     the result to the user: what they allow (automated access, own use, reuse or publication of the data) and what
+     needs consent. Do not build a source for a website whose robots.txt or terms forbid automated access, and never
+     work around protection (Cloudflare, CAPTCHA, login). The user decides whether to go on.
   1. Ask `html-page-analyst` to map the website: season list, season schedule (phases, stages, rounds),
      match page (header, statistics, formats across seasons), clubs, squad and player pages, URL patterns and
      which ids are stable across seasons.
