@@ -56,9 +56,9 @@ namespace FantasyVolleyballLeague.Scraper.Sources.Poland.Pls
             return PlsRosterScrapper.GetClubsAsync(season, session);
         }
 
-        public Task<RosterRecord> GetRosterAsync(LeagueOptions league, Season season, ClubLink club, PlaywrightSession session)
+        public Task<RosterRecord> GetRosterAsync(LeagueOptions league, Season season, ClubLink club, RosterRecord? stored, PlaywrightSession session)
         {
-            return _rosterScrapper.GetRosterAsync(league, season, club, session);
+            return _rosterScrapper.GetRosterAsync(league, season, club, stored, session);
         }
     }
 }
